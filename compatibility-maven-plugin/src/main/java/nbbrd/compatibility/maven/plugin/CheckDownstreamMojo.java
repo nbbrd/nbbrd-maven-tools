@@ -37,7 +37,7 @@ public final class CheckDownstreamMojo extends CompatibilityMojo {
 
     private void checkDownstream() throws MojoExecutionException {
         Job job = toJob();
-        log(job);
+        log(job, getReportFilename());
         exec(job);
     }
 
@@ -46,8 +46,7 @@ public final class CheckDownstreamMojo extends CompatibilityMojo {
                 .builder()
                 .source(asSource().toValue())
                 .targets(targets.stream().map(Target::toValue).collect(toList()))
-                .workingDir(getWorkingDir())
-                .reportFilename(getReportFilename())
+                .workingDir(getWorkingDir().toPath())
                 .build();
     }
 

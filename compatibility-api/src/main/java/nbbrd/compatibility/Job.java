@@ -1,6 +1,6 @@
 package nbbrd.compatibility;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.List;
 
 @lombok.Value
@@ -13,7 +13,5 @@ public class Job {
     @lombok.Singular
     List<Target> targets;
 
-    File workingDir;
-
-    String reportFilename;
+    Path workingDir;
 }

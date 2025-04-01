@@ -2,9 +2,9 @@ package nbbrd.compatibility;
 
 @lombok.Value
 @lombok.Builder
-public class Mvn {
+public class Building {
 
-    public static final Mvn DEFAULT = Mvn.builder().build();
+    public static final Building DEFAULT = Building.builder().build();
 
     @lombok.Builder.Default
     String property = "";

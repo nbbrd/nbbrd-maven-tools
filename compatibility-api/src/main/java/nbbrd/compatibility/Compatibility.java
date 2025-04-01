@@ -44,14 +44,14 @@ public class Compatibility {
                     if (isFileScheme(target.getUri())) {
                         throw new IOException("WIP");
                     } else {
-                        Path targetPath = job.getWorkingDir().toPath().resolve("target");
+                        Path targetPath = job.getWorkingDir().resolve("target");
                         executor.clone(target.getUri(), targetPath);
                         List<String> tags = executor.getTags(targetPath);
                         for (String tag : tags) {
                             executor.checkoutTag(targetPath, tag);
                             String targetVersion = executor.getVersion(targetPath);
-                            String defaultVersion = executor.getProperty(targetPath, target.getMvn().getProperty());
-                            executor.setProperty(targetPath, target.getMvn().getProperty(), sourceVersion);
+                            String defaultVersion = executor.getProperty(targetPath, target.getBuilding().getProperty());
+                            executor.setProperty(targetPath, target.getBuilding().getProperty(), sourceVersion);
                             int exitCode = executor.verify(targetPath);
                             result.item(ReportItem
                                     .builder()

@@ -1,14 +1,16 @@
 package nbbrd.compatibility.maven.plugin;
 
+import nbbrd.compatibility.Tagging;
+
 @lombok.Data
-public class Tag implements MutableRepresentationOf<nbbrd.compatibility.Tag> {
+public class Tag implements MutableRepresentationOf<Tagging> {
 
     private String versioning;
     private String prefix;
 
     @Override
-    public nbbrd.compatibility.Tag toValue() {
-        return nbbrd.compatibility.Tag
+    public Tagging toValue() {
+        return Tagging
                 .builder()
                 .versioning(versioning)
                 .prefix(prefix)

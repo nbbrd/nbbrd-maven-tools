@@ -52,10 +52,9 @@ class CompatibilityTest {
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .mvn(Mvn.builder().property("x").build())
+                        .building(Building.builder().property("x").build())
                         .build())
-                .workingDir(tmp.toFile())
-                .reportFilename("report.csv")
+                .workingDir(tmp)
                 .build();
 
         assertThat(x.execute(job).getItems())

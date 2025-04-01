@@ -11,5 +11,5 @@ public class Source {
 
     @lombok.NonNull
     @lombok.Builder.Default
-    Tag tag = Tag.DEFAULT;
+    Tagging tagging = Tagging.DEFAULT;
 }

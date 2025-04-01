@@ -40,7 +40,7 @@ public final class CheckUpstreamMojo extends CompatibilityMojo {
 
     private void checkUpstream() throws MojoExecutionException {
         Job job = toJob();
-        log(job);
+        log(job, getReportFilename());
         exec(job);
     }
 
@@ -49,8 +49,7 @@ public final class CheckUpstreamMojo extends CompatibilityMojo {
                 .builder()
                 .sources(sources.stream().map(Source::toValue).collect(toList()))
                 .target(asTarget().toValue())
-                .workingDir(getWorkingDir())
-                .reportFilename(getReportFilename())
+                .workingDir(getWorkingDir().toPath())
                 .build();
     }
 

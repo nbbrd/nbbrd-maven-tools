@@ -1,5 +1,7 @@
 package nbbrd.compatibility.maven.plugin;
 
+import nbbrd.compatibility.Tagging;
+
 import java.net.URI;
 import java.util.Optional;
 
@@ -14,7 +16,7 @@ public class Source implements MutableRepresentationOf<nbbrd.compatibility.Sourc
         return nbbrd.compatibility.Source
                 .builder()
                 .uri(uri)
-                .tag(Optional.ofNullable(tag).map(Tag::toValue).orElse(nbbrd.compatibility.Tag.DEFAULT))
+                .tagging(Optional.ofNullable(tag).map(Tag::toValue).orElse(Tagging.DEFAULT))
                 .build();
     }
 }

@@ -11,9 +11,9 @@ public class Target {
 
     @lombok.NonNull
     @lombok.Builder.Default
-    Tag tag = Tag.DEFAULT;
+    Tagging tagging = Tagging.DEFAULT;
 
     @lombok.NonNull
     @lombok.Builder.Default
-    Mvn mvn = Mvn.DEFAULT;
+    Building building = Building.DEFAULT;
 }

@@ -42,12 +42,12 @@ abstract class CompatibilityMojo extends AbstractMojo {
         return true;
     }
 
-    protected void log(Job job) {
+    protected void log(Job job, String reportFilename) {
         Log log = getLog();
         job.getSources().forEach(source -> log.info(source.toString()));
         job.getTargets().forEach(target -> log.info(target.toString()));
         log.info(job.getWorkingDir().toString());
-        log.info(job.getReportFilename());
+        log.info(reportFilename);
     }
 
     protected Report exec(Job job) throws MojoExecutionException {

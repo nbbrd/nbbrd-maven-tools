@@ -1,15 +1,17 @@
 package nbbrd.compatibility.maven.plugin;
 
+import nbbrd.compatibility.Building;
+
 @lombok.Data
-public class Mvn implements MutableRepresentationOf<nbbrd.compatibility.Mvn> {
+public class Mvn implements MutableRepresentationOf<Building> {
 
     private String property;
     private String parameters;
     private String jdk;
 
     @Override
-    public nbbrd.compatibility.Mvn toValue() {
-        return nbbrd.compatibility.Mvn
+    public Building toValue() {
+        return Building
                 .builder()
                 .property(property)
                 .parameters(parameters)

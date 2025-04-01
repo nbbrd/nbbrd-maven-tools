@@ -2,9 +2,9 @@ package nbbrd.compatibility;
 
 @lombok.Value
 @lombok.Builder
-public class Tag {
+public class Tagging {
 
-    public static final Tag DEFAULT = Tag.builder().build();
+    public static final Tagging DEFAULT = Tagging.builder().build();
 
     @lombok.Builder.Default
     String versioning = "";
