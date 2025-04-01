@@ -2,8 +2,7 @@ package internal.compatibility;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.condition.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -21,7 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static tests.compatibility.Examples.generateProject;
 import static tests.compatibility.Examples.resolveResource;
 
-@EnabledOnOs(OS.WINDOWS)
+@EnabledOnOs(value = OS.WINDOWS, disabledReason = "Use powershell internally")
+@EnabledForJreRange(min = JRE.JAVA_17, disabledReason = "Use Java 17 in example projects")
 @Execution(ExecutionMode.CONCURRENT)
 class PowerShellJobExecutorTest {
 
