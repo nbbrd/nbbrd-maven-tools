@@ -14,11 +14,11 @@ public final class JobEngineAssert {
     }
 
     public static void assertEngineCompliance(@NonNull JobEngine x) {
-        assertThat(x.getId())
+        assertThat(x.getJobEngineId())
                 .isNotNull()
                 .matches(JobEngineLoader.ID_PATTERN);
 
-        assertThatCode(x::isAvailable)
+        assertThatCode(x::isJobEngineAvailable)
                 .doesNotThrowAnyException();
     }
 }

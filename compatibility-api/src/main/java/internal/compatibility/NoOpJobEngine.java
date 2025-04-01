@@ -11,12 +11,17 @@ public enum NoOpJobEngine implements JobEngine {
     INSTANCE;
 
     @Override
-    public @NonNull String getId() {
-        return "no_op";
+    public @NonNull String getJobEngineId() {
+        return "no-op";
     }
 
     @Override
-    public boolean isAvailable() {
+    public @NonNull String getJobEngineName() {
+        return "No operation";
+    }
+
+    @Override
+    public boolean isJobEngineAvailable() {
         return false;
     }
 

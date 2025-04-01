@@ -3,6 +3,7 @@ package nbbrd.compatibility.maven.plugin;
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
+import nbbrd.compatibility.spi.Format;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -42,21 +43,59 @@ abstract class CompatibilityMojo extends AbstractMojo {
         return true;
     }
 
-    protected void log(Job job, String reportFilename) {
+    protected void log(Compatibility compatibility, Job job, String reportFilename) throws MojoExecutionException {
         Log log = getLog();
-        job.getSources().forEach(source -> log.info(source.toString()));
-        job.getTargets().forEach(target -> log.info(target.toString()));
-        log.info(job.getWorkingDir().toString());
+        Format format = compatibility.getFormats()
+                .stream()
+                .filter(item -> item.getFormatId().equals("json"))
+                .findFirst()
+                .orElse(null);
+        if (format != null) {
+            try {
+                format.formatJob(asAppendable(log), job);
+            } catch (IOException ex) {
+                throw new MojoExecutionException("Failed to format job", ex);
+            }
+        } else {
+            job.getSources().forEach(source -> log.info(source.toString()));
+            job.getTargets().forEach(target -> log.info(target.toString()));
+            log.info(job.getWorkingDir().toString());
+        }
         log.info(reportFilename);
     }
 
-    protected Report exec(Job job) throws MojoExecutionException {
-        Compatibility compatibility = Compatibility.ofServiceLoader();
-        getLog().info("Using engine: " + compatibility.getEngine().getId());
+    protected Report exec(Compatibility compatibility, Job job) throws MojoExecutionException {
+        getLog().info("Using engine: " + compatibility.getEngine().getJobEngineId());
         try {
             return compatibility.execute(job);
         } catch (IOException ex) {
             throw new MojoExecutionException("Failed to execute job", ex);
         }
+    }
+
+    protected Compatibility loadCompatibility() {
+        return Compatibility.ofServiceLoader();
+    }
+
+    private static Appendable asAppendable(Log log) {
+        return new Appendable() {
+            @Override
+            public Appendable append(CharSequence csq) {
+                log.info(csq);
+                return this;
+            }
+
+            @Override
+            public Appendable append(CharSequence csq, int start, int end) {
+                log.info(csq.subSequence(start, end));
+                return this;
+            }
+
+            @Override
+            public Appendable append(char c) {
+                log.info(String.valueOf(c));
+                return this;
+            }
+        };
     }
 }

@@ -24,10 +24,28 @@ public class MockedEngine implements JobEngine {
     String id = "mocked";
 
     @lombok.Builder.Default
+    String name = "mocked";
+
+    @lombok.Builder.Default
     boolean available = true;
 
     @lombok.Singular
     List<MockedProject> projects;
+
+    @Override
+    public @NonNull String getJobEngineId() {
+        return id;
+    }
+
+    @Override
+    public @NonNull String getJobEngineName() {
+        return name;
+    }
+
+    @Override
+    public boolean isJobEngineAvailable() {
+        return available;
+    }
 
     @Override
     public @NonNull JobExecutor getExecutor() {

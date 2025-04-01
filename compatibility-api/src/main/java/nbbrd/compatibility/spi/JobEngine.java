@@ -10,12 +10,15 @@ import java.io.IOException;
 @ServiceDefinition
 public interface JobEngine {
 
-    @ServiceId(pattern = ServiceId.SNAKE_CASE)
+    @ServiceId(pattern = ServiceId.KEBAB_CASE)
     @NonNull
-    String getId();
+    String getJobEngineId();
+
+    @NonNull
+    String getJobEngineName();
 
     @ServiceFilter
-    boolean isAvailable();
+    boolean isJobEngineAvailable();
 
     @NonNull
     JobExecutor getExecutor() throws IOException;

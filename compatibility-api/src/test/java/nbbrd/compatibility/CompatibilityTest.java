@@ -28,7 +28,8 @@ class CompatibilityTest {
         URI remoteTarget = URI.create("mocked:target-project");
 
         Compatibility x = Compatibility
-                .builder()
+                .ofServiceLoader()
+                .toBuilder()
                 .engine(MockedEngine
                         .builder()
                         .project(MockedProject
@@ -48,7 +49,11 @@ class CompatibilityTest {
 
         Job job = Job
                 .builder()
-                .source(Source.builder().uri(localSource).build())
+                .source(Source
+                        .builder()
+                        .uri(localSource)
+                        .tagging(Tagging.builder().versioning("semver").build())
+                        .build())
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
@@ -59,9 +64,7 @@ class CompatibilityTest {
 
         assertThat(x.execute(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitCode(0).targetUri(URI.create("mocked:target-project")).sourceVersion("2.3.4").targetVersion("1.0.0").defaultVersion("2.3.4").build(),
-                        ReportItem.builder().exitCode(1).targetUri(URI.create("mocked:target-project")).sourceVersion("2.3.4").targetVersion("1.0.1").defaultVersion("2.4.0").build(),
-                        ReportItem.builder().exitCode(1).targetUri(URI.create("mocked:target-project")).sourceVersion("2.3.4").targetVersion("1.0.2").defaultVersion("3.0.0").build()
+                        ReportItem.builder().exitCode(0).targetUri(URI.create("mocked:target-project")).sourceVersion("2.3.4").targetVersion("1.0.0").defaultVersion("2.3.4").build()
                 );
     }
 }

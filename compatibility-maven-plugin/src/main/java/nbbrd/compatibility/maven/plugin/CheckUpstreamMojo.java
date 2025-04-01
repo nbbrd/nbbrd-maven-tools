@@ -1,5 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
+import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -39,9 +40,10 @@ public final class CheckUpstreamMojo extends CompatibilityMojo {
     }
 
     private void checkUpstream() throws MojoExecutionException {
+        Compatibility compatibility = loadCompatibility();
         Job job = toJob();
-        log(job, getReportFilename());
-        exec(job);
+        log(compatibility, job, getReportFilename());
+        exec(compatibility, job);
     }
 
     private Job toJob() {
