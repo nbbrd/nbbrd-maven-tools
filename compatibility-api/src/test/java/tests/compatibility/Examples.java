@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.Files.createDirectory;
+import static java.nio.file.Files.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static nbbrd.io.sys.ProcessReader.readToString;
 
@@ -21,12 +21,20 @@ public final class Examples {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
+    public static void main(String[] args) throws IOException {
+        Path project = createTempDirectory("source-project");
+        Files.deleteIfExists(project);
+        System.out.println(generateProject(resolveResource("/source-project"), project));
+    }
+
     public static Path generateProject(Path resources, Path project) throws IOException {
         createDirectory(project);
         System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "init"));
+        System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "config", "--local", "user.name", "Test"));
+        System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "config", "--local", "user.email", "test@example.com"));
         for (String version : getVersions(resources)) {
             Path workingDir = resources.resolve(version);
-            copyFolder(workingDir, Files.createDirectories(project), REPLACE_EXISTING);
+            copyFolder(workingDir, createDirectories(project), REPLACE_EXISTING);
             System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "add", "*"));
             System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "commit", "-am", version));
             System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "tag", version));
@@ -48,7 +56,7 @@ public final class Examples {
         Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                Files.createDirectories(map(dir));
+                createDirectories(map(dir));
                 return FileVisitResult.CONTINUE;
             }
 
