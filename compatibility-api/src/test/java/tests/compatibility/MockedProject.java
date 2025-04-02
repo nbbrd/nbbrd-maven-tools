@@ -1,6 +1,7 @@
 package tests.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Tag;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,12 +23,12 @@ public class MockedProject {
         return versions.get(versions.size() - 1);
     }
 
-    public MockedVersion getByTag(String tag) throws IOException {
+    public MockedVersion getByTag(Tag tag) throws IOException {
         for (MockedVersion version : versions) {
-            if (version.getVersionId().equals(tag)) {
+            if (version.getVersionId().equals(tag.toString())) {
                 return version;
             }
         }
-        throw new IOException("Tag not found");
+        throw new IOException("Tag not found: " + tag);
     }
 }

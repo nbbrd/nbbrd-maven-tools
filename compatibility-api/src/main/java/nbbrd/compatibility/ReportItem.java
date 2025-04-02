@@ -7,8 +7,9 @@ import java.net.URI;
 public class ReportItem {
 
     int exitCode;
+    URI sourceUri;
+    Version sourceVersion;
     URI targetUri;
-    String sourceVersion;
-    String targetVersion;
-    String defaultVersion;
+    Version targetVersion;
+    Version originalVersion;
 }

@@ -1,5 +1,6 @@
 package internal.compatibility;
 
+import nbbrd.compatibility.Version;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,15 +16,15 @@ class SemVerTest {
     @Test
     void testIsValid() {
         SemVer x = new SemVer();
-        assertThat(x.isValidVersion("1.1.0")).isTrue();
-        assertThat(x.isValidVersion(".1.0")).isFalse();
+        assertThat(x.isValidVersion(Version.parse("1.1.0"))).isTrue();
+        assertThat(x.isValidVersion(Version.parse(".1.0"))).isFalse();
     }
 
     @Test
-    void testIsOrdered() {
+    void testGetVersionComparator() {
         SemVer x = new SemVer();
-        assertThat(x.isOrdered("1.0.0", "1.0.1")).isTrue();
-        assertThat(x.isOrdered("1.0.1", "1.0.0")).isFalse();
-        assertThat(x.isOrdered("1.0.0", "1.0.0")).isTrue();
+        assertThat(x.getVersionComparator().compare(Version.parse("1.0.0"), Version.parse("1.0.1"))).isEqualTo(-1);
+        assertThat(x.getVersionComparator().compare(Version.parse("1.0.1"), Version.parse("1.0.0"))).isEqualTo(1);
+        assertThat(x.getVersionComparator().compare(Version.parse("1.0.0"), Version.parse("1.0.0"))).isEqualTo(0);
     }
 }

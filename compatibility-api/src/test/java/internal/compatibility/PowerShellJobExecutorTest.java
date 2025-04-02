@@ -1,8 +1,12 @@
 package internal.compatibility;
 
+import nbbrd.compatibility.Tag;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.*;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -97,7 +101,7 @@ class PowerShellJobExecutorTest {
         Path project = copy(tmp);
         try (PowerShellJobExecutor x = getJobExecutor()) {
             assertThat(x.getVersion(project))
-                    .isEqualTo("3.0.0");
+                    .hasToString("3.0.0");
         }
     }
 
@@ -105,7 +109,7 @@ class PowerShellJobExecutorTest {
     void checkoutTag(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
         try (PowerShellJobExecutor x = getJobExecutor()) {
-            x.checkoutTag(project, "v2.4.0");
+            x.checkoutTag(project, Tag.parse("v2.4.0"));
             assertThat(project.resolve("pom.xml"))
                     .content().contains("<version>2.4.0</version>");
         }
@@ -116,6 +120,7 @@ class PowerShellJobExecutorTest {
         Path project = copy(tmp);
         try (PowerShellJobExecutor x = getJobExecutor()) {
             assertThat(x.getTags(project))
+                    .map(Tag::toString)
                     .contains(
                             "v3.0.0",
                             "v2.4.0",

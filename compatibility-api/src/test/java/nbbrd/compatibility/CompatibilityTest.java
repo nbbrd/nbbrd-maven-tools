@@ -64,7 +64,15 @@ class CompatibilityTest {
 
         assertThat(x.execute(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitCode(0).targetUri(URI.create("mocked:target-project")).sourceVersion("2.3.4").targetVersion("1.0.0").defaultVersion("2.3.4").build()
+                        ReportItem
+                                .builder()
+                                .exitCode(0)
+                                .sourceUri(localSource)
+                                .sourceVersion(Version.parse("2.3.4"))
+                                .targetUri(remoteTarget)
+                                .targetVersion(Version.parse("1.0.0"))
+                                .originalVersion(Version.parse("2.3.4"))
+                                .build()
                 );
     }
 }

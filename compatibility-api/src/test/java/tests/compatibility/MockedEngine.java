@@ -1,6 +1,8 @@
 package tests.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.JobEngine;
 import nbbrd.compatibility.spi.JobExecutor;
 import org.semver4j.Semver;
@@ -114,24 +116,25 @@ public class MockedEngine implements JobEngine {
         }
 
         @Override
-        public String getVersion(Path project) throws IOException {
+        public Version getVersion(Path project) throws IOException {
             String id = toProjectId(project);
-            return stuff.computeIfAbsent(id, this::initStatus).getModified().getVersionId();
+            return Version.parse(stuff.computeIfAbsent(id, this::initStatus).getModified().getVersionId());
         }
 
         @Override
-        public void checkoutTag(Path project, String tag) throws IOException {
+        public void checkoutTag(Path project, Tag tag) throws IOException {
             String id = toProjectId(project);
             stuff.put(id, MockedStatus.of(projects.get(id).getByTag(tag)));
         }
 
         @Override
-        public List<String> getTags(Path project) throws IOException {
+        public List<Tag> getTags(Path project) throws IOException {
             String id = toProjectId(project);
             return projects.get(id)
                     .getVersions()
                     .stream()
                     .map(MockedVersion::getVersionId)
+                    .map(Tag::parse)
                     .collect(toList());
         }
 

@@ -1,9 +1,12 @@
 package nbbrd.compatibility.spi;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Version;
 import nbbrd.service.Quantifier;
 import nbbrd.service.ServiceDefinition;
 import nbbrd.service.ServiceId;
+
+import java.util.Comparator;
 
 @ServiceDefinition(
         quantifier = Quantifier.MULTIPLE
@@ -17,7 +20,8 @@ public interface Versioning {
     @NonNull
     String getVersioningName();
 
-    boolean isValidVersion(@NonNull CharSequence text);
+    boolean isValidVersion(@NonNull Version version);
 
-    boolean isOrdered(@NonNull String from, @NonNull String to);
+    @NonNull
+    Comparator<Version> getVersionComparator();
 }

@@ -1,11 +1,11 @@
 package tests.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Versioning;
 import nbbrd.compatibility.spi.VersioningLoader;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.Assertions.*;
 
 public final class VersioningAssert {
 
@@ -13,7 +13,7 @@ public final class VersioningAssert {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 
-    @SuppressWarnings("DataFlowIssue")
+    @SuppressWarnings({"DataFlowIssue", "ResultOfMethodCallIgnored"})
     public static void assertVersioningCompliance(@NonNull Versioning x) {
         assertThat(x.getVersioningId())
                 .isNotNull()
@@ -25,7 +25,8 @@ public final class VersioningAssert {
 
         assertThatNullPointerException().isThrownBy(() -> x.isValidVersion(null));
 
-        assertThatNullPointerException().isThrownBy(() -> x.isOrdered(null, ""));
-        assertThatNullPointerException().isThrownBy(() -> x.isOrdered("", null));
+        assertThatNoException().isThrownBy(x::getVersionComparator);
+        assertThatNullPointerException().isThrownBy(() -> x.getVersionComparator().compare(null, Version.NO_VERSION));
+        assertThatNullPointerException().isThrownBy(() -> x.getVersionComparator().compare(Version.NO_VERSION, null));
     }
 }

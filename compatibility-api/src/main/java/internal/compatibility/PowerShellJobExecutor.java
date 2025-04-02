@@ -1,6 +1,8 @@
 package internal.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.JobExecutor;
 import nbbrd.design.StaticFactoryMethod;
 import nbbrd.io.sys.ProcessReader;
@@ -93,26 +95,29 @@ public final class PowerShellJobExecutor implements JobExecutor {
     }
 
     @Override
-    public String getVersion(Path project) throws IOException {
+    public Version getVersion(Path project) throws IOException {
         return exec(
                 format(ROOT, "mvn -q -f %s help:evaluate -Dexpression='project.version' -DforceStdout", project)
         ).stream()
                 .findFirst()
+                .map(Version::parse)
                 .orElseThrow(() -> new IOException("Failed to get version"));
     }
 
     @Override
-    public void checkoutTag(Path project, String tag) throws IOException {
+    public void checkoutTag(Path project, Tag tag) throws IOException {
         exec(
                 format(ROOT, "git -C %s checkout -q %s", project, tag)
         );
     }
 
     @Override
-    public List<String> getTags(Path project) throws IOException {
+    public List<Tag> getTags(Path project) throws IOException {
         return exec(
                 format(ROOT, "git -C %s tag --sort=-creatordate", project)
-        );
+        ).stream()
+                .map(Tag::parse)
+                .collect(toList());
     }
 
     @Override

@@ -1,5 +1,8 @@
 package nbbrd.compatibility.spi;
 
+import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Version;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
@@ -16,11 +19,11 @@ public interface JobExecutor extends Closeable {
 
     String getProperty(Path project, String propertyName) throws IOException;
 
-    String getVersion(Path project) throws IOException;
+    Version getVersion(Path project) throws IOException;
 
-    void checkoutTag(Path project, String tag) throws IOException;
+    void checkoutTag(Path project, Tag tag) throws IOException;
 
-    List<String> getTags(Path project) throws IOException;
+    List<Tag> getTags(Path project) throws IOException;
 
     void clone(URI from, Path to) throws IOException;
 

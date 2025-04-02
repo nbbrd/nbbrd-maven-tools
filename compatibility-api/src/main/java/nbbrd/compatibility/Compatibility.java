@@ -5,13 +5,17 @@ import internal.compatibility.NoOpVersioning;
 import lombok.NonNull;
 import nbbrd.compatibility.spi.*;
 import nbbrd.design.StaticFactoryMethod;
+import nbbrd.io.function.IOFunction;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+
+import static java.util.stream.Collectors.toList;
 
 @lombok.Value
 @lombok.Builder(toBuilder = true)
@@ -38,57 +42,164 @@ public class Compatibility {
 
     public @NonNull Report execute(@NonNull Job job) throws IOException {
         try (JobExecutor executor = engine.getExecutor()) {
-            Report.Builder result = Report.builder();
-            for (Source source : job.getSources()) {
-                Versioning sourceVersioning = getVersioning(source.getTagging().getVersioning()).orElse(NoOpVersioning.INSTANCE);
-                String sourceVersion;
-                if (isFileScheme(source.getUri())) {
-                    Path sourcePath = Paths.get(source.getUri());
-                    sourceVersion = executor.getVersion(sourcePath);
-                    if (isSnapshot(sourceVersion)) {
-                        executor.install(sourcePath);
-                    }
-                } else {
-                    throw new IOException("WIP");
-                }
-                for (Target target : job.getTargets()) {
-                    if (isFileScheme(target.getUri())) {
-                        throw new IOException("WIP");
-                    } else {
-                        Path targetPath = job.getWorkingDir().resolve("target");
-                        executor.clone(target.getUri(), targetPath);
-                        List<String> tags = executor.getTags(targetPath);
-                        for (String tag : tags) {
-                            executor.checkoutTag(targetPath, tag);
-                            String targetVersion = executor.getVersion(targetPath);
-                            String originalVersion = executor.getProperty(targetPath, target.getBuilding().getProperty());
-                            if (!isSkip(sourceVersioning, originalVersion, sourceVersion)) {
-                                executor.setProperty(targetPath, target.getBuilding().getProperty(), sourceVersion);
-                                int exitCode = executor.verify(targetPath);
-                                result.item(ReportItem
-                                        .builder()
-                                        .exitCode(exitCode)
-                                        .targetUri(target.getUri())
-                                        .sourceVersion(sourceVersion)
-                                        .targetVersion(targetVersion)
-                                        .defaultVersion(originalVersion)
-                                        .build());
-                            }
-                            executor.cleanAndRestore(targetPath);
+            return execute(
+                    map(job.getSources(), source -> of(source, job.getWorkingDir(), executor)),
+                    map(job.getTargets(), source1 -> of(source1, job.getWorkingDir(), executor)),
+                    executor
+            );
+        }
+    }
+
+    private Report execute(List<SourceContext> sources, List<TargetContext> targets, JobExecutor executor) throws IOException {
+        Report.Builder result = Report.builder();
+        for (SourceContext source : sources) {
+            for (VersionContext sourceVersion : source.getVersions()) {
+                for (TargetContext target : targets) {
+                    for (VersionContext targetVersion : target.getVersions()) {
+                        executor.checkoutTag(target.getDirectory(), targetVersion.getTag());
+                        Version originalVersion = Version.parse(executor.getProperty(target.getDirectory(), target.getBuilding().getProperty()));
+                        if (!isSkip(source.getVersioning(), originalVersion, sourceVersion.getVersion())) {
+                            executor.setProperty(target.getDirectory(), target.getBuilding().getProperty(), sourceVersion.getVersion().toString());
+                            result.item(ReportItem
+                                    .builder()
+                                    .exitCode(executor.verify(target.getDirectory()))
+                                    .sourceUri(source.getUri())
+                                    .sourceVersion(sourceVersion.getVersion())
+                                    .targetUri(target.getUri())
+                                    .targetVersion(targetVersion.getVersion())
+                                    .originalVersion(originalVersion)
+                                    .build());
                         }
+                        executor.cleanAndRestore(target.getDirectory());
                     }
                 }
+            }
+        }
+        return result.build();
+    }
+
+    @lombok.Value
+    @lombok.Builder
+    private static class VersionContext {
+
+        @NonNull
+        Tag tag;
+
+        @NonNull
+        Version version;
+    }
+
+    @lombok.Value
+    @lombok.Builder
+    private static class SourceContext {
+
+        @NonNull
+        URI uri;
+
+        @NonNull
+        Path directory;
+
+        @lombok.Singular
+        List<VersionContext> versions;
+
+        @NonNull
+        Versioning versioning;
+    }
+
+    @lombok.Value
+    @lombok.Builder
+    private static class TargetContext {
+
+        @NonNull
+        URI uri;
+
+        @NonNull
+        Path directory;
+
+        @lombok.Singular
+        List<VersionContext> versions;
+
+        @NonNull
+        Building building;
+    }
+
+    private SourceContext of(Source source, Path workingDir, JobExecutor executor) throws IOException {
+        Versioning versioning = getVersioning(source.getTagging().getVersioning()).orElse(NoOpVersioning.INSTANCE);
+        if (isFileScheme(source.getUri())) {
+            Path directory = Paths.get(source.getUri());
+
+            return SourceContext
+                    .builder()
+                    .uri(source.getUri())
+                    .directory(directory)
+                    .versioning(versioning)
+                    .version(VersionContext
+                            .builder()
+                            .tag(Tag.NO_TAG)
+                            .version(executor.getVersion(directory))
+                            .build())
+                    .build();
+        } else {
+            Path directory = workingDir.resolve(getDirectoryName(source.getUri()));
+            executor.clone(source.getUri(), directory);
+
+            SourceContext.Builder result = SourceContext
+                    .builder()
+                    .uri(source.getUri())
+                    .directory(directory)
+                    .versioning(versioning);
+            for (Tag tag : executor.getTags(directory)) {
+                executor.checkoutTag(directory, tag);
+                result.version(VersionContext
+                        .builder()
+                        .tag(tag)
+                        .version(executor.getVersion(directory))
+                        .build());
+                executor.cleanAndRestore(directory);
             }
             return result.build();
         }
     }
 
-    private boolean isSnapshot(String sourceVersion) {
-        return sourceVersion.endsWith("-SNAPSHOT");
+    private TargetContext of(Target target, Path workingDir, JobExecutor executor) throws IOException {
+        if (isFileScheme(target.getUri())) {
+            Path directory = Paths.get(target.getUri());
+
+            return TargetContext
+                    .builder()
+                    .uri(target.getUri())
+                    .directory(directory)
+                    .building(target.getBuilding())
+                    .version(VersionContext
+                            .builder()
+                            .tag(Tag.NO_TAG)
+                            .version(executor.getVersion(directory))
+                            .build())
+                    .build();
+        } else {
+            Path directory = workingDir.resolve(getDirectoryName(target.getUri()));
+            executor.clone(target.getUri(), directory);
+
+            TargetContext.Builder result = TargetContext
+                    .builder()
+                    .uri(target.getUri())
+                    .directory(directory)
+                    .building(target.getBuilding());
+            for (Tag tag : executor.getTags(directory)) {
+                executor.checkoutTag(directory, tag);
+                result.version(VersionContext
+                        .builder()
+                        .tag(tag)
+                        .version(executor.getVersion(directory))
+                        .build());
+                executor.cleanAndRestore(directory);
+            }
+            return result.build();
+        }
     }
 
-    private boolean isSkip(Versioning versioning, String from, String to) {
-        return versioning != null && !versioning.isOrdered(from, to);
+    private boolean isSkip(Versioning versioning, Version from, Version to) {
+        return versioning.getVersionComparator().compare(from, to) > 0;
     }
 
     private Optional<Versioning> getVersioning(String id) {
@@ -99,5 +210,17 @@ public class Compatibility {
 
     private static boolean isFileScheme(URI uri) {
         return uri.getScheme().equals("file");
+    }
+
+    private static String getDirectoryName(URI uri) {
+        return "dir_" + uri.toString().hashCode();
+    }
+
+    private static <X, Y> List<Y> map(List<X> sources, IOFunction<X, Y> mapping) throws IOException {
+        try {
+            return sources.stream().map(mapping.asUnchecked()).collect(toList());
+        } catch (UncheckedIOException ex) {
+            throw ex.getCause();
+        }
     }
 }

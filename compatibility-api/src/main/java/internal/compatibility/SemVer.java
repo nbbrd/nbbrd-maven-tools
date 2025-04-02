@@ -1,9 +1,13 @@
 package internal.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Versioning;
 import nbbrd.design.DirectImpl;
 import nbbrd.service.ServiceProvider;
+import org.semver4j.Semver;
+
+import java.util.Comparator;
 
 @DirectImpl
 @ServiceProvider
@@ -20,12 +24,16 @@ public final class SemVer implements Versioning {
     }
 
     @Override
-    public boolean isValidVersion(@NonNull CharSequence text) {
-        return org.semver4j.Semver.isValid(text.toString());
+    public boolean isValidVersion(@NonNull Version version) {
+        return org.semver4j.Semver.isValid(version.toString());
     }
 
     @Override
-    public boolean isOrdered(@NonNull String from, @NonNull String to) {
-        return new org.semver4j.Semver(from).isLowerThanOrEqualTo(to);
+    public @NonNull Comparator<Version> getVersionComparator() {
+        return Comparator.comparing(SemVer::toSemver);
+    }
+
+    private static Semver toSemver(Version version) {
+        return Version.NO_VERSION.equals(version) ? Semver.ZERO : new Semver(version.toString());
     }
 }
