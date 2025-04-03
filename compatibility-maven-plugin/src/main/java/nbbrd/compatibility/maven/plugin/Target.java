@@ -1,7 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
 import nbbrd.compatibility.Building;
-import nbbrd.compatibility.Tagging;
 
 import java.net.URI;
 import java.util.Optional;
@@ -18,7 +17,7 @@ public class Target implements MutableRepresentationOf<nbbrd.compatibility.Targe
         return nbbrd.compatibility.Target
                 .builder()
                 .uri(uri)
-                .tagging(Optional.ofNullable(tag).map(Tag::toValue).orElse(Tagging.DEFAULT))
+                .property(mvn.getProperty())
                 .building(Optional.ofNullable(mvn).map(Mvn::toValue).orElse(Building.DEFAULT))
                 .build();
     }

@@ -1,6 +1,5 @@
 package internal.compatibility;
 
-import nbbrd.compatibility.Building;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Source;
 import nbbrd.compatibility.Target;
@@ -32,7 +31,7 @@ class JsonFormatTest {
                 .target(Target
                         .builder()
                         .uri(URI.create("hello:target"))
-                        .building(Building.builder().property("x").build())
+                        .property("x")
                         .build())
                 .workingDir(Paths.get("folder"))
                 .build();
@@ -44,21 +43,14 @@ class JsonFormatTest {
                         "  \"sources\": [\n" +
                         "    {\n" +
                         "      \"uri\": \"hello:source\",\n" +
-                        "      \"tagging\": {\n" +
-                        "        \"versioning\": \"\",\n" +
-                        "        \"prefix\": \"\"\n" +
-                        "      }\n" +
+                        "      \"versioning\": \"\"\n" +
                         "    }\n" +
                         "  ],\n" +
                         "  \"targets\": [\n" +
                         "    {\n" +
                         "      \"uri\": \"hello:target\",\n" +
-                        "      \"tagging\": {\n" +
-                        "        \"versioning\": \"\",\n" +
-                        "        \"prefix\": \"\"\n" +
-                        "      },\n" +
+                        "      \"property\": \"x\",\n" +
                         "      \"building\": {\n" +
-                        "        \"property\": \"x\",\n" +
                         "        \"parameters\": \"\",\n" +
                         "        \"jdk\": \"\"\n" +
                         "      }\n" +

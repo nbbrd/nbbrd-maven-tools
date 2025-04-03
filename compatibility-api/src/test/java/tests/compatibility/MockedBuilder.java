@@ -88,7 +88,11 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
-        public void cleanAndRestore(@NonNull Path project) throws IOException {
+        public void clean(@NonNull Path project) throws IOException {
+        }
+
+        @Override
+        public void restore(@NonNull Path project) throws IOException {
             checkAvailability(stuff.remove(toProjectId(project)));
         }
 
@@ -174,5 +178,13 @@ public class MockedBuilder implements Builder {
         public String getProperty(String propertyName) throws IOException {
             return modified.getProperty(propertyName);
         }
+    }
+
+    public static URI localURI(Path tmp, String name) {
+        return tmp.resolve(name).toUri();
+    }
+
+    public static URI remoteURI(String name) {
+        return URI.create("mocked:" + name);
     }
 }

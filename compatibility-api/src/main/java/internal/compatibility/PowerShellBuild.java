@@ -18,12 +18,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collector;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 import static java.util.Locale.ROOT;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 @lombok.Builder
 public final class PowerShellBuild implements Build {
@@ -37,11 +39,11 @@ public final class PowerShellBuild implements Build {
 
     private final @Nullable Path mvn;
 
-    private List<String> exec(String command) throws IOException {
+    private <X> X run(String command, Collector<String, ?, X> collector) throws IOException {
         Path script = Files.createTempFile("script", ".ps1");
         Files.write(script, getScript(command), UTF_8, TRUNCATE_EXISTING);
         try (BufferedReader reader = ProcessReader.newReader(UTF_8, PowerShellWrapper.exec(script))) {
-            return reader.lines().collect(toList());
+            return reader.lines().collect(collector);
         } catch (UncheckedIOException ex) {
             throw ex.getCause();
         } finally {
@@ -59,75 +61,75 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public void cleanAndRestore(@NonNull Path project) throws IOException {
-        exec(
-                format(ROOT, "mvn -q -f %s clean", project)
-        );
-        exec(
-                format(ROOT, "git -C %s restore .", project)
-        );
+    public void clean(@NonNull Path project) throws IOException {
+        run(format(ROOT, "mvn -q -f %s clean", project), consume());
+    }
+
+    @Override
+    public void restore(@NonNull Path project) throws IOException {
+        run(format(ROOT, "git -C %s restore .", project), consume());
     }
 
     @Override
     public int verify(@NonNull Path project) throws IOException {
-        return exec(
-                format(ROOT, "mvn -q -f %s clean verify -U -DskipTests -D'enforcer.skip' ; echo $LASTEXITCODE", project)
-        ).stream()
-                .reduce((ignore, second) -> second)
-                .map(Integer::valueOf)
-                .orElseThrow(() -> new IOException("Failed to verify target"));
+        return run(
+                format(ROOT, "mvn -q -f %s clean verify -U -DskipTests -D'enforcer.skip' ; echo $LASTEXITCODE", project),
+                toLast()
+        ).map(Integer::valueOf).orElseThrow(() -> new IOException("Failed to verify target"));
     }
 
     @Override
     public void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
-        exec(
-                format(ROOT, "mvn -q -f %s versions:set-property -Dproperty='%s' -DnewVersion='%s'", project, propertyName, propertyValue)
-        );
+        run(format(ROOT, "mvn -q -f %s versions:set-property -Dproperty='%s' -DnewVersion='%s'", project, propertyName, propertyValue), consume());
     }
 
     @Override
     public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
-        return exec(
-                format(ROOT, "mvn -q -f %s help:evaluate -Dexpression='%s' -DforceStdout", project, propertyName)
-        ).stream()
-                .findFirst()
-                .orElseThrow(() -> new IOException("Failed to get property " + propertyName));
+        return run(
+                format(ROOT, "mvn -q -f %s help:evaluate -Dexpression='%s' -DforceStdout", project, propertyName),
+                toFirst()
+        ).orElseThrow(() -> new IOException("Failed to get property " + propertyName));
     }
 
     @Override
     public @NonNull Version getVersion(@NonNull Path project) throws IOException {
-        return exec(
-                format(ROOT, "mvn -q -f %s help:evaluate -Dexpression='project.version' -DforceStdout", project)
-        ).stream()
-                .findFirst()
-                .map(Version::parse)
-                .orElseThrow(() -> new IOException("Failed to get version"));
+        return run(
+                format(ROOT, "mvn -q -f %s help:evaluate -Dexpression='project.version' -DforceStdout", project),
+                toFirst()
+        ).map(Version::parse).orElseThrow(() -> new IOException("Failed to get version"));
     }
 
     @Override
     public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
-        exec(
-                format(ROOT, "git -C %s checkout -q %s", project, tag)
-        );
+        run(format(ROOT, "git -C %s checkout -q %s", project, tag), consume());
     }
 
     @Override
     public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
-        return exec(
-                format(ROOT, "git -C %s tag --sort=-creatordate", project)
-        ).stream()
-                .map(Tag::parse)
-                .collect(toList());
-    }
-
-    @Override
-    public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
-        exec(
-                format(ROOT, "git clone -q %s %s", from, to)
+        return run(
+                format(ROOT, "git -C %s tag --sort=-creatordate", project),
+                mapping(Tag::parse, toList())
         );
     }
 
     @Override
+    public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
+        run(format(ROOT, "git clone -q %s %s", from, to), consume());
+    }
+
+    @Override
     public void close() {
+    }
+
+    private static <X> Collector<X, ?, Optional<X>> toFirst() {
+        return reducing((first, ignore) -> first);
+    }
+
+    private static <X> Collector<X, ?, Optional<X>> toLast() {
+        return reducing((ignore, second) -> second);
+    }
+
+    private static <X> Collector<X, ?, Void> consume() {
+        return reducing(null, ignore -> null, (ignoreFirst, ignoreSecond) -> null);
     }
 }

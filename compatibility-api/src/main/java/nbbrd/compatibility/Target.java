@@ -9,9 +9,8 @@ public class Target {
     @lombok.NonNull
     URI uri;
 
-    @lombok.NonNull
     @lombok.Builder.Default
-    Tagging tagging = Tagging.DEFAULT;
+    String property = "";
 
     @lombok.NonNull
     @lombok.Builder.Default

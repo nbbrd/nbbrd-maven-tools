@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import static nbbrd.compatibility.ExitStatus.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIOException;
+import static tests.compatibility.MockedBuilder.localURI;
+import static tests.compatibility.MockedBuilder.remoteURI;
 
 class CompatibilityTest {
 
@@ -25,8 +27,8 @@ class CompatibilityTest {
 
     @Test
     void executeDownstream(@TempDir Path tmp) throws IOException {
-        URI localSource = tmp.resolve("source-project").toUri();
-        URI remoteTarget = URI.create("mocked:target-project");
+        URI localSource = localURI(tmp, "source-project");
+        URI remoteTarget = remoteURI("target-project");
 
         Compatibility x = Compatibility.ofServiceLoader().toBuilder().builder(example).build();
 
@@ -35,12 +37,12 @@ class CompatibilityTest {
                 .source(Source
                         .builder()
                         .uri(localSource)
-                        .tagging(Tagging.builder().versioning("semver").build())
+                        .versioning("semver")
                         .build())
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .building(Building.builder().property("x").build())
+                        .property("x")
                         .build())
                 .workingDir(tmp)
                 .build();
@@ -55,8 +57,8 @@ class CompatibilityTest {
 
     @Test
     void executeUpstream(@TempDir Path tmp) throws IOException {
-        URI remoteSource = URI.create("mocked:source-project");
-        URI localTarget = tmp.resolve("target-project").toUri();
+        URI remoteSource = remoteURI("source-project");
+        URI localTarget = localURI(tmp, "target-project");
 
         Compatibility x = Compatibility.ofServiceLoader().toBuilder().builder(example).build();
 
@@ -65,12 +67,12 @@ class CompatibilityTest {
                 .source(Source
                         .builder()
                         .uri(remoteSource)
-                        .tagging(Tagging.builder().versioning("semver").build())
+                        .versioning("semver")
                         .build())
                 .target(Target
                         .builder()
                         .uri(localTarget)
-                        .building(Building.builder().property("x").build())
+                        .property("x")
                         .build())
                 .workingDir(tmp)
                 .build();
@@ -85,8 +87,8 @@ class CompatibilityTest {
 
     @Test
     void executeRemoteStreams(@TempDir Path tmp) throws IOException {
-        URI remoteSource = URI.create("mocked:source-project");
-        URI remoteTarget = URI.create("mocked:target-project");
+        URI remoteSource = remoteURI("source-project");
+        URI remoteTarget = remoteURI("target-project");
 
         Compatibility x = Compatibility.ofServiceLoader().toBuilder().builder(example).build();
 
@@ -95,12 +97,12 @@ class CompatibilityTest {
                 .source(Source
                         .builder()
                         .uri(remoteSource)
-                        .tagging(Tagging.builder().versioning("semver").build())
+                        .versioning("semver")
                         .build())
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .building(Building.builder().property("x").build())
+                        .property("x")
                         .build())
                 .workingDir(tmp)
                 .build();
@@ -116,6 +118,34 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(BROKEN).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.0").build(),
                         ReportItem.builder().exitStatus(BROKEN).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.1").build(),
                         ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.2").build()
+                );
+    }
+
+    @Test
+    void executeLocalStreams(@TempDir Path tmp) throws IOException {
+        URI localSource = localURI(tmp, "source-project");
+        URI localTarget = localURI(tmp, "target-project");
+
+        Compatibility x = Compatibility.ofServiceLoader().toBuilder().builder(example).build();
+
+        Job job = Job
+                .builder()
+                .source(Source
+                        .builder()
+                        .uri(localSource)
+                        .versioning("semver")
+                        .build())
+                .target(Target
+                        .builder()
+                        .uri(localTarget)
+                        .property("x")
+                        .build())
+                .workingDir(tmp)
+                .build();
+
+        assertThat(x.execute(job).getItems())
+                .containsExactly(
+                        ReportItem.builder().exitStatus(VERIFIED).source(localSource, "3.0.0").target(localTarget, "1.0.2").build()
                 );
     }
 

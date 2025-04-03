@@ -1,7 +1,7 @@
 package nbbrd.compatibility;
 
+import internal.compatibility.Broker;
 import internal.compatibility.NoOpBuilder;
-import internal.compatibility.NoOpVersioning;
 import lombok.NonNull;
 import nbbrd.compatibility.spi.*;
 import nbbrd.design.StaticFactoryMethod;
@@ -13,7 +13,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 
 import static java.util.stream.Collectors.toList;
 
@@ -44,8 +43,8 @@ public class Compatibility {
         try (Build build = builder.getBuild()) {
             return execute(
                     build,
-                    map(job.getSources(), source -> of(source, job.getWorkingDir(), build)),
-                    map(job.getTargets(), target -> of(target, job.getWorkingDir(), build))
+                    map(job.getSources(), source -> SourceContext.init(source, job.getWorkingDir(), build, versionings)),
+                    map(job.getTargets(), target -> TargetContext.init(target, job.getWorkingDir(), build))
             );
         }
     }
@@ -72,20 +71,18 @@ public class Compatibility {
                 .targetUri(target.getUri())
                 .targetVersion(targetVersion.getVersion());
         Path project = target.getDirectory();
-        Tag tag = targetVersion.getTag();
-        if (!Tag.NO_TAG.equals(tag)) {
-            build.checkoutTag(project, tag);
+        if (targetVersion.requiresCheckout()) {
+            build.checkoutTag(project, targetVersion.getTag());
         }
-        String propertyValue = build.getProperty(project, target.getBuilding().getProperty());
-        Version originalVersion = propertyValue != null ? Version.parse(propertyValue) : Version.NO_VERSION;
-        if (!isSkip(source.getVersioning(), originalVersion, sourceVersion.getVersion())) {
-            build.setProperty(project, target.getBuilding().getProperty(), sourceVersion.getVersion().toString());
+        if (!isSkip(source.getVersioning(), target.getBroker().getVersion(build, project), sourceVersion.getVersion())) {
+            target.getBroker().setVersion(build, project, sourceVersion.getVersion());
             result.exitStatus(build.verify(project) == 0 ? ExitStatus.VERIFIED : ExitStatus.BROKEN);
+            build.clean(project);
         } else {
             result.exitStatus(ExitStatus.SKIPPED);
         }
-        if (!Tag.NO_TAG.equals(tag)) {
-            build.cleanAndRestore(project);
+        if (targetVersion.requiresCheckout()) {
+            build.restore(project);
         }
         return result.build();
     }
@@ -99,6 +96,28 @@ public class Compatibility {
 
         @NonNull
         Version version;
+
+        public boolean requiresCheckout() {
+            return !tag.equals(Tag.NO_TAG);
+        }
+
+        @StaticFactoryMethod
+        public static VersionContext local(Version version) {
+            return VersionContext
+                    .builder()
+                    .tag(Tag.NO_TAG)
+                    .version(version)
+                    .build();
+        }
+
+        @StaticFactoryMethod
+        public static VersionContext remote(Tag tag, Version version) {
+            return VersionContext
+                    .builder()
+                    .tag(tag)
+                    .version(version)
+                    .build();
+        }
     }
 
     @lombok.Value
@@ -116,6 +135,40 @@ public class Compatibility {
 
         @NonNull
         Versioning versioning;
+
+        @StaticFactoryMethod
+        public static SourceContext init(Source source, Path workingDir, Build build, List<Versioning> versioningList) throws IOException {
+            SourceContext.Builder result = SourceContext
+                    .builder()
+                    .uri(source.getUri())
+                    .versioning(resolveVersioning(source, versioningList));
+
+            if (isFileScheme(source.getUri())) {
+                Path directory = Paths.get(source.getUri());
+                result.directory(directory);
+                result.version(VersionContext.local(build.getVersion(directory)));
+            } else {
+                Path directory = workingDir.resolve(getDirectoryName(source.getUri()));
+                result.directory(directory);
+                build.clone(source.getUri(), directory);
+                for (Tag tag : build.getTags(directory)) {
+                    build.checkoutTag(directory, tag);
+                    result.version(VersionContext.remote(tag, build.getVersion(directory)));
+                    build.clean(directory);
+                    build.restore(directory);
+                }
+            }
+
+            return result.build();
+        }
+
+        private static Versioning resolveVersioning(Source source, List<Versioning> list) throws IOException {
+            return list
+                    .stream()
+                    .filter(item -> item.getVersioningId().equals(source.getVersioning()))
+                    .findFirst()
+                    .orElseThrow(() -> new IOException("Cannot resolve versioning: " + source.getVersioning()));
+        }
     }
 
     @lombok.Value
@@ -132,92 +185,49 @@ public class Compatibility {
         List<VersionContext> versions;
 
         @NonNull
+        Broker broker;
+
+        @NonNull
         Building building;
-    }
 
-    private SourceContext of(Source source, Path workingDir, Build build) throws IOException {
-        Versioning versioning = getVersioning(source.getTagging().getVersioning()).orElse(NoOpVersioning.INSTANCE);
-        if (isFileScheme(source.getUri())) {
-            Path directory = Paths.get(source.getUri());
-
-            return SourceContext
-                    .builder()
-                    .uri(source.getUri())
-                    .directory(directory)
-                    .versioning(versioning)
-                    .version(VersionContext
-                            .builder()
-                            .tag(Tag.NO_TAG)
-                            .version(build.getVersion(directory))
-                            .build())
-                    .build();
-        } else {
-            Path directory = workingDir.resolve(getDirectoryName(source.getUri()));
-            build.clone(source.getUri(), directory);
-
-            SourceContext.Builder result = SourceContext
-                    .builder()
-                    .uri(source.getUri())
-                    .directory(directory)
-                    .versioning(versioning);
-            for (Tag tag : build.getTags(directory)) {
-                build.checkoutTag(directory, tag);
-                result.version(VersionContext
-                        .builder()
-                        .tag(tag)
-                        .version(build.getVersion(directory))
-                        .build());
-                build.cleanAndRestore(directory);
-            }
-            return result.build();
-        }
-    }
-
-    private TargetContext of(Target target, Path workingDir, Build build) throws IOException {
-        if (isFileScheme(target.getUri())) {
-            Path directory = Paths.get(target.getUri());
-
-            return TargetContext
-                    .builder()
-                    .uri(target.getUri())
-                    .directory(directory)
-                    .building(target.getBuilding())
-                    .version(VersionContext
-                            .builder()
-                            .tag(Tag.NO_TAG)
-                            .version(build.getVersion(directory))
-                            .build())
-                    .build();
-        } else {
-            Path directory = workingDir.resolve(getDirectoryName(target.getUri()));
-            build.clone(target.getUri(), directory);
-
+        @StaticFactoryMethod
+        public static TargetContext init(Target target, Path workingDir, Build build) throws IOException {
             TargetContext.Builder result = TargetContext
                     .builder()
                     .uri(target.getUri())
-                    .directory(directory)
-                    .building(target.getBuilding());
-            for (Tag tag : build.getTags(directory)) {
-                build.checkoutTag(directory, tag);
-                result.version(VersionContext
-                        .builder()
-                        .tag(tag)
-                        .version(build.getVersion(directory))
-                        .build());
-                build.cleanAndRestore(directory);
+                    .building(target.getBuilding())
+                    .broker(resolveBroker(target));
+
+            if (isFileScheme(target.getUri())) {
+                Path directory = Paths.get(target.getUri());
+                result.directory(directory);
+                result.version(VersionContext.local(build.getVersion(directory)));
+            } else {
+                Path directory = workingDir.resolve(getDirectoryName(target.getUri()));
+                result.directory(directory);
+                build.clone(target.getUri(), directory);
+                for (Tag tag : build.getTags(directory)) {
+                    build.checkoutTag(directory, tag);
+                    result.version(VersionContext.remote(tag, build.getVersion(directory)));
+                    build.clean(directory);
+                    build.restore(directory);
+                }
             }
+
             return result.build();
+        }
+
+        private static Broker resolveBroker(Target target) throws IOException {
+            String property = target.getProperty();
+            if (property.isEmpty()) {
+                throw new IOException("Cannot resolve broker: target property is empty");
+            }
+            return new Broker.PropertyBroker(property);
         }
     }
 
-    private boolean isSkip(Versioning versioning, Version from, Version to) {
+    private static boolean isSkip(Versioning versioning, Version from, Version to) {
         return versioning.getVersionComparator().compare(from, to) > 0;
-    }
-
-    private Optional<Versioning> getVersioning(String id) {
-        return versionings.stream()
-                .filter(versioning -> versioning.getVersioningId().equals(id))
-                .findFirst();
     }
 
     private static boolean isFileScheme(URI uri) {

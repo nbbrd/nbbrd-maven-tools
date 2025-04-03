@@ -54,7 +54,10 @@ class PowerShellBuildTest {
             assertThat(target).exists();
             assertThat(pom).content(UTF_8).isNotEqualTo(new String(originalContent, UTF_8));
 
-            assertThatCode(() -> x.cleanAndRestore(project))
+            assertThatCode(() -> x.clean(project))
+                    .doesNotThrowAnyException();
+
+            assertThatCode(() -> x.restore(project))
                     .doesNotThrowAnyException();
 
             assertThat(target).doesNotExist();

@@ -13,7 +13,6 @@ public class Mvn implements MutableRepresentationOf<Building> {
     public Building toValue() {
         return Building
                 .builder()
-                .property(property)
                 .parameters(parameters)
                 .jdk(jdk)
                 .build();
