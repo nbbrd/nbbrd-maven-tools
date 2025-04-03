@@ -7,6 +7,7 @@ import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,20 +25,20 @@ public final class Examples {
     public static void main(String[] args) throws IOException {
         Path project = createTempDirectory("source-project");
         Files.deleteIfExists(project);
-        System.out.println(generateProject(resolveResource("/source-project"), project));
+        System.out.println(generateProject(resolveResource("/source-project"), project, System.out::println));
     }
 
-    public static Path generateProject(Path resources, Path project) throws IOException {
+    public static Path generateProject(Path resources, Path project, Consumer<? super String> logger) throws IOException {
         createDirectory(project);
-        System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "init"));
-        System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "config", "--local", "user.name", "Test"));
-        System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "config", "--local", "user.email", "test@example.com"));
+        logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "init"));
+        logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "config", "--local", "user.name", "Test"));
+        logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "config", "--local", "user.email", "test@example.com"));
         for (String version : getVersions(resources)) {
             Path workingDir = resources.resolve(version);
             copyFolder(workingDir, createDirectories(project), REPLACE_EXISTING);
-            System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "add", "*"));
-            System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "commit", "-am", version));
-            System.out.println(readToString(UTF_8, "git", "-C", project.toString(), "tag", version));
+            logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "add", "*"));
+            logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "commit", "-am", version));
+            logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "tag", version));
         }
         return project;
     }

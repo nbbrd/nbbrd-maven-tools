@@ -33,6 +33,4 @@ public interface Build extends Closeable {
     List<Tag> getTags(@NonNull Path project) throws IOException;
 
     void clone(@NonNull URI from, @NonNull Path to) throws IOException;
-
-    void install(@NonNull Path project) throws IOException;
 }

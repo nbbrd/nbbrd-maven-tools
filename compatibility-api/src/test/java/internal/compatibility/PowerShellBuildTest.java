@@ -34,8 +34,8 @@ class PowerShellBuildTest {
 
     @BeforeAll
     static void beforeAll(@TempDir Path tmp) throws IOException {
-        sourceProject = generateProject(resolveResource("/source-project"), tmp.resolve("source-project"));
-        targetProject = generateProject(resolveResource("/target-project"), tmp.resolve("target-project"));
+        sourceProject = generateProject(resolveResource("/source-project"), tmp.resolve("source-project"), PowerShellBuildTest::doNothing);
+        targetProject = generateProject(resolveResource("/target-project"), tmp.resolve("target-project"), PowerShellBuildTest::doNothing);
     }
 
     @Test
@@ -156,5 +156,8 @@ class PowerShellBuildTest {
 
     private static PowerShellBuild getJobExecutor() throws IOException {
         return PowerShellBuild.getDefault();
+    }
+
+    private static void doNothing(Object ignore) {
     }
 }

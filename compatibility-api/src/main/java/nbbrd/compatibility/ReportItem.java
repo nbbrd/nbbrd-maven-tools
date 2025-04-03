@@ -21,6 +21,14 @@ public class ReportItem {
     @lombok.NonNull
     Version targetVersion;
 
-    @lombok.NonNull
-    Version originalVersion;
+    public static final class Builder {
+
+        public Builder source(URI uri, CharSequence version) {
+            return sourceUri(uri).sourceVersion(Version.parse(version));
+        }
+
+        public Builder target(URI uri, CharSequence version) {
+            return targetUri(uri).targetVersion(Version.parse(version));
+        }
+    }
 }

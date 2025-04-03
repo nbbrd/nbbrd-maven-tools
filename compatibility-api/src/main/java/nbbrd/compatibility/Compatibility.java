@@ -45,7 +45,7 @@ public class Compatibility {
             return execute(
                     build,
                     map(job.getSources(), source -> of(source, job.getWorkingDir(), build)),
-                    map(job.getTargets(), source1 -> of(source1, job.getWorkingDir(), build))
+                    map(job.getTargets(), target -> of(target, job.getWorkingDir(), build))
             );
         }
     }
@@ -72,17 +72,21 @@ public class Compatibility {
                 .targetUri(target.getUri())
                 .targetVersion(targetVersion.getVersion());
         Path project = target.getDirectory();
-        build.checkoutTag(project, targetVersion.getTag());
+        Tag tag = targetVersion.getTag();
+        if (!Tag.NO_TAG.equals(tag)) {
+            build.checkoutTag(project, tag);
+        }
         String propertyValue = build.getProperty(project, target.getBuilding().getProperty());
         Version originalVersion = propertyValue != null ? Version.parse(propertyValue) : Version.NO_VERSION;
-        result.originalVersion(originalVersion);
         if (!isSkip(source.getVersioning(), originalVersion, sourceVersion.getVersion())) {
             build.setProperty(project, target.getBuilding().getProperty(), sourceVersion.getVersion().toString());
             result.exitStatus(build.verify(project) == 0 ? ExitStatus.VERIFIED : ExitStatus.BROKEN);
         } else {
             result.exitStatus(ExitStatus.SKIPPED);
         }
-        build.cleanAndRestore(project);
+        if (!Tag.NO_TAG.equals(tag)) {
+            build.cleanAndRestore(project);
+        }
         return result.build();
     }
 

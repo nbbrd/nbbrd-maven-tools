@@ -95,9 +95,9 @@ public class MockedBuilder implements Builder {
         @Override
         public int verify(@NonNull Path project) throws IOException {
             MockedStatus status = checkAvailability(stuff.get(toProjectId(project)));
-            String original = status.getOriginal().getValue();
-            String modified = status.getModified().getValue();
-            if (new Semver(original).isGreaterThan(modified)) {
+            Semver original = new Semver(status.getOriginal().getValue());
+            Semver modified = new Semver(status.getModified().getValue());
+            if (original.isGreaterThan(modified) || !original.isApiCompatible(modified)) {
                 return 1;
             }
             return 0;
@@ -118,7 +118,7 @@ public class MockedBuilder implements Builder {
         @Override
         public @NonNull Version getVersion(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
-            return Version.parse(stuff.computeIfAbsent(id, this::initStatus).getModified().getVersionId());
+            return Version.parse(stuff.computeIfAbsent(id, this::initStatus).getModified().getVersion());
         }
 
         @Override
@@ -133,8 +133,7 @@ public class MockedBuilder implements Builder {
             return projects.get(id)
                     .getVersions()
                     .stream()
-                    .map(MockedVersion::getVersionId)
-                    .map(Tag::parse)
+                    .map(MockedVersion::getTag)
                     .collect(toList());
         }
 
@@ -148,11 +147,6 @@ public class MockedBuilder implements Builder {
             }
             MockedProject mockedProject = projects.get(from.toString().substring(7));
             projects.put(toProjectId(to), mockedProject);
-        }
-
-        @Override
-        public void install(@NonNull Path project) throws IOException {
-            String id = toProjectId(project);
         }
 
         @Override

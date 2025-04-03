@@ -128,13 +128,6 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public void install(@NonNull Path project) throws IOException {
-        exec(
-                format(ROOT, "mvn -q -f %s install -DskipTests", project)
-        );
-    }
-
-    @Override
     public void close() {
     }
 }

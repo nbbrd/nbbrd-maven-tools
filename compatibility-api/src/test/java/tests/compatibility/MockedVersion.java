@@ -1,6 +1,8 @@
 package tests.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Version;
 
 import java.io.IOException;
 
@@ -9,7 +11,10 @@ import java.io.IOException;
 public class MockedVersion {
 
     @NonNull
-    String versionId;
+    Version version;
+
+    @NonNull
+    Tag tag;
 
     String name;
 
@@ -28,6 +33,17 @@ public class MockedVersion {
     private void checkProperty(String name) throws IOException {
         if (!this.name.equals(name)) {
             throw new IOException("Property " + name + " not found");
+        }
+    }
+
+    public static Builder builderOf(CharSequence version) {
+        return builder().version(Version.parse(version)).tag(Tag.parse("v" + version));
+    }
+
+    public static final class Builder {
+
+        public Builder property(String name, String value) {
+            return name(name).value(value);
         }
     }
 }

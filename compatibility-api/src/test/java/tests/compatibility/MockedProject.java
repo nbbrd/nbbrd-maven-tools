@@ -25,10 +25,10 @@ public class MockedProject {
 
     public MockedVersion getByTag(Tag tag) throws IOException {
         for (MockedVersion version : versions) {
-            if (version.getVersionId().equals(tag.toString())) {
+            if (version.getTag().equals(tag)) {
                 return version;
             }
         }
-        throw new IOException("Tag not found: " + tag);
+        throw new IOException("Tag not found: '" + tag + "'");
     }
 }
