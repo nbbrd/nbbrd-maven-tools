@@ -6,10 +6,21 @@ import java.net.URI;
 @lombok.Builder
 public class ReportItem {
 
-    int exitCode;
+    @lombok.NonNull
+    ExitStatus exitStatus;
+
+    @lombok.NonNull
     URI sourceUri;
+
+    @lombok.NonNull
     Version sourceVersion;
+
+    @lombok.NonNull
     URI targetUri;
+
+    @lombok.NonNull
     Version targetVersion;
+
+    @lombok.NonNull
     Version originalVersion;
 }

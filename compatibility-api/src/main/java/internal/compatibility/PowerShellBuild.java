@@ -59,7 +59,7 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public void cleanAndRestore(Path project) throws IOException {
+    public void cleanAndRestore(@NonNull Path project) throws IOException {
         exec(
                 format(ROOT, "mvn -q -f %s clean", project)
         );
@@ -69,7 +69,7 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public int verify(Path project) throws IOException {
+    public int verify(@NonNull Path project) throws IOException {
         return exec(
                 format(ROOT, "mvn -q -f %s clean verify -U -DskipTests -D'enforcer.skip' ; echo $LASTEXITCODE", project)
         ).stream()
@@ -79,14 +79,14 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public void setProperty(Path project, String propertyName, String propertyValue) throws IOException {
+    public void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
         exec(
                 format(ROOT, "mvn -q -f %s versions:set-property -Dproperty='%s' -DnewVersion='%s'", project, propertyName, propertyValue)
         );
     }
 
     @Override
-    public String getProperty(Path project, String propertyName) throws IOException {
+    public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
         return exec(
                 format(ROOT, "mvn -q -f %s help:evaluate -Dexpression='%s' -DforceStdout", project, propertyName)
         ).stream()
@@ -95,7 +95,7 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public Version getVersion(Path project) throws IOException {
+    public @NonNull Version getVersion(@NonNull Path project) throws IOException {
         return exec(
                 format(ROOT, "mvn -q -f %s help:evaluate -Dexpression='project.version' -DforceStdout", project)
         ).stream()
@@ -105,14 +105,14 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public void checkoutTag(Path project, Tag tag) throws IOException {
+    public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
         exec(
                 format(ROOT, "git -C %s checkout -q %s", project, tag)
         );
     }
 
     @Override
-    public List<Tag> getTags(Path project) throws IOException {
+    public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
         return exec(
                 format(ROOT, "git -C %s tag --sort=-creatordate", project)
         ).stream()
@@ -121,14 +121,14 @@ public final class PowerShellBuild implements Build {
     }
 
     @Override
-    public void clone(URI from, Path to) throws IOException {
+    public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
         exec(
                 format(ROOT, "git clone -q %s %s", from, to)
         );
     }
 
     @Override
-    public void install(Path project) throws IOException {
+    public void install(@NonNull Path project) throws IOException {
         exec(
                 format(ROOT, "mvn -q -f %s install -DskipTests", project)
         );

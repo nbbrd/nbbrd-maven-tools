@@ -88,12 +88,12 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
-        public void cleanAndRestore(Path project) throws IOException {
+        public void cleanAndRestore(@NonNull Path project) throws IOException {
             checkAvailability(stuff.remove(toProjectId(project)));
         }
 
         @Override
-        public int verify(Path project) throws IOException {
+        public int verify(@NonNull Path project) throws IOException {
             MockedStatus status = checkAvailability(stuff.get(toProjectId(project)));
             String original = status.getOriginal().getValue();
             String modified = status.getModified().getValue();
@@ -104,31 +104,31 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
-        public void setProperty(Path project, String propertyName, String propertyValue) throws IOException {
+        public void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
             String id = toProjectId(project);
             stuff.put(id, stuff.computeIfAbsent(id, this::initStatus).withProperty(propertyName, propertyValue));
         }
 
         @Override
-        public String getProperty(Path project, String propertyName) throws IOException {
+        public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
             String id = toProjectId(project);
             return stuff.computeIfAbsent(id, this::initStatus).getProperty(propertyName);
         }
 
         @Override
-        public Version getVersion(Path project) throws IOException {
+        public @NonNull Version getVersion(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
             return Version.parse(stuff.computeIfAbsent(id, this::initStatus).getModified().getVersionId());
         }
 
         @Override
-        public void checkoutTag(Path project, Tag tag) throws IOException {
+        public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
             String id = toProjectId(project);
             stuff.put(id, MockedStatus.of(projects.get(id).getByTag(tag)));
         }
 
         @Override
-        public List<Tag> getTags(Path project) throws IOException {
+        public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
             return projects.get(id)
                     .getVersions()
@@ -139,7 +139,7 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
-        public void clone(URI from, Path to) throws IOException {
+        public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
             if (!from.getScheme().equals("mocked")) {
                 throw new IOException("Unsupported URI scheme: " + from.getScheme());
             }
@@ -151,7 +151,7 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
-        public void install(Path project) throws IOException {
+        public void install(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
         }
 

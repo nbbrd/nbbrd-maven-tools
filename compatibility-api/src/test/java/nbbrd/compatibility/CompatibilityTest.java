@@ -66,12 +66,30 @@ class CompatibilityTest {
                 .containsExactly(
                         ReportItem
                                 .builder()
-                                .exitCode(0)
+                                .exitStatus(ExitStatus.VERIFIED)
                                 .sourceUri(localSource)
                                 .sourceVersion(Version.parse("2.3.4"))
                                 .targetUri(remoteTarget)
                                 .targetVersion(Version.parse("1.0.0"))
                                 .originalVersion(Version.parse("2.3.4"))
+                                .build(),
+                        ReportItem
+                                .builder()
+                                .exitStatus(ExitStatus.SKIPPED)
+                                .sourceUri(localSource)
+                                .sourceVersion(Version.parse("2.3.4"))
+                                .targetUri(remoteTarget)
+                                .targetVersion(Version.parse("1.0.1"))
+                                .originalVersion(Version.parse("2.4.0"))
+                                .build(),
+                        ReportItem
+                                .builder()
+                                .exitStatus(ExitStatus.SKIPPED)
+                                .sourceUri(localSource)
+                                .sourceVersion(Version.parse("2.3.4"))
+                                .targetUri(remoteTarget)
+                                .targetVersion(Version.parse("1.0.2"))
+                                .originalVersion(Version.parse("3.0.0"))
                                 .build()
                 );
     }

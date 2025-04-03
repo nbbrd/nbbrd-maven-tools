@@ -43,38 +43,46 @@ public class Compatibility {
     public @NonNull Report execute(@NonNull Job job) throws IOException {
         try (Build build = builder.getBuild()) {
             return execute(
+                    build,
                     map(job.getSources(), source -> of(source, job.getWorkingDir(), build)),
-                    map(job.getTargets(), source1 -> of(source1, job.getWorkingDir(), build)),
-                    build
+                    map(job.getTargets(), source1 -> of(source1, job.getWorkingDir(), build))
             );
         }
     }
 
-    private Report execute(List<SourceContext> sources, List<TargetContext> targets, Build build) throws IOException {
+    private Report execute(Build build, List<SourceContext> sources, List<TargetContext> targets) throws IOException {
         Report.Builder result = Report.builder();
         for (SourceContext source : sources) {
             for (VersionContext sourceVersion : source.getVersions()) {
                 for (TargetContext target : targets) {
                     for (VersionContext targetVersion : target.getVersions()) {
-                        build.checkoutTag(target.getDirectory(), targetVersion.getTag());
-                        Version originalVersion = Version.parse(build.getProperty(target.getDirectory(), target.getBuilding().getProperty()));
-                        if (!isSkip(source.getVersioning(), originalVersion, sourceVersion.getVersion())) {
-                            build.setProperty(target.getDirectory(), target.getBuilding().getProperty(), sourceVersion.getVersion().toString());
-                            result.item(ReportItem
-                                    .builder()
-                                    .exitCode(build.verify(target.getDirectory()))
-                                    .sourceUri(source.getUri())
-                                    .sourceVersion(sourceVersion.getVersion())
-                                    .targetUri(target.getUri())
-                                    .targetVersion(targetVersion.getVersion())
-                                    .originalVersion(originalVersion)
-                                    .build());
-                        }
-                        build.cleanAndRestore(target.getDirectory());
+                        result.item(execute(build, source, sourceVersion, target, targetVersion));
                     }
                 }
             }
         }
+        return result.build();
+    }
+
+    private ReportItem execute(Build build, SourceContext source, VersionContext sourceVersion, TargetContext target, VersionContext targetVersion) throws IOException {
+        ReportItem.Builder result = ReportItem
+                .builder()
+                .sourceUri(source.getUri())
+                .sourceVersion(sourceVersion.getVersion())
+                .targetUri(target.getUri())
+                .targetVersion(targetVersion.getVersion());
+        Path project = target.getDirectory();
+        build.checkoutTag(project, targetVersion.getTag());
+        String propertyValue = build.getProperty(project, target.getBuilding().getProperty());
+        Version originalVersion = propertyValue != null ? Version.parse(propertyValue) : Version.NO_VERSION;
+        result.originalVersion(originalVersion);
+        if (!isSkip(source.getVersioning(), originalVersion, sourceVersion.getVersion())) {
+            build.setProperty(project, target.getBuilding().getProperty(), sourceVersion.getVersion().toString());
+            result.exitStatus(build.verify(project) == 0 ? ExitStatus.VERIFIED : ExitStatus.BROKEN);
+        } else {
+            result.exitStatus(ExitStatus.SKIPPED);
+        }
+        build.cleanAndRestore(project);
         return result.build();
     }
 
