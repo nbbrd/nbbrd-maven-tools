@@ -1,5 +1,6 @@
 package nbbrd.compatibility.spi;
 
+import internal.compatibility.ResourceDefinition;
 import nbbrd.compatibility.Tag;
 import nbbrd.compatibility.Version;
 
@@ -9,7 +10,8 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 
-public interface JobExecutor extends Closeable {
+@ResourceDefinition
+public interface Build extends Closeable {
 
     void cleanAndRestore(Path project) throws IOException;
 

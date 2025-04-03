@@ -65,7 +65,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
     }
 
     protected Report exec(Compatibility compatibility, Job job) throws MojoExecutionException {
-        getLog().info("Using engine: " + compatibility.getEngine().getJobEngineId());
+        getLog().info("Using builder: " + compatibility.getBuilder().getBuilderId());
         try {
             return compatibility.execute(job);
         } catch (IOException ex) {

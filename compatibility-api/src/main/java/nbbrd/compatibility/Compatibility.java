@@ -1,6 +1,6 @@
 package nbbrd.compatibility;
 
-import internal.compatibility.NoOpJobEngine;
+import internal.compatibility.NoOpBuilder;
 import internal.compatibility.NoOpVersioning;
 import lombok.NonNull;
 import nbbrd.compatibility.spi.*;
@@ -25,14 +25,14 @@ public class Compatibility {
     public static @NonNull Compatibility ofServiceLoader() {
         return Compatibility
                 .builder()
-                .engine(JobEngineLoader.load().orElse(NoOpJobEngine.INSTANCE))
+                .builder(BuilderLoader.load().orElse(NoOpBuilder.INSTANCE))
                 .formats(FormatLoader.load())
                 .versionings(VersioningLoader.load())
                 .build();
     }
 
     @lombok.Builder.Default
-    JobEngine engine = NoOpJobEngine.INSTANCE;
+    nbbrd.compatibility.spi.Builder builder = NoOpBuilder.INSTANCE;
 
     @lombok.Singular
     List<Format> formats;
@@ -41,28 +41,28 @@ public class Compatibility {
     List<Versioning> versionings;
 
     public @NonNull Report execute(@NonNull Job job) throws IOException {
-        try (JobExecutor executor = engine.getExecutor()) {
+        try (Build build = builder.getBuild()) {
             return execute(
-                    map(job.getSources(), source -> of(source, job.getWorkingDir(), executor)),
-                    map(job.getTargets(), source1 -> of(source1, job.getWorkingDir(), executor)),
-                    executor
+                    map(job.getSources(), source -> of(source, job.getWorkingDir(), build)),
+                    map(job.getTargets(), source1 -> of(source1, job.getWorkingDir(), build)),
+                    build
             );
         }
     }
 
-    private Report execute(List<SourceContext> sources, List<TargetContext> targets, JobExecutor executor) throws IOException {
+    private Report execute(List<SourceContext> sources, List<TargetContext> targets, Build build) throws IOException {
         Report.Builder result = Report.builder();
         for (SourceContext source : sources) {
             for (VersionContext sourceVersion : source.getVersions()) {
                 for (TargetContext target : targets) {
                     for (VersionContext targetVersion : target.getVersions()) {
-                        executor.checkoutTag(target.getDirectory(), targetVersion.getTag());
-                        Version originalVersion = Version.parse(executor.getProperty(target.getDirectory(), target.getBuilding().getProperty()));
+                        build.checkoutTag(target.getDirectory(), targetVersion.getTag());
+                        Version originalVersion = Version.parse(build.getProperty(target.getDirectory(), target.getBuilding().getProperty()));
                         if (!isSkip(source.getVersioning(), originalVersion, sourceVersion.getVersion())) {
-                            executor.setProperty(target.getDirectory(), target.getBuilding().getProperty(), sourceVersion.getVersion().toString());
+                            build.setProperty(target.getDirectory(), target.getBuilding().getProperty(), sourceVersion.getVersion().toString());
                             result.item(ReportItem
                                     .builder()
-                                    .exitCode(executor.verify(target.getDirectory()))
+                                    .exitCode(build.verify(target.getDirectory()))
                                     .sourceUri(source.getUri())
                                     .sourceVersion(sourceVersion.getVersion())
                                     .targetUri(target.getUri())
@@ -70,7 +70,7 @@ public class Compatibility {
                                     .originalVersion(originalVersion)
                                     .build());
                         }
-                        executor.cleanAndRestore(target.getDirectory());
+                        build.cleanAndRestore(target.getDirectory());
                     }
                 }
             }
@@ -123,7 +123,7 @@ public class Compatibility {
         Building building;
     }
 
-    private SourceContext of(Source source, Path workingDir, JobExecutor executor) throws IOException {
+    private SourceContext of(Source source, Path workingDir, Build build) throws IOException {
         Versioning versioning = getVersioning(source.getTagging().getVersioning()).orElse(NoOpVersioning.INSTANCE);
         if (isFileScheme(source.getUri())) {
             Path directory = Paths.get(source.getUri());
@@ -136,32 +136,32 @@ public class Compatibility {
                     .version(VersionContext
                             .builder()
                             .tag(Tag.NO_TAG)
-                            .version(executor.getVersion(directory))
+                            .version(build.getVersion(directory))
                             .build())
                     .build();
         } else {
             Path directory = workingDir.resolve(getDirectoryName(source.getUri()));
-            executor.clone(source.getUri(), directory);
+            build.clone(source.getUri(), directory);
 
             SourceContext.Builder result = SourceContext
                     .builder()
                     .uri(source.getUri())
                     .directory(directory)
                     .versioning(versioning);
-            for (Tag tag : executor.getTags(directory)) {
-                executor.checkoutTag(directory, tag);
+            for (Tag tag : build.getTags(directory)) {
+                build.checkoutTag(directory, tag);
                 result.version(VersionContext
                         .builder()
                         .tag(tag)
-                        .version(executor.getVersion(directory))
+                        .version(build.getVersion(directory))
                         .build());
-                executor.cleanAndRestore(directory);
+                build.cleanAndRestore(directory);
             }
             return result.build();
         }
     }
 
-    private TargetContext of(Target target, Path workingDir, JobExecutor executor) throws IOException {
+    private TargetContext of(Target target, Path workingDir, Build build) throws IOException {
         if (isFileScheme(target.getUri())) {
             Path directory = Paths.get(target.getUri());
 
@@ -173,26 +173,26 @@ public class Compatibility {
                     .version(VersionContext
                             .builder()
                             .tag(Tag.NO_TAG)
-                            .version(executor.getVersion(directory))
+                            .version(build.getVersion(directory))
                             .build())
                     .build();
         } else {
             Path directory = workingDir.resolve(getDirectoryName(target.getUri()));
-            executor.clone(target.getUri(), directory);
+            build.clone(target.getUri(), directory);
 
             TargetContext.Builder result = TargetContext
                     .builder()
                     .uri(target.getUri())
                     .directory(directory)
                     .building(target.getBuilding());
-            for (Tag tag : executor.getTags(directory)) {
-                executor.checkoutTag(directory, tag);
+            for (Tag tag : build.getTags(directory)) {
+                build.checkoutTag(directory, tag);
                 result.version(VersionContext
                         .builder()
                         .tag(tag)
-                        .version(executor.getVersion(directory))
+                        .version(build.getVersion(directory))
                         .build());
-                executor.cleanAndRestore(directory);
+                build.cleanAndRestore(directory);
             }
             return result.build();
         }

@@ -8,18 +8,18 @@ import nbbrd.service.ServiceId;
 import java.io.IOException;
 
 @ServiceDefinition
-public interface JobEngine {
+public interface Builder {
 
     @ServiceId(pattern = ServiceId.KEBAB_CASE)
     @NonNull
-    String getJobEngineId();
+    String getBuilderId();
 
     @NonNull
-    String getJobEngineName();
+    String getBuilderName();
 
     @ServiceFilter
-    boolean isJobEngineAvailable();
+    boolean isBuilderAvailable();
 
     @NonNull
-    JobExecutor getExecutor() throws IOException;
+    Build getBuild() throws IOException;
 }

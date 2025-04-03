@@ -2,7 +2,7 @@ package nbbrd.compatibility;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import tests.compatibility.MockedEngine;
+import tests.compatibility.MockedBuilder;
 import tests.compatibility.MockedProject;
 import tests.compatibility.MockedVersion;
 
@@ -30,7 +30,7 @@ class CompatibilityTest {
         Compatibility x = Compatibility
                 .ofServiceLoader()
                 .toBuilder()
-                .engine(MockedEngine
+                .builder(MockedBuilder
                         .builder()
                         .project(MockedProject
                                 .builder()

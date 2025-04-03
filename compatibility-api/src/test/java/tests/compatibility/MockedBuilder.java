@@ -3,8 +3,8 @@ package tests.compatibility;
 import lombok.NonNull;
 import nbbrd.compatibility.Tag;
 import nbbrd.compatibility.Version;
-import nbbrd.compatibility.spi.JobEngine;
-import nbbrd.compatibility.spi.JobExecutor;
+import nbbrd.compatibility.spi.Build;
+import nbbrd.compatibility.spi.Builder;
 import org.semver4j.Semver;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ import static java.util.stream.Collectors.toMap;
 
 @lombok.Value
 @lombok.Builder
-public class MockedEngine implements JobEngine {
+public class MockedBuilder implements Builder {
 
     @lombok.Builder.Default
     String id = "mocked";
@@ -35,30 +35,30 @@ public class MockedEngine implements JobEngine {
     List<MockedProject> projects;
 
     @Override
-    public @NonNull String getJobEngineId() {
+    public @NonNull String getBuilderId() {
         return id;
     }
 
     @Override
-    public @NonNull String getJobEngineName() {
+    public @NonNull String getBuilderName() {
         return name;
     }
 
     @Override
-    public boolean isJobEngineAvailable() {
+    public boolean isBuilderAvailable() {
         return available;
     }
 
     @Override
-    public @NonNull JobExecutor getExecutor() {
-        return MockedExecutor.open(projects);
+    public @NonNull Build getBuild() {
+        return MockedBuild.open(projects);
     }
 
     @lombok.RequiredArgsConstructor
-    private static final class MockedExecutor implements JobExecutor {
+    private static final class MockedBuild implements Build {
 
-        public static MockedExecutor open(List<MockedProject> projects) {
-            return new MockedExecutor(projects.stream().collect(toMap(MockedProject::getProjectId, p -> p)));
+        public static MockedBuild open(List<MockedProject> projects) {
+            return new MockedBuild(projects.stream().collect(toMap(MockedProject::getProjectId, p -> p)));
         }
 
         private final Map<String, MockedProject> projects;

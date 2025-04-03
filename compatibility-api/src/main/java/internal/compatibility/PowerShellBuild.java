@@ -3,7 +3,7 @@ package internal.compatibility;
 import lombok.NonNull;
 import nbbrd.compatibility.Tag;
 import nbbrd.compatibility.Version;
-import nbbrd.compatibility.spi.JobExecutor;
+import nbbrd.compatibility.spi.Build;
 import nbbrd.design.StaticFactoryMethod;
 import nbbrd.io.sys.ProcessReader;
 import nbbrd.io.win.PowerShellWrapper;
@@ -26,13 +26,13 @@ import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.toList;
 
 @lombok.Builder
-public final class PowerShellJobExecutor implements JobExecutor {
+public final class PowerShellBuild implements Build {
 
     @StaticFactoryMethod
-    public static @NonNull PowerShellJobExecutor getDefault() throws IOException {
+    public static @NonNull PowerShellBuild getDefault() throws IOException {
         if (!WhereWrapper.isAvailable("mvn")) throw new IOException("mvn not found in PATH");
         if (!WhereWrapper.isAvailable("git")) throw new IOException("git not found in PATH");
-        return PowerShellJobExecutor.builder().build();
+        return PowerShellBuild.builder().build();
     }
 
     private final @Nullable Path mvn;

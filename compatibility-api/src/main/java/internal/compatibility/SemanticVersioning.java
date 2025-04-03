@@ -11,7 +11,7 @@ import java.util.Comparator;
 
 @DirectImpl
 @ServiceProvider
-public final class SemVer implements Versioning {
+public final class SemanticVersioning implements Versioning {
 
     @Override
     public @NonNull String getVersioningId() {
@@ -30,7 +30,7 @@ public final class SemVer implements Versioning {
 
     @Override
     public @NonNull Comparator<Version> getVersionComparator() {
-        return Comparator.comparing(SemVer::toSemver);
+        return Comparator.comparing(SemanticVersioning::toSemver);
     }
 
     private static Semver toSemver(Version version) {
