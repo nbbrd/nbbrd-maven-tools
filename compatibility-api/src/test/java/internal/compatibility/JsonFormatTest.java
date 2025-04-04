@@ -24,12 +24,12 @@ class JsonFormatTest {
     void testFormatJob() throws IOException {
         JsonFormat x = new JsonFormat();
 
-        assertThat(Job.builder().build())
+        assertThat(Job.builder().workingDir(Paths.get("hello")).build())
                 .extracting(withFormatJob(x), STRING)
                 .isEqualTo("{\n" +
                         "  \"sources\": [],\n" +
                         "  \"targets\": [],\n" +
-                        "  \"workingDir\": \"C:\\\\Users\\\\charphi\\\\AppData\\\\Local\\\\Temp\\\\1\"\n" +
+                        "  \"workingDir\": \"hello\"\n" +
                         "}");
 
         Job value = Job
