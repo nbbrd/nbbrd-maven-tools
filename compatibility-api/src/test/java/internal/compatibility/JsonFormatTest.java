@@ -1,16 +1,17 @@
 package internal.compatibility;
 
-import nbbrd.compatibility.Job;
-import nbbrd.compatibility.Source;
-import nbbrd.compatibility.Target;
-import org.assertj.core.api.Assertions;
+import nbbrd.compatibility.*;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static tests.compatibility.FormatAssert.assertFormatCompliance;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
+import static tests.compatibility.FormatAssert.*;
 
 class JsonFormatTest {
 
@@ -23,9 +24,15 @@ class JsonFormatTest {
     void testFormatJob() throws IOException {
         JsonFormat x = new JsonFormat();
 
-        StringBuilder sb = new StringBuilder();
+        assertThat(Job.builder().build())
+                .extracting(withFormatJob(x), STRING)
+                .isEqualTo("{\n" +
+                        "  \"sources\": [],\n" +
+                        "  \"targets\": [],\n" +
+                        "  \"workingDir\": \"C:\\\\Users\\\\charphi\\\\AppData\\\\Local\\\\Temp\\\\1\"\n" +
+                        "}");
 
-        Job job = Job
+        Job value = Job
                 .builder()
                 .source(Source.builder().uri(URI.create("hello:source")).build())
                 .target(Target
@@ -36,9 +43,7 @@ class JsonFormatTest {
                 .workingDir(Paths.get("folder"))
                 .build();
 
-        x.formatJob(sb, job);
-
-        Assertions.assertThat(sb.toString())
+        assertThat(formatToString(x, value))
                 .isEqualTo("{\n" +
                         "  \"sources\": [\n" +
                         "    {\n" +
@@ -58,5 +63,48 @@ class JsonFormatTest {
                         "  ],\n" +
                         "  \"workingDir\": \"folder\"\n" +
                         "}");
+    }
+
+    @Test
+    void testFormatReport() throws IOException {
+        JsonFormat x = new JsonFormat();
+
+        assertThat(Report.builder().build())
+                .extracting(withFormatReport(x), STRING)
+                .isEqualTo("{\n" +
+                        "  \"items\": []\n" +
+                        "}");
+
+        Report value = Report
+                .builder()
+                .item(ReportItem
+                        .builder()
+                        .exitStatus(ExitStatus.VERIFIED)
+                        .source(URI.create("source"), "1.2.3")
+                        .target(URI.create("target"), "3.2.1")
+                        .build())
+                .build();
+
+        assertThat(formatToString(x, value))
+                .isEqualTo("{\n" +
+                        "  \"items\": [\n" +
+                        "    {\n" +
+                        "      \"exitStatus\": \"VERIFIED\",\n" +
+                        "      \"sourceUri\": \"source\",\n" +
+                        "      \"sourceVersion\": \"1.2.3\",\n" +
+                        "      \"targetUri\": \"target\",\n" +
+                        "      \"targetVersion\": \"3.2.1\"\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "}");
+    }
+
+    @Test
+    void testGetFormatFileFilter() throws IOException {
+        DirectoryStream.Filter<? super Path> x = new JsonFormat().getFormatFileFilter();
+
+        assertThat(x.accept(Paths.get("hello.xml"))).isFalse();
+        assertThat(x.accept(Paths.get("hello.json"))).isTrue();
+        assertThat(x.accept(Paths.get("hello.JSON"))).isTrue();
     }
 }
