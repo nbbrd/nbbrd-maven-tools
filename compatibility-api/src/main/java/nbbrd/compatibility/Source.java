@@ -11,4 +11,6 @@ public class Source {
 
     @lombok.Builder.Default
     String versioning = "";
+
+    public static final String DEFAULT_VERSIONING = "semver";
 }

@@ -9,10 +9,13 @@ public class Target {
     @lombok.NonNull
     URI uri;
 
+    @lombok.NonNull
     @lombok.Builder.Default
-    String property = "";
+    String property = NO_PROPERTY;
 
     @lombok.NonNull
     @lombok.Builder.Default
     Building building = Building.DEFAULT;
+
+    public static final String NO_PROPERTY = "";
 }

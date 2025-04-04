@@ -2,6 +2,8 @@ package nbbrd.compatibility.maven.plugin;
 
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
+import nbbrd.compatibility.Source;
+import nbbrd.compatibility.Target;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -10,6 +12,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.net.URI;
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 @lombok.Getter
@@ -17,14 +20,17 @@ import static java.util.stream.Collectors.toList;
 @Mojo(name = "check-downstream", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
 public final class CheckDownstreamMojo extends CompatibilityMojo {
 
-    @Parameter
-    private URI uri;
+    @Parameter(defaultValue = "${project.baseUri}", property = "compatibility.source")
+    private URI source;
 
-    @Parameter
-    private Tag tag;
+    @Parameter(defaultValue = Source.DEFAULT_VERSIONING, property = "compatibility.versioning")
+    private String versioning;
 
-    @Parameter
-    private List<Target> targets;
+    @Parameter(defaultValue = "", property = "compatibility.targets")
+    private List<URI> targets;
+
+    @Parameter(defaultValue = Target.NO_PROPERTY, property = "compatibility.property")
+    private String property;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -39,23 +45,32 @@ public final class CheckDownstreamMojo extends CompatibilityMojo {
     private void checkDownstream() throws MojoExecutionException {
         Compatibility compatibility = loadCompatibility();
         Job job = toJob();
-        log(compatibility, job, getReportFilename());
+        log(compatibility, job);
         exec(compatibility, job);
     }
 
     private Job toJob() {
         return Job
                 .builder()
-                .source(asSource().toValue())
-                .targets(targets.stream().map(Target::toValue).collect(toList()))
+                .source(toSource())
+                .targets(targets.stream().map(this::toTarget).collect(toList()))
                 .workingDir(getWorkingDir().toPath())
                 .build();
     }
 
-    private Source asSource() {
-        Source result = new Source();
-        result.setUri(uri);
-        result.setTag(tag);
-        return result;
+    private Source toSource() {
+        return Source
+                .builder()
+                .uri(requireNonNull(source, "Source URI must not be null"))
+                .versioning(versioning != null ? versioning : Source.DEFAULT_VERSIONING)
+                .build();
+    }
+
+    private Target toTarget(URI uri) {
+        return Target
+                .builder()
+                .uri(requireNonNull(uri, "Target URI must not be null"))
+                .property(property != null ? property : Target.NO_PROPERTY)
+                .build();
     }
 }

@@ -143,7 +143,7 @@ public class MockedBuilder implements Builder {
 
         @Override
         public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
-            if (!from.getScheme().equals("mocked")) {
+            if (!"mocked".equals(from.getScheme())) {
                 throw new IOException("Unsupported URI scheme: " + from.getScheme());
             }
             if (projects.containsKey(toProjectId(to))) {

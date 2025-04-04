@@ -4,6 +4,7 @@ import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.spi.Format;
+import nbbrd.io.text.TextFormatter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -11,6 +12,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Writer;
 
 @lombok.Getter
 @lombok.Setter
@@ -25,11 +27,11 @@ abstract class CompatibilityMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
     private File projectBaseDir;
 
-    @Parameter(defaultValue = "${project.build.directory}", readonly = true)
+    @Parameter(defaultValue = "${project.build.directory}/compatibility", readonly = true)
     private File workingDir;
 
-    @Parameter(defaultValue = "report.csv", readonly = true)
-    private String reportFilename;
+    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", readonly = true)
+    private String reportFile;
 
     protected boolean isRootProject() {
         if (projectBaseDir == null) {
@@ -43,25 +45,21 @@ abstract class CompatibilityMojo extends AbstractMojo {
         return true;
     }
 
-    protected void log(Compatibility compatibility, Job job, String reportFilename) throws MojoExecutionException {
+    protected void log(Compatibility compatibility, Job job) throws MojoExecutionException {
         Log log = getLog();
-        Format format = compatibility.getFormats()
+        TextFormatter<Job> formatter = compatibility.getFormats()
                 .stream()
                 .filter(item -> item.getFormatId().equals("json"))
                 .findFirst()
-                .orElse(null);
-        if (format != null) {
-            try {
-                format.formatJob(asAppendable(log), job);
-            } catch (IOException ex) {
-                throw new MojoExecutionException("Failed to format job", ex);
-            }
-        } else {
-            job.getSources().forEach(source -> log.info(source.toString()));
-            job.getTargets().forEach(target -> log.info(target.toString()));
-            log.info(job.getWorkingDir().toString());
+                .map(CompatibilityMojo::asJobFormatter)
+                .orElse(onToString());
+        try {
+            log.info("Job: ");
+            log.info(formatter.formatToString(job));
+        } catch (IOException ex) {
+            throw new MojoExecutionException("Failed to format job", ex);
         }
-        log.info(reportFilename);
+        log.info("ReportFile: " + reportFile);
     }
 
     protected Report exec(Compatibility compatibility, Job job) throws MojoExecutionException {
@@ -77,25 +75,11 @@ abstract class CompatibilityMojo extends AbstractMojo {
         return Compatibility.ofServiceLoader();
     }
 
-    private static Appendable asAppendable(Log log) {
-        return new Appendable() {
-            @Override
-            public Appendable append(CharSequence csq) {
-                log.info(csq);
-                return this;
-            }
+    private static TextFormatter<Job> onToString() {
+        return TextFormatter.onFormattingWriter((j, w) -> w.write(j.toString()));
+    }
 
-            @Override
-            public Appendable append(CharSequence csq, int start, int end) {
-                log.info(csq.subSequence(start, end));
-                return this;
-            }
-
-            @Override
-            public Appendable append(char c) {
-                log.info(String.valueOf(c));
-                return this;
-            }
-        };
+    private static TextFormatter<Job> asJobFormatter(Format format) {
+        return TextFormatter.onFormattingWriter((Job j, Writer w) -> format.formatJob(w, j));
     }
 }

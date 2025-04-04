@@ -231,7 +231,7 @@ public class Compatibility {
     }
 
     private static boolean isFileScheme(URI uri) {
-        return uri.getScheme().equals("file");
+        return "file".equals(uri.getScheme());
     }
 
     private static String getDirectoryName(URI uri) {
