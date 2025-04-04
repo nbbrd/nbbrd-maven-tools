@@ -72,7 +72,10 @@ abstract class CompatibilityMojo extends AbstractMojo {
     }
 
     protected Compatibility loadCompatibility() {
-        return Compatibility.ofServiceLoader();
+        return Compatibility.ofServiceLoader()
+                .toBuilder()
+                .onEvent(getLog()::info)
+                .build();
     }
 
     private static TextFormatter<Job> onToString() {

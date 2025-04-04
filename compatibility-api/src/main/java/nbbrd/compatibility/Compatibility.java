@@ -6,6 +6,7 @@ import lombok.NonNull;
 import nbbrd.compatibility.spi.*;
 import nbbrd.design.StaticFactoryMethod;
 import nbbrd.io.function.IOFunction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -13,6 +14,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 
@@ -39,8 +41,14 @@ public class Compatibility {
     @lombok.Singular
     List<Versioning> versionings;
 
+    @lombok.NonNull
+    @lombok.Builder.Default
+    Consumer<? super String> onEvent = ignore -> {
+    };
+
     public @NonNull Report execute(@NonNull Job job) throws IOException {
-        try (Build build = builder.getBuild()) {
+        onEvent.accept("Executing job");
+        try (Build build = new LoggingBuild(onEvent, builder.getBuild())) {
             return execute(
                     build,
                     map(job.getSources(), source -> SourceContext.init(source, job.getWorkingDir(), build, versionings)),
@@ -64,6 +72,7 @@ public class Compatibility {
     }
 
     private ReportItem execute(Build build, SourceContext source, VersionContext sourceVersion, TargetContext target, VersionContext targetVersion) throws IOException {
+        onEvent.accept("Executing job item for " + source.getUri() + " -> " + target.getUri());
         ReportItem.Builder result = ReportItem
                 .builder()
                 .sourceUri(source.getUri())
@@ -235,7 +244,8 @@ public class Compatibility {
     }
 
     private static String getDirectoryName(URI uri) {
-        return "dir_" + uri.toString().hashCode();
+        int hashCode = uri.toString().hashCode();
+        return "dir_" + (hashCode > 0 ? "0" : "1") + Math.abs(hashCode);
     }
 
     private static <X, Y> List<Y> map(List<X> sources, IOFunction<X, Y> mapping) throws IOException {
@@ -243,6 +253,73 @@ public class Compatibility {
             return sources.stream().map(mapping.asUnchecked()).collect(toList());
         } catch (UncheckedIOException ex) {
             throw ex.getCause();
+        }
+    }
+
+    @lombok.RequiredArgsConstructor
+    private static class LoggingBuild implements Build {
+
+        final Consumer<? super String> onEvent;
+        final Build delegate;
+
+        @Override
+        public void close() throws IOException {
+            onEvent.accept("closing build");
+            delegate.close();
+        }
+
+        @Override
+        public void restore(@NonNull Path project) throws IOException {
+            onEvent.accept("restoring " + project);
+            delegate.restore(project);
+        }
+
+        @Override
+        public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
+            onEvent.accept("checking out tag " + tag + " in " + project);
+            delegate.checkoutTag(project, tag);
+        }
+
+        @Override
+        public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
+            onEvent.accept("getting tags for " + project);
+            return delegate.getTags(project);
+        }
+
+        @Override
+        public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
+            onEvent.accept("cloning " + from + " to " + to);
+            delegate.clone(from, to);
+        }
+
+        @Override
+        public void clean(@NonNull Path project) throws IOException {
+            onEvent.accept("cleaning " + project);
+            delegate.clean(project);
+        }
+
+        @Override
+        public int verify(@NonNull Path project) throws IOException {
+            onEvent.accept("verifying " + project);
+            return delegate.verify(project);
+        }
+
+        @Override
+        public void setProperty(@NonNull Path project, @NonNull String propertyName, @Nullable String propertyValue) throws IOException {
+            onEvent.accept("setting property " + propertyName + " to " + propertyValue + " in " + project);
+            delegate.setProperty(project, propertyName, propertyValue);
+        }
+
+        @Override
+        public @Nullable String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
+            onEvent.accept("getting property " + propertyName + " from " + project);
+            return delegate.getProperty(project, propertyName);
+        }
+
+        @Override
+        public @NonNull Version getVersion(@NonNull Path project) throws IOException {
+            onEvent.accept("getting version from " + project);
+            return delegate.getVersion(project);
         }
     }
 }
