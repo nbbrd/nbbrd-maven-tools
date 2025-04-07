@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -115,6 +116,7 @@ public final class PowerShellBuild implements Build {
     @Override
     public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
         run(format(ROOT, "git clone -q %s %s", from, to), consume());
+        fixReadOnlyFiles(to);
     }
 
     @Override
@@ -131,5 +133,12 @@ public final class PowerShellBuild implements Build {
 
     private static <X> Collector<X, ?, Void> consume() {
         return reducing(null, ignore -> null, (ignoreFirst, ignoreSecond) -> null);
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static void fixReadOnlyFiles(Path to) throws IOException {
+        try (Stream<Path> files = Files.list(to.resolve(".git").resolve("objects").resolve("pack"))) {
+            files.forEach(file -> file.toFile().setWritable(true));
+        }
     }
 }
