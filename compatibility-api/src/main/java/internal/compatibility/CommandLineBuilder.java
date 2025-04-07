@@ -11,16 +11,16 @@ import java.io.IOException;
 
 @DirectImpl
 @ServiceProvider
-public final class PowerShellBuilder implements Builder {
+public final class CommandLineBuilder implements Builder {
 
     @Override
     public @NonNull String getBuilderId() {
-        return "powershell";
+        return "command-line";
     }
 
     @Override
     public @NonNull String getBuilderName() {
-        return "Powershell";
+        return "Command Line";
     }
 
     @Override
@@ -30,6 +30,6 @@ public final class PowerShellBuilder implements Builder {
 
     @Override
     public @NonNull Build getBuild() throws IOException {
-        return PowerShellBuild.getDefault();
+        return CommandLineBuild.getDefault();
     }
 }

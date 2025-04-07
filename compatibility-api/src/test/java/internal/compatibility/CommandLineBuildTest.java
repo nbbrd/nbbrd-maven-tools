@@ -24,24 +24,24 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static tests.compatibility.Examples.generateProject;
 import static tests.compatibility.Examples.resolveResource;
 
-@EnabledOnOs(value = OS.WINDOWS, disabledReason = "Use powershell internally")
+@EnabledOnOs(value = OS.WINDOWS, disabledReason = "Use Windows command line")
 @EnabledForJreRange(min = JRE.JAVA_17, disabledReason = "Use Java 17 in example projects")
 @Execution(ExecutionMode.CONCURRENT)
-class PowerShellBuildTest {
+class CommandLineBuildTest {
 
     private static Path sourceProject;
     private static Path targetProject;
 
     @BeforeAll
     static void beforeAll(@TempDir Path tmp) throws IOException {
-        sourceProject = generateProject(resolveResource("/source-project"), tmp.resolve("source-project"), PowerShellBuildTest::doNothing);
-        targetProject = generateProject(resolveResource("/target-project"), tmp.resolve("target-project"), PowerShellBuildTest::doNothing);
+        sourceProject = generateProject(resolveResource("/source-project"), tmp.resolve("source-project"), CommandLineBuildTest::doNothing);
+        targetProject = generateProject(resolveResource("/target-project"), tmp.resolve("target-project"), CommandLineBuildTest::doNothing);
     }
 
     @Test
     void cleanAndRestore(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             Path target = project.resolve("target");
             Path pom = project.resolve("pom.xml");
 
@@ -68,7 +68,7 @@ class PowerShellBuildTest {
     @Test
     void verify(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.verify(project))
                     .isEqualTo(0);
 
@@ -81,7 +81,7 @@ class PowerShellBuildTest {
     @Test
     void setProperty(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             Path pom = project.resolve("pom.xml");
             assertThat(pom).content().contains("<maven.compiler.target>11</maven.compiler.target>");
             assertThatCode(() -> x.setProperty(project, "maven.compiler.target", "stuff"))
@@ -93,7 +93,7 @@ class PowerShellBuildTest {
     @Test
     void getProperty(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getProperty(project, "maven.compiler.target"))
                     .isEqualTo("11");
         }
@@ -102,7 +102,7 @@ class PowerShellBuildTest {
     @Test
     void getVersion(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getVersion(project))
                     .hasToString("3.0.0");
         }
@@ -111,7 +111,7 @@ class PowerShellBuildTest {
     @Test
     void checkoutTag(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             x.checkoutTag(project, Tag.parse("v2.4.0"));
             assertThat(project.resolve("pom.xml"))
                     .content().contains("<version>2.4.0</version>");
@@ -121,7 +121,7 @@ class PowerShellBuildTest {
     @Test
     void getTags(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getTags(project))
                     .map(Tag::toString)
                     .contains(
@@ -137,7 +137,7 @@ class PowerShellBuildTest {
         Path project = copy(tmp);
         Path clonedProject = tmp.resolve("clonedProject");
         createDirectory(clonedProject);
-        try (PowerShellBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getJobExecutor()) {
             x.clone(project.toUri(), clonedProject);
         }
         assertThat(clonedProject.resolve("pom.xml")).exists();
@@ -157,8 +157,8 @@ class PowerShellBuildTest {
         return target;
     }
 
-    private static PowerShellBuild getJobExecutor() throws IOException {
-        return PowerShellBuild.getDefault();
+    private static CommandLineBuild getJobExecutor() throws IOException {
+        return CommandLineBuild.getDefault();
     }
 
     private static void doNothing(Object ignore) {

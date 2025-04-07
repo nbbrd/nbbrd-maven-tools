@@ -11,17 +11,17 @@ import java.nio.file.Path;
 
 import static tests.compatibility.BuilderAssert.assertBuilderCompliance;
 
-class PowerShellBuilderTest {
+class CommandLineBuilderTest {
 
     @Test
     void testCompliance() {
-        assertBuilderCompliance(new PowerShellBuilder());
+        assertBuilderCompliance(new CommandLineBuilder());
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     void testBuild(@TempDir Path tmp) throws IOException {
-        PowerShellBuilder x = new PowerShellBuilder();
+        CommandLineBuilder x = new CommandLineBuilder();
 
         try (Build build = x.getBuild()) {
         }
