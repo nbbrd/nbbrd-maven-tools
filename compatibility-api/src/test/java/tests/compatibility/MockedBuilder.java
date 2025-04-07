@@ -10,6 +10,7 @@ import org.semver4j.Semver;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -149,6 +150,7 @@ public class MockedBuilder implements Builder {
             if (projects.containsKey(toProjectId(to))) {
                 throw new IOException("Project " + to + " already exists");
             }
+            Files.createDirectory(to);
             MockedProject mockedProject = projects.get(from.toString().substring(7));
             projects.put(toProjectId(to), mockedProject);
         }

@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -68,6 +69,7 @@ public class Compatibility {
                 }
             }
         }
+        deleteTemporaryDirectories(sources, targets);
         return result.build();
     }
 
@@ -94,6 +96,19 @@ public class Compatibility {
             build.restore(project);
         }
         return result.build();
+    }
+
+    private void deleteTemporaryDirectories(List<SourceContext> sources, List<TargetContext> targets) throws IOException {
+        for (SourceContext source : sources) {
+            if (source.isDeleteOnExit()) {
+                Files.deleteIfExists(source.getDirectory());
+            }
+        }
+        for (TargetContext target : targets) {
+            if (target.isDeleteOnExit()) {
+                Files.deleteIfExists(target.getDirectory());
+            }
+        }
     }
 
     @lombok.Value
@@ -139,6 +154,8 @@ public class Compatibility {
         @NonNull
         Path directory;
 
+        boolean deleteOnExit;
+
         @lombok.Singular
         List<VersionContext> versions;
 
@@ -154,11 +171,11 @@ public class Compatibility {
 
             if (isFileScheme(source.getUri())) {
                 Path directory = Paths.get(source.getUri());
-                result.directory(directory);
+                result.directory(directory).deleteOnExit(false);
                 result.version(VersionContext.local(build.getVersion(directory)));
             } else {
                 Path directory = workingDir.resolve(getDirectoryName(source.getUri()));
-                result.directory(directory);
+                result.directory(directory).deleteOnExit(true);
                 build.clone(source.getUri(), directory);
                 for (Tag tag : build.getTags(directory)) {
                     build.checkoutTag(directory, tag);
@@ -190,6 +207,8 @@ public class Compatibility {
         @NonNull
         Path directory;
 
+        boolean deleteOnExit;
+
         @lombok.Singular
         List<VersionContext> versions;
 
@@ -209,11 +228,11 @@ public class Compatibility {
 
             if (isFileScheme(target.getUri())) {
                 Path directory = Paths.get(target.getUri());
-                result.directory(directory);
+                result.directory(directory).deleteOnExit(false);
                 result.version(VersionContext.local(build.getVersion(directory)));
             } else {
                 Path directory = workingDir.resolve(getDirectoryName(target.getUri()));
-                result.directory(directory);
+                result.directory(directory).deleteOnExit(true);
                 build.clone(target.getUri(), directory);
                 for (Tag tag : build.getTags(directory)) {
                     build.checkoutTag(directory, tag);

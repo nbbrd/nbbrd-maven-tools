@@ -53,6 +53,8 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(BROKEN).source(localSource, "3.0.0").target(remoteTarget, "1.0.1").build(),
                         ReportItem.builder().exitStatus(VERIFIED).source(localSource, "3.0.0").target(remoteTarget, "1.0.2").build()
                 );
+
+        assertThat(tmp).isEmptyDirectory();
     }
 
     @Test
@@ -83,6 +85,8 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(localTarget, "1.0.2").build(),
                         ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "3.0.0").target(localTarget, "1.0.2").build()
                 );
+
+        assertThat(tmp).isEmptyDirectory();
     }
 
     @Test
@@ -119,6 +123,8 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(BROKEN).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.1").build(),
                         ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.2").build()
                 );
+
+        assertThat(tmp).isEmptyDirectory();
     }
 
     @Test
@@ -147,6 +153,8 @@ class CompatibilityTest {
                 .containsExactly(
                         ReportItem.builder().exitStatus(VERIFIED).source(localSource, "3.0.0").target(localTarget, "1.0.2").build()
                 );
+
+        assertThat(tmp).isEmptyDirectory();
     }
 
     private final MockedBuilder example = MockedBuilder
