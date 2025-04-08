@@ -11,9 +11,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -101,14 +100,30 @@ public class Compatibility {
     private void deleteTemporaryDirectories(List<SourceContext> sources, List<TargetContext> targets) throws IOException {
         for (SourceContext source : sources) {
             if (source.isDeleteOnExit()) {
-                Files.deleteIfExists(source.getDirectory());
+                deleteRecursively(source.getDirectory());
             }
         }
         for (TargetContext target : targets) {
             if (target.isDeleteOnExit()) {
-                Files.deleteIfExists(target.getDirectory());
+                deleteRecursively(target.getDirectory());
             }
         }
+    }
+
+    private static void deleteRecursively(Path source) throws IOException {
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.deleteIfExists(file);
+                return super.visitFile(file, attrs);
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.deleteIfExists(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
+        });
     }
 
     @lombok.Value
@@ -174,7 +189,7 @@ public class Compatibility {
                 result.directory(directory).deleteOnExit(false);
                 result.version(VersionContext.local(build.getVersion(directory)));
             } else {
-                Path directory = workingDir.resolve(getDirectoryName(source.getUri()));
+                Path directory = Files.createTempDirectory(workingDir, "source");
                 result.directory(directory).deleteOnExit(true);
                 build.clone(source.getUri(), directory);
                 for (Tag tag : build.getTags(directory)) {
@@ -233,7 +248,7 @@ public class Compatibility {
                 result.directory(directory).deleteOnExit(false);
                 result.version(VersionContext.local(build.getVersion(directory)));
             } else {
-                Path directory = workingDir.resolve(getDirectoryName(target.getUri()));
+                Path directory = Files.createTempDirectory(workingDir, "target");
                 result.directory(directory).deleteOnExit(true);
                 build.clone(target.getUri(), directory);
                 for (Tag tag : build.getTags(directory)) {
@@ -264,11 +279,6 @@ public class Compatibility {
 
     private static boolean isFileScheme(URI uri) {
         return "file".equals(uri.getScheme());
-    }
-
-    private static String getDirectoryName(URI uri) {
-        int hashCode = uri.toString().hashCode();
-        return "dir_" + (hashCode > 0 ? "0" : "1") + Math.abs(hashCode);
     }
 
     private static <X, Y> List<Y> map(List<X> sources, IOFunction<X, Y> mapping) throws IOException {

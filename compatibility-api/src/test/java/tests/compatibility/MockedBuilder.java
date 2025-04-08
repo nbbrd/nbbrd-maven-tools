@@ -150,7 +150,7 @@ public class MockedBuilder implements Builder {
             if (projects.containsKey(toProjectId(to))) {
                 throw new IOException("Project " + to + " already exists");
             }
-            Files.createDirectory(to);
+            Files.createDirectories(to.resolve("sub-dir"));
             MockedProject mockedProject = projects.get(from.toString().substring(7));
             projects.put(toProjectId(to), mockedProject);
         }
