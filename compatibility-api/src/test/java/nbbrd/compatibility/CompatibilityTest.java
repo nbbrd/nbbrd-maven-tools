@@ -22,7 +22,7 @@ class CompatibilityTest {
     void executeNoOp() {
         Compatibility x = Compatibility.builder().build();
         assertThatIOException()
-                .isThrownBy(() -> x.execute(Job.builder().build()));
+                .isThrownBy(() -> x.check(Job.builder().build()));
     }
 
     @Test
@@ -47,7 +47,7 @@ class CompatibilityTest {
                 .workingDir(tmp)
                 .build();
 
-        assertThat(x.execute(job).getItems())
+        assertThat(x.check(job).getItems())
                 .containsExactly(
                         ReportItem.builder().exitStatus(BROKEN).source(localSource, "3.0.0").target(remoteTarget, "1.0.0").build(),
                         ReportItem.builder().exitStatus(BROKEN).source(localSource, "3.0.0").target(remoteTarget, "1.0.1").build(),
@@ -79,7 +79,7 @@ class CompatibilityTest {
                 .workingDir(tmp)
                 .build();
 
-        assertThat(x.execute(job).getItems())
+        assertThat(x.check(job).getItems())
                 .containsExactly(
                         ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(localTarget, "1.0.2").build(),
                         ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(localTarget, "1.0.2").build(),
@@ -111,7 +111,7 @@ class CompatibilityTest {
                 .workingDir(tmp)
                 .build();
 
-        assertThat(x.execute(job).getItems())
+        assertThat(x.check(job).getItems())
                 .containsExactly(
                         ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.0").build(),
                         ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.1").build(),
@@ -141,7 +141,7 @@ class CompatibilityTest {
                 .workingDir(tmp)
                 .build();
 
-        assertThat(x.execute(jobWithFilter).getItems())
+        assertThat(x.check(jobWithFilter).getItems())
                 .containsExactly(
                         ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.2").build(),
                         ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.2").build()
@@ -172,7 +172,7 @@ class CompatibilityTest {
                 .workingDir(tmp)
                 .build();
 
-        assertThat(x.execute(job).getItems())
+        assertThat(x.check(job).getItems())
                 .containsExactly(
                         ReportItem.builder().exitStatus(VERIFIED).source(localSource, "3.0.0").target(localTarget, "1.0.2").build()
                 );

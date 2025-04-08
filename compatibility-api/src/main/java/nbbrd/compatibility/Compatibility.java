@@ -4,9 +4,9 @@ import internal.compatibility.Broker;
 import internal.compatibility.NoOpBuilder;
 import lombok.NonNull;
 import nbbrd.compatibility.spi.*;
+import nbbrd.design.MightBePromoted;
 import nbbrd.design.StaticFactoryMethod;
 import nbbrd.io.function.IOFunction;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -46,24 +46,89 @@ public class Compatibility {
     Consumer<? super String> onEvent = ignore -> {
     };
 
-    public @NonNull Report execute(@NonNull Job job) throws IOException {
-        onEvent.accept("Executing job");
-        try (Build build = new LoggingBuild(onEvent, builder.getBuild())) {
-            return execute(
+    public @NonNull Report check(@NonNull Job job) throws IOException {
+        onEvent.accept("Using builder " + builder.getBuilderId());
+        try (Build build = builder.getBuild()) {
+            Report result = check(
                     build,
-                    map(job.getSources(), source -> SourceContext.init(source, job.getWorkingDir(), build, versionings)),
-                    map(job.getTargets(), target -> TargetContext.init(target, job.getWorkingDir(), build))
+                    map(job.getSources(), source -> initSource(source, job.getWorkingDir(), build)),
+                    map(job.getTargets(), target -> initTarget(target, job.getWorkingDir(), build))
             );
+            onEvent.accept("Report created with " + result.getItems().size() + " items");
+            return result;
         }
     }
 
-    private Report execute(Build build, List<SourceContext> sources, List<TargetContext> targets) throws IOException {
+    private SourceContext initSource(Source source, Path workingDir, Build build) throws IOException {
+        SourceContext.Builder result = SourceContext
+                .builder()
+                .uri(source.getUri())
+                .versioning(SourceContext.resolveVersioning(source, versionings));
+
+        if (isFileScheme(source.getUri())) {
+            Path directory = Paths.get(source.getUri());
+            onEvent.accept("Initializing local source from " + directory);
+            result.directory(directory).deleteOnExit(false);
+            result.version(VersionContext.local(build.getVersion(directory)));
+        } else {
+            Path directory = Files.createTempDirectory(workingDir, "source");
+            onEvent.accept("Initializing remote source to " + directory);
+            result.directory(directory).deleteOnExit(true);
+            build.clone(source.getUri(), directory);
+            for (Tag tag : build.getTags(directory)) {
+                if (source.getFilter().contains(tag)) {
+                    build.checkoutTag(directory, tag);
+                    result.version(VersionContext.remote(tag, build.getVersion(directory)));
+                    build.clean(directory);
+                    build.restore(directory);
+                }
+            }
+        }
+
+        return result.build();
+    }
+
+    private TargetContext initTarget(Target target, Path workingDir, Build build) throws IOException {
+        TargetContext.Builder result = TargetContext
+                .builder()
+                .uri(target.getUri())
+                .building(target.getBuilding())
+                .broker(TargetContext.resolveBroker(target));
+
+        if (isFileScheme(target.getUri())) {
+            Path directory = Paths.get(target.getUri());
+            onEvent.accept("Initializing local target from " + directory);
+            result.directory(directory).deleteOnExit(false);
+            result.version(VersionContext.local(build.getVersion(directory)));
+        } else {
+            Path directory = Files.createTempDirectory(workingDir, "target");
+            onEvent.accept("Initializing remote target to " + directory);
+            result.directory(directory).deleteOnExit(true);
+            build.clone(target.getUri(), directory);
+            for (Tag tag : build.getTags(directory)) {
+                if (target.getFilter().contains(tag)) {
+                    build.checkoutTag(directory, tag);
+                    result.version(VersionContext.remote(tag, build.getVersion(directory)));
+                    build.clean(directory);
+                    build.restore(directory);
+                }
+            }
+        }
+
+        return result.build();
+    }
+
+    private Report check(Build build, List<SourceContext> sources, List<TargetContext> targets) throws IOException {
+        long count = sources.stream().mapToLong(o -> o.getVersions().size()).sum()
+                * targets.stream().mapToLong(o -> o.getVersions().size()).sum();
+        int index = 0;
         Report.Builder result = Report.builder();
         for (SourceContext source : sources) {
             for (VersionContext sourceVersion : source.getVersions()) {
                 for (TargetContext target : targets) {
                     for (VersionContext targetVersion : target.getVersions()) {
-                        result.item(execute(build, source, sourceVersion, target, targetVersion));
+                        onEvent.accept("Checking " + ++index + "/" + count + " " + source.getUri() + "@" + sourceVersion.getVersion() + " -> " + target.getUri() + "@" + targetVersion.getVersion());
+                        result.item(check(build, source, sourceVersion, target, targetVersion));
                     }
                 }
             }
@@ -72,8 +137,7 @@ public class Compatibility {
         return result.build();
     }
 
-    private ReportItem execute(Build build, SourceContext source, VersionContext sourceVersion, TargetContext target, VersionContext targetVersion) throws IOException {
-        onEvent.accept("Executing job item for " + source.getUri() + " -> " + target.getUri());
+    private ReportItem check(Build build, SourceContext source, VersionContext sourceVersion, TargetContext target, VersionContext targetVersion) throws IOException {
         ReportItem.Builder result = ReportItem
                 .builder()
                 .sourceUri(source.getUri())
@@ -108,22 +172,6 @@ public class Compatibility {
                 deleteRecursively(target.getDirectory());
             }
         }
-    }
-
-    private static void deleteRecursively(Path source) throws IOException {
-        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.deleteIfExists(file);
-                return super.visitFile(file, attrs);
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.deleteIfExists(dir);
-                return super.postVisitDirectory(dir, exc);
-            }
-        });
     }
 
     @lombok.Value
@@ -177,34 +225,6 @@ public class Compatibility {
         @NonNull
         Versioning versioning;
 
-        @StaticFactoryMethod
-        public static SourceContext init(Source source, Path workingDir, Build build, List<Versioning> versioningList) throws IOException {
-            SourceContext.Builder result = SourceContext
-                    .builder()
-                    .uri(source.getUri())
-                    .versioning(resolveVersioning(source, versioningList));
-
-            if (isFileScheme(source.getUri())) {
-                Path directory = Paths.get(source.getUri());
-                result.directory(directory).deleteOnExit(false);
-                result.version(VersionContext.local(build.getVersion(directory)));
-            } else {
-                Path directory = Files.createTempDirectory(workingDir, "source");
-                result.directory(directory).deleteOnExit(true);
-                build.clone(source.getUri(), directory);
-                for (Tag tag : build.getTags(directory)) {
-                    if (source.getFilter().contains(tag)) {
-                        build.checkoutTag(directory, tag);
-                        result.version(VersionContext.remote(tag, build.getVersion(directory)));
-                        build.clean(directory);
-                        build.restore(directory);
-                    }
-                }
-            }
-
-            return result.build();
-        }
-
         private static Versioning resolveVersioning(Source source, List<Versioning> list) throws IOException {
             return list
                     .stream()
@@ -235,35 +255,6 @@ public class Compatibility {
         @NonNull
         Building building;
 
-        @StaticFactoryMethod
-        public static TargetContext init(Target target, Path workingDir, Build build) throws IOException {
-            TargetContext.Builder result = TargetContext
-                    .builder()
-                    .uri(target.getUri())
-                    .building(target.getBuilding())
-                    .broker(resolveBroker(target));
-
-            if (isFileScheme(target.getUri())) {
-                Path directory = Paths.get(target.getUri());
-                result.directory(directory).deleteOnExit(false);
-                result.version(VersionContext.local(build.getVersion(directory)));
-            } else {
-                Path directory = Files.createTempDirectory(workingDir, "target");
-                result.directory(directory).deleteOnExit(true);
-                build.clone(target.getUri(), directory);
-                for (Tag tag : build.getTags(directory)) {
-                    if (target.getFilter().contains(tag)) {
-                        build.checkoutTag(directory, tag);
-                        result.version(VersionContext.remote(tag, build.getVersion(directory)));
-                        build.clean(directory);
-                        build.restore(directory);
-                    }
-                }
-            }
-
-            return result.build();
-        }
-
         private static Broker resolveBroker(Target target) throws IOException {
             String property = target.getProperty();
             if (property.isEmpty()) {
@@ -277,10 +268,12 @@ public class Compatibility {
         return versioning.getVersionComparator().compare(from, to) > 0;
     }
 
+    @MightBePromoted
     private static boolean isFileScheme(URI uri) {
         return "file".equals(uri.getScheme());
     }
 
+    @MightBePromoted
     private static <X, Y> List<Y> map(List<X> sources, IOFunction<X, Y> mapping) throws IOException {
         try {
             return sources.stream().map(mapping.asUnchecked()).collect(toList());
@@ -289,70 +282,20 @@ public class Compatibility {
         }
     }
 
-    @lombok.RequiredArgsConstructor
-    private static class LoggingBuild implements Build {
+    @MightBePromoted
+    private static void deleteRecursively(Path source) throws IOException {
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.deleteIfExists(file);
+                return super.visitFile(file, attrs);
+            }
 
-        final Consumer<? super String> onEvent;
-        final Build delegate;
-
-        @Override
-        public void close() throws IOException {
-            onEvent.accept("closing build");
-            delegate.close();
-        }
-
-        @Override
-        public void restore(@NonNull Path project) throws IOException {
-            onEvent.accept("restoring " + project);
-            delegate.restore(project);
-        }
-
-        @Override
-        public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
-            onEvent.accept("checking out tag " + tag + " in " + project);
-            delegate.checkoutTag(project, tag);
-        }
-
-        @Override
-        public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
-            onEvent.accept("getting tags for " + project);
-            return delegate.getTags(project);
-        }
-
-        @Override
-        public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
-            onEvent.accept("cloning " + from + " to " + to);
-            delegate.clone(from, to);
-        }
-
-        @Override
-        public void clean(@NonNull Path project) throws IOException {
-            onEvent.accept("cleaning " + project);
-            delegate.clean(project);
-        }
-
-        @Override
-        public int verify(@NonNull Path project) throws IOException {
-            onEvent.accept("verifying " + project);
-            return delegate.verify(project);
-        }
-
-        @Override
-        public void setProperty(@NonNull Path project, @NonNull String propertyName, @Nullable String propertyValue) throws IOException {
-            onEvent.accept("setting property " + propertyName + " to " + propertyValue + " in " + project);
-            delegate.setProperty(project, propertyName, propertyValue);
-        }
-
-        @Override
-        public @Nullable String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
-            onEvent.accept("getting property " + propertyName + " from " + project);
-            return delegate.getProperty(project, propertyName);
-        }
-
-        @Override
-        public @NonNull Version getVersion(@NonNull Path project) throws IOException {
-            onEvent.accept("getting version from " + project);
-            return delegate.getVersion(project);
-        }
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.deleteIfExists(dir);
+                return super.postVisitDirectory(dir, exc);
+            }
+        });
     }
 }

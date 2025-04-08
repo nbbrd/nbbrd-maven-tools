@@ -3,6 +3,7 @@ package nbbrd.compatibility.maven.plugin;
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
+import nbbrd.compatibility.spi.Builder;
 import nbbrd.compatibility.spi.Format;
 import nbbrd.io.text.TextFormatter;
 import org.apache.maven.plugin.AbstractMojo;
@@ -34,7 +35,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
     @Parameter(defaultValue = "${java.io.tmpdir}", readonly = true)
     private File workingDir;
 
-    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", readonly = true)
+    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", property = "compatibility.report.file")
     private File reportFile;
 
     protected boolean isRootProject() {
@@ -63,7 +64,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
     protected Report exec(Compatibility compatibility, Job job) throws MojoExecutionException {
         getLog().info("Using builder: " + compatibility.getBuilder().getBuilderId());
         try {
-            return compatibility.execute(job);
+            return compatibility.check(job);
         } catch (IOException ex) {
             throw new MojoExecutionException("Failed to execute job", ex);
         }
@@ -79,8 +80,10 @@ abstract class CompatibilityMojo extends AbstractMojo {
     }
 
     protected Compatibility loadCompatibility() {
-        return Compatibility.ofServiceLoader()
+        Compatibility original = Compatibility.ofServiceLoader();
+        return original
                 .toBuilder()
+                .builder(Builder.logging(getLog()::debug, original.getBuilder()))
                 .onEvent(getLog()::info)
                 .build();
     }
