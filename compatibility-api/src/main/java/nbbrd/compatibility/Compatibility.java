@@ -178,10 +178,12 @@ public class Compatibility {
                 result.directory(directory).deleteOnExit(true);
                 build.clone(source.getUri(), directory);
                 for (Tag tag : build.getTags(directory)) {
-                    build.checkoutTag(directory, tag);
-                    result.version(VersionContext.remote(tag, build.getVersion(directory)));
-                    build.clean(directory);
-                    build.restore(directory);
+                    if (source.getFilter().contains(tag)) {
+                        build.checkoutTag(directory, tag);
+                        result.version(VersionContext.remote(tag, build.getVersion(directory)));
+                        build.clean(directory);
+                        build.restore(directory);
+                    }
                 }
             }
 
@@ -235,10 +237,12 @@ public class Compatibility {
                 result.directory(directory).deleteOnExit(true);
                 build.clone(target.getUri(), directory);
                 for (Tag tag : build.getTags(directory)) {
-                    build.checkoutTag(directory, tag);
-                    result.version(VersionContext.remote(tag, build.getVersion(directory)));
-                    build.clean(directory);
-                    build.restore(directory);
+                    if (target.getFilter().contains(tag)) {
+                        build.checkoutTag(directory, tag);
+                        result.version(VersionContext.remote(tag, build.getVersion(directory)));
+                        build.clean(directory);
+                        build.restore(directory);
+                    }
                 }
             }
 

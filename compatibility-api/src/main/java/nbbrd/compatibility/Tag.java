@@ -1,42 +1,40 @@
 package nbbrd.compatibility;
 
-import lombok.AccessLevel;
 import lombok.NonNull;
 import nbbrd.design.RepresentableAsString;
 import nbbrd.design.StaticFactoryMethod;
 
-@RepresentableAsString
-@lombok.AllArgsConstructor(access = AccessLevel.PRIVATE)
-@lombok.EqualsAndHashCode
-public class Tag implements CharSequence {
+import java.time.LocalDate;
 
-    public static final Tag NO_TAG = new Tag("");
+@RepresentableAsString
+@lombok.Value(staticConstructor = "of")
+public class Tag {
+
+    public static final Tag NO_TAG = new Tag(LocalDate.MAX, "");
+
+    private static final String SEPARATOR = "/";
 
     @StaticFactoryMethod
-    public static @NonNull Tag parse(@NonNull CharSequence text) {
-        return new Tag(text.toString());
+    public static @NonNull Tag parse(@NonNull CharSequence text) throws IllegalArgumentException {
+        String textString = text.toString();
+        int separatorIndex = textString.indexOf(SEPARATOR);
+        if (separatorIndex == -1) {
+            throw new IllegalArgumentException("Invalid tag");
+        }
+        return new Tag(
+                separatorIndex == 0 ? LocalDate.MAX : LocalDate.parse(textString.substring(0, separatorIndex)),
+                textString.substring(separatorIndex + SEPARATOR.length())
+        );
     }
 
     @NonNull
-    String text;
+    LocalDate date;
 
-    @Override
-    public int length() {
-        return text.length();
-    }
-
-    @Override
-    public char charAt(int index) {
-        return text.charAt(index);
-    }
-
-    @Override
-    public CharSequence subSequence(int start, int end) {
-        return text.subSequence(start, end);
-    }
+    @NonNull
+    String ref;
 
     @Override
     public String toString() {
-        return text.toString();
+        return (date.equals(LocalDate.MAX) ? "" : date.toString()) + SEPARATOR + ref;
     }
 }

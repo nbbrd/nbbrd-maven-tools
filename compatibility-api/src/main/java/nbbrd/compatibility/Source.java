@@ -10,7 +10,11 @@ public class Source {
     URI uri;
 
     @lombok.Builder.Default
-    String versioning = "";
+    String versioning = DEFAULT_VERSIONING;
+
+    @lombok.NonNull
+    @lombok.Builder.Default
+    Filter filter = Filter.DEFAULT;
 
     public static final String DEFAULT_VERSIONING = "semver";
 }

@@ -5,6 +5,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import lombok.NonNull;
+import nbbrd.compatibility.Filter;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.Version;
@@ -13,6 +14,7 @@ import nbbrd.design.DirectImpl;
 import nbbrd.service.ServiceProvider;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,6 +71,7 @@ public final class JsonFormat implements Format {
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(Path.class, create(Path.class, Paths::get, Path::toString))
             .registerTypeAdapter(Version.class, create(Version.class, Version::parse, Version::toString))
+            .registerTypeAdapter(Filter.class, (JsonSerializer<Filter>) JsonFormat::serializeFilter)
             .setPrettyPrinting()
             .create();
 
@@ -93,5 +96,13 @@ public final class JsonFormat implements Format {
                 out.value(value == null ? null : formatter.apply(value));
             }
         };
+    }
+
+    private static JsonElement serializeFilter(Filter src, Type typeOfSrc, JsonSerializationContext context) {
+        JsonObject result = new JsonObject();
+        result.addProperty("ref", src.getRef());
+        result.addProperty("from", src.getFrom().toString());
+        result.addProperty("to", src.getTo().toString());
+        return result;
     }
 }

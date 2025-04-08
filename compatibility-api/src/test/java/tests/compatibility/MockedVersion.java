@@ -37,7 +37,7 @@ public class MockedVersion {
     }
 
     public static Builder builderOf(CharSequence version) {
-        return builder().version(Version.parse(version)).tag(Tag.parse("v" + version));
+        return builder().version(Version.parse(version)).tag(Tag.parse("/v" + version));
     }
 
     public static final class Builder {

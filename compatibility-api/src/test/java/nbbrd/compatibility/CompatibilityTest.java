@@ -124,6 +124,29 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.2").build()
                 );
 
+        Job jobWithFilter = Job
+                .builder()
+                .source(Source
+                        .builder()
+                        .uri(remoteSource)
+                        .versioning("semver")
+                        .filter(Filter.builder().ref("2.").build())
+                        .build())
+                .target(Target
+                        .builder()
+                        .uri(remoteTarget)
+                        .property("x")
+                        .filter(Filter.builder().ref("1.0.2").build())
+                        .build())
+                .workingDir(tmp)
+                .build();
+
+        assertThat(x.execute(jobWithFilter).getItems())
+                .containsExactly(
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.2").build(),
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.2").build()
+                );
+
         assertThat(tmp).isEmptyDirectory();
     }
 

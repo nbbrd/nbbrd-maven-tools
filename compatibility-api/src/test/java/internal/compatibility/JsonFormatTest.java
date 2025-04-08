@@ -48,7 +48,12 @@ class JsonFormatTest {
                         "  \"sources\": [\n" +
                         "    {\n" +
                         "      \"uri\": \"hello:source\",\n" +
-                        "      \"versioning\": \"\"\n" +
+                        "      \"versioning\": \"semver\",\n" +
+                        "      \"filter\": {\n" +
+                        "        \"ref\": \"\",\n" +
+                        "        \"from\": \"-999999999-01-01\",\n" +
+                        "        \"to\": \"+999999999-12-31\"\n" +
+                        "      }\n"+
                         "    }\n" +
                         "  ],\n" +
                         "  \"targets\": [\n" +
@@ -58,7 +63,12 @@ class JsonFormatTest {
                         "      \"building\": {\n" +
                         "        \"parameters\": \"\",\n" +
                         "        \"jdk\": \"\"\n" +
-                        "      }\n" +
+                        "      },\n" +
+                        "      \"filter\": {\n" +
+                        "        \"ref\": \"\",\n" +
+                        "        \"from\": \"-999999999-01-01\",\n" +
+                        "        \"to\": \"+999999999-12-31\"\n" +
+                        "      }\n"+
                         "    }\n" +
                         "  ],\n" +
                         "  \"workingDir\": \"folder\"\n" +

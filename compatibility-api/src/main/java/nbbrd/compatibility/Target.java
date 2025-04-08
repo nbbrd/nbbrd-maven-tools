@@ -17,5 +17,9 @@ public class Target {
     @lombok.Builder.Default
     Building building = Building.DEFAULT;
 
+    @lombok.NonNull
+    @lombok.Builder.Default
+    Filter filter = Filter.DEFAULT;
+
     public static final String NO_PROPERTY = "";
 }

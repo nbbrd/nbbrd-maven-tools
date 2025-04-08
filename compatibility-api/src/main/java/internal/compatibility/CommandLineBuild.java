@@ -80,12 +80,12 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
-        run(consume(), "git", "-C", project.toString(), "checkout", "-q", tag.toString());
+        run(consume(), "git", "-C", project.toString(), "checkout", "-q", tag.getRef());
     }
 
     @Override
     public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
-        return run(mapping(Tag::parse, toList()), "git", "-C", project.toString(), "tag", "--sort=-creatordate");
+        return run(mapping(Tag::parse, toList()), "git", "-C", project.toString(), "tag", "--sort=-creatordate", "--format=%(creatordate:short)/%(refname:strip=2)");
     }
 
     @Override
