@@ -1,6 +1,7 @@
 package nbbrd.compatibility.maven.plugin;
 
 import internal.compatibility.maven.plugin.MojoFunction;
+import lombok.NonNull;
 import nbbrd.compatibility.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -36,15 +37,15 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
     @Parameter(defaultValue = "+999999999-12-31", property = "compatibility.target.to")
     private String targetTo;
 
-    protected String getNonNullVersioning() {
+    protected @NonNull String toVersioning() {
         return versioning != null ? versioning : Source.DEFAULT_VERSIONING;
     }
 
-    protected String getNonNullProperty() {
+    protected @NonNull String toProperty() {
         return property != null ? property : Target.NO_PROPERTY;
     }
 
-    protected Filter getSourceFilter() throws MojoExecutionException {
+    protected @NonNull Filter toSourceFilter() throws MojoExecutionException {
         return Filter
                 .builder()
                 .ref(Objects.toString(sourceRef, ""))
@@ -53,7 +54,7 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
                 .build();
     }
 
-    protected Filter getTargetFilter() throws MojoExecutionException {
+    protected @NonNull Filter toTargetFilter() throws MojoExecutionException {
         return Filter
                 .builder()
                 .ref(Objects.toString(targetRef, ""))

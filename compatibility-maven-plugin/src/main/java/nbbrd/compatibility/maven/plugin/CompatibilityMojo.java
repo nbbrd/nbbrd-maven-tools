@@ -1,10 +1,12 @@
 package nbbrd.compatibility.maven.plugin;
 
+import lombok.NonNull;
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.spi.Builder;
 import nbbrd.compatibility.spi.Format;
+import nbbrd.design.VisibleForTesting;
 import nbbrd.io.text.TextFormatter;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -14,7 +16,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Predicate;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -50,6 +55,10 @@ abstract class CompatibilityMojo extends AbstractMojo {
         return true;
     }
 
+    protected @NonNull Path toReportFile() {
+        return Paths.get(fixUnresolvedProperties(reportFile.toURI()));
+    }
+
     protected void log(Compatibility compatibility, Job job) throws MojoExecutionException {
         Log log = getLog();
         try {
@@ -58,11 +67,10 @@ abstract class CompatibilityMojo extends AbstractMojo {
         } catch (IOException ex) {
             throw new MojoExecutionException("Failed to format job", ex);
         }
-        log.info("ReportFile: " + reportFile);
+        log.info("ReportFile: " + toReportFile());
     }
 
     protected Report exec(Compatibility compatibility, Job job) throws MojoExecutionException {
-        getLog().info("Using builder: " + compatibility.getBuilder().getBuilderId());
         try {
             return compatibility.check(job);
         } catch (IOException ex) {
@@ -71,12 +79,14 @@ abstract class CompatibilityMojo extends AbstractMojo {
     }
 
     protected void writeReport(Compatibility compatibility, Report report) throws MojoExecutionException {
+        Path file = toReportFile();
         try {
-            Files.createDirectories(reportFile.toPath().getParent());
-            getReportTextFormatter(compatibility, onFile(reportFile)).formatFile(report, reportFile, UTF_8);
+            Files.createDirectories(file.getParent());
+            getReportTextFormatter(compatibility, onFile(file)).formatPath(report, file, UTF_8);
         } catch (IOException ex) {
             throw new MojoExecutionException("Failed to write report", ex);
         }
+        getLog().info("Report written to " + file);
     }
 
     protected Compatibility loadCompatibility() {
@@ -114,10 +124,10 @@ abstract class CompatibilityMojo extends AbstractMojo {
         return format -> format.getFormatId().equals(id);
     }
 
-    private static Predicate<Format> onFile(File file) {
+    private static Predicate<Format> onFile(Path file) {
         return format -> {
             try {
-                return format.getFormatFileFilter().accept(file.toPath());
+                return format.getFormatFileFilter().accept(file);
             } catch (IOException e) {
                 return false;
             }
@@ -134,5 +144,13 @@ abstract class CompatibilityMojo extends AbstractMojo {
 
     private static TextFormatter<Report> asReportFormatter(Format format) {
         return TextFormatter.onFormattingWriter((Report j, Writer w) -> format.formatReport(w, j));
+    }
+
+    @VisibleForTesting
+    static URI fixUnresolvedProperties(URI uri) {
+        String text = uri.toString();
+        return URI.create(text
+                .replace("$%7Bproject.build.directory%7D/", "")
+                .replace("$%7Bproject.basedir%7D/", ""));
     }
 }

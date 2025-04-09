@@ -48,8 +48,8 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
         return Source
                 .builder()
                 .uri(requireNonNull(source, "Source URI must not be null"))
-                .versioning(getNonNullVersioning())
-                .filter(getSourceFilter())
+                .versioning(toVersioning())
+                .filter(toSourceFilter())
                 .build();
     }
 
@@ -65,8 +65,8 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
         return Target
                 .builder()
                 .uri(requireNonNull(uri, "Target URI must not be null"))
-                .property(getNonNullProperty())
-                .filter(getTargetFilter())
+                .property(toProperty())
+                .filter(toTargetFilter())
                 .build();
     }
 }
