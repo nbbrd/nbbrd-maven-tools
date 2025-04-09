@@ -53,7 +53,7 @@ class JsonFormatTest {
                         "        \"ref\": \"\",\n" +
                         "        \"from\": \"-999999999-01-01\",\n" +
                         "        \"to\": \"+999999999-12-31\"\n" +
-                        "      }\n"+
+                        "      }\n" +
                         "    }\n" +
                         "  ],\n" +
                         "  \"targets\": [\n" +
@@ -68,7 +68,7 @@ class JsonFormatTest {
                         "        \"ref\": \"\",\n" +
                         "        \"from\": \"-999999999-01-01\",\n" +
                         "        \"to\": \"+999999999-12-31\"\n" +
-                        "      }\n"+
+                        "      }\n" +
                         "    }\n" +
                         "  ],\n" +
                         "  \"workingDir\": \"folder\"\n" +
@@ -79,7 +79,7 @@ class JsonFormatTest {
     void testFormatReport() throws IOException {
         JsonFormat x = new JsonFormat();
 
-        assertThat(Report.builder().build())
+        assertThat(Report.EMPTY)
                 .extracting(withFormatReport(x), STRING)
                 .isEqualTo("{\n" +
                         "  \"items\": []\n" +

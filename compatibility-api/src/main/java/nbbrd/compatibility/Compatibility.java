@@ -47,6 +47,14 @@ public class Compatibility {
     };
 
     public @NonNull Report check(@NonNull Job job) throws IOException {
+        if (job.getSources().isEmpty()) {
+            onEvent.accept("No source provided");
+            return Report.EMPTY;
+        }
+        if (job.getTargets().isEmpty()) {
+            onEvent.accept("No target provided");
+            return Report.EMPTY;
+        }
         onEvent.accept("Using builder " + builder.getBuilderId());
         try (Build build = builder.getBuild()) {
             Report result = check(

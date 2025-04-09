@@ -31,7 +31,7 @@ class MarkdownFormatTest {
     void testFormatReport() throws IOException {
         MarkdownFormat x = new MarkdownFormat();
 
-        assertThat(Report.builder().build())
+        assertThat(Report.EMPTY)
                 .extracting(withFormatReport(x), STRING)
                 .isEqualTo("");
 

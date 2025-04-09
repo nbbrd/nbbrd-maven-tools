@@ -37,7 +37,7 @@ public final class FormatAssert {
             assertThatIOException().isThrownBy(() -> x.formatJob(new StringBuilder(), job));
         }
 
-        Report report = Report.builder().build();
+        Report report = Report.EMPTY;
         if (x.canFormatReport()) {
             assertThatNullPointerException().isThrownBy(() -> x.formatReport(null, report));
             assertThatNullPointerException().isThrownBy(() -> x.formatReport(new StringBuilder(), null));
