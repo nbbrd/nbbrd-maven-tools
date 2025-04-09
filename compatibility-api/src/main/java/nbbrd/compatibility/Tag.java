@@ -10,9 +10,10 @@ import java.time.LocalDate;
 @lombok.Value(staticConstructor = "of")
 public class Tag {
 
-    public static final Tag NO_TAG = new Tag(LocalDate.MAX, "");
+    private static final char SEPARATOR = '/';
+    private static final LocalDate NO_DATE_VALUE = LocalDate.MAX;
 
-    private static final String SEPARATOR = "/";
+    public static final Tag NO_TAG = new Tag(NO_DATE_VALUE, "");
 
     @StaticFactoryMethod
     public static @NonNull Tag parse(@NonNull CharSequence text) throws IllegalArgumentException {
@@ -22,8 +23,8 @@ public class Tag {
             throw new IllegalArgumentException("Invalid tag");
         }
         return new Tag(
-                separatorIndex == 0 ? LocalDate.MAX : LocalDate.parse(textString.substring(0, separatorIndex)),
-                textString.substring(separatorIndex + SEPARATOR.length())
+                separatorIndex == 0 ? NO_DATE_VALUE : LocalDate.parse(textString.substring(0, separatorIndex)),
+                textString.substring(separatorIndex + 1)
         );
     }
 
@@ -35,6 +36,10 @@ public class Tag {
 
     @Override
     public String toString() {
-        return (date.equals(LocalDate.MAX) ? "" : date.toString()) + SEPARATOR + ref;
+        return (date.equals(NO_DATE_VALUE) ? "" : date.toString()) + SEPARATOR + ref;
+    }
+
+    public @NonNull Tag withoutDate() {
+        return new Tag(NO_DATE_VALUE, ref);
     }
 }

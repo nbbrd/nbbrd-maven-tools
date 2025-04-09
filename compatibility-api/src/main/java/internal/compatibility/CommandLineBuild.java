@@ -85,7 +85,7 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
-        return run(mapping(Tag::parse, toList()), "git", "-C", project.toString(), "tag", "--sort=-creatordate", "--format=%(creatordate:short)/%(refname:strip=2)");
+        return run(mapping(Tag::parse, toList()), "git", "-C", project.toString(), "tag", "--sort=creatordate", "--format=%(creatordate:short)/%(refname:strip=2)");
     }
 
     @Override

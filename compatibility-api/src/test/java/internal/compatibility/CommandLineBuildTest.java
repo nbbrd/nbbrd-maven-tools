@@ -123,11 +123,11 @@ class CommandLineBuildTest {
         Path project = copy(tmp);
         try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getTags(project))
-                    .map(Tag::getRef)
-                    .contains(
-                            "v3.0.0",
-                            "v2.4.0",
-                            "v2.3.4"
+                    .map(Tag::withoutDate)
+                    .containsExactly(
+                            Tag.parse("/v2.3.4"),
+                            Tag.parse("/v2.4.0"),
+                            Tag.parse("/v3.0.0")
                     );
         }
     }
