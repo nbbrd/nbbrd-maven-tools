@@ -1,7 +1,7 @@
 package nbbrd.compatibility.spi;
 
-import internal.compatibility.LoggingBuild;
-import internal.compatibility.ResourceDefinition;
+import internal.compatibility.spi.LoggingBuild;
+import internal.compatibility.spi.ResourceDefinition;
 import lombok.NonNull;
 
 import java.io.Closeable;

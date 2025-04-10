@@ -1,10 +1,10 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import nbbrd.compatibility.Version;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static tests.compatibility.VersioningAssert.assertVersioningCompliance;
+import static tests.compatibility.spi.VersioningAssert.assertVersioningCompliance;
 
 class SemanticVersioningTest {
 

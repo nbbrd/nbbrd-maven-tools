@@ -1,4 +1,4 @@
-package tests.compatibility;
+package tests.compatibility.spi;
 
 import lombok.NonNull;
 import nbbrd.compatibility.spi.Builder;

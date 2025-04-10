@@ -1,6 +1,6 @@
 package nbbrd.compatibility;
 
-import internal.compatibility.NoOpBuilder;
+import internal.compatibility.spi.NoOpBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tests.compatibility.MockedBuilder;

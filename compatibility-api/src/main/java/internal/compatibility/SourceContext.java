@@ -1,0 +1,30 @@
+package internal.compatibility;
+
+import lombok.NonNull;
+import nbbrd.compatibility.spi.Versioning;
+
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.List;
+
+@lombok.Value
+@lombok.Builder
+public class SourceContext implements ProjectContext {
+
+    @NonNull
+    URI uri;
+
+    @NonNull
+    Path directory;
+
+    boolean deleteOnExit;
+
+    @lombok.Singular
+    List<VersionContext> versions;
+
+    @NonNull
+    Versioning versioning;
+
+    public static final class Builder implements ProjectContext.Builder<Builder> {
+    }
+}

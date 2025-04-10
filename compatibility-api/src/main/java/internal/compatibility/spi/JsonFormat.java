@@ -1,4 +1,4 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;

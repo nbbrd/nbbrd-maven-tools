@@ -1,4 +1,4 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import lombok.NonNull;
 import nbbrd.compatibility.Version;

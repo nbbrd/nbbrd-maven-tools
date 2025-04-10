@@ -1,8 +1,8 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import org.junit.jupiter.api.Test;
 
-import static tests.compatibility.BuilderAssert.assertBuilderCompliance;
+import static tests.compatibility.spi.BuilderAssert.assertBuilderCompliance;
 
 class NoOpBuilderTest {
 

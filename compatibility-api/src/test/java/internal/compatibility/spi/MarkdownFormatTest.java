@@ -1,4 +1,4 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.ReportItem;
@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 import static nbbrd.compatibility.ExitStatus.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
-import static tests.compatibility.FormatAssert.*;
+import static tests.compatibility.spi.FormatAssert.*;
 
 class MarkdownFormatTest {
 

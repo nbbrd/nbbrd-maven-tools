@@ -1,35 +1,32 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import lombok.NonNull;
 import nbbrd.compatibility.spi.Builder;
 import nbbrd.compatibility.spi.Build;
-import nbbrd.design.DirectImpl;
-import nbbrd.io.sys.OS;
-import nbbrd.service.ServiceProvider;
 
 import java.io.IOException;
 
-@DirectImpl
-@ServiceProvider
-public final class CommandLineBuilder implements Builder {
+public enum NoOpBuilder implements Builder {
+
+    INSTANCE;
 
     @Override
     public @NonNull String getBuilderId() {
-        return "command-line";
+        return "no-op";
     }
 
     @Override
     public @NonNull String getBuilderName() {
-        return "Command Line";
+        return "No operation";
     }
 
     @Override
     public boolean isBuilderAvailable() {
-        return OS.NAME.equals(OS.Name.WINDOWS);
+        return false;
     }
 
     @Override
     public @NonNull Build getBuild() throws IOException {
-        return CommandLineBuild.getDefault();
+        throw new IOException(getBuilderName());
     }
 }

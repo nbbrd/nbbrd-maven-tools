@@ -1,4 +1,4 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import nbbrd.compatibility.*;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
-import static tests.compatibility.FormatAssert.*;
+import static tests.compatibility.spi.FormatAssert.*;
 
 class JsonFormatTest {
 

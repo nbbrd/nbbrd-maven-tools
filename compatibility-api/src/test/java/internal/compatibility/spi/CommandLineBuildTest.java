@@ -1,4 +1,4 @@
-package internal.compatibility;
+package internal.compatibility.spi;
 
 import nbbrd.compatibility.Tag;
 import org.junit.jupiter.api.BeforeAll;

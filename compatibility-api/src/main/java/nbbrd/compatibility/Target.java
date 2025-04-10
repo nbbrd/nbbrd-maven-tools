@@ -4,7 +4,7 @@ import java.net.URI;
 
 @lombok.Value
 @lombok.Builder
-public class Target {
+public class Target implements Project {
 
     @lombok.NonNull
     URI uri;

@@ -1,6 +1,6 @@
 package nbbrd.compatibility.spi;
 
-import internal.compatibility.LoggingBuilder;
+import internal.compatibility.spi.LoggingBuilder;
 import lombok.NonNull;
 import nbbrd.service.ServiceDefinition;
 import nbbrd.service.ServiceFilter;
