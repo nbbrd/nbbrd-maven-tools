@@ -4,6 +4,7 @@ import lombok.NonNull;
 import nbbrd.compatibility.*;
 import nbbrd.compatibility.spi.Format;
 import nbbrd.design.DirectImpl;
+import nbbrd.design.VisibleForTesting;
 import nbbrd.service.ServiceProvider;
 
 import java.io.IOException;
@@ -88,7 +89,8 @@ public final class MarkdownFormat implements Format {
     }
 
     private static void printMarkdown(Appendable appendable, List<Header> rows, List<Header> columns, ExitStatus[][] body) throws IOException {
-        int col0 = rows.stream().map(Header::toShortPluginName).mapToInt(String::length).max().orElse(0);
+        int shortNameIndex = Header.getShortNameIndex(rows);
+        int col0 = rows.stream().map(header -> header.toShortPluginName(shortNameIndex)).mapToInt(String::length).max().orElse(0);
         int col1 = rows.stream().map(Header::toVersionString).mapToInt(s -> s.length() + 4).max().orElse(0);
         int[] sizes = IntStream.concat(
                 IntStream.of(col0, col1),
@@ -105,7 +107,7 @@ public final class MarkdownFormat implements Format {
         int bound = rows.size();
         for (int idx = 0; idx < bound; idx++) {
             int i = idx;
-            String shortPluginName = rows.get(i).toShortPluginName();
+            String shortPluginName = rows.get(i).toShortPluginName(shortNameIndex);
             String label = previous.getAndSet(shortPluginName).equals(shortPluginName) ? "" : shortPluginName;
             String versionString = rows.get(i).toVersionString();
             boolean important = max.get(rows.get(i).getUri()).orElse(Version.parse("")).equals(Version.parse(versionString.substring(1)));
@@ -134,8 +136,9 @@ public final class MarkdownFormat implements Format {
         }
     }
 
+    @VisibleForTesting
     @lombok.Value
-    private static class Header {
+    static class Header {
 
         URI uri;
         Version version;
@@ -144,9 +147,30 @@ public final class MarkdownFormat implements Format {
             return "v" + version.toString();
         }
 
-        String toShortPluginName() {
-            String text = uri.toString();
-            return text.substring(text.lastIndexOf("/") + 1).replace("jdplus-", "");
+        String toUriString() {
+            return uri.toString();
+        }
+
+        String toShortPluginName(int index) {
+            return toUriString().substring(index);
+        }
+
+        static int getShortNameIndex(List<Header> headers) {
+            switch (headers.size()) {
+                case 0:
+                case 1:
+                    return 0;
+                default:
+                    String first = headers.get(0).toUriString();
+                    List<String> rest = headers.stream().skip(1).map(Header::toUriString).collect(toList());
+                    for (int i = first.length(); i >= 0; i--) {
+                        String prefix = first.substring(0, i);
+                        if (rest.stream().allMatch(header -> header.startsWith(prefix))) {
+                            return i == first.length() ? 0 : i;
+                        }
+                    }
+                    return 0;
+            }
         }
     }
 

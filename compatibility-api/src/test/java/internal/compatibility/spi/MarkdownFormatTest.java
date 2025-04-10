@@ -10,6 +10,9 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static internal.compatibility.spi.MarkdownFormat.Header.getShortNameIndex;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static nbbrd.compatibility.ExitStatus.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
@@ -66,5 +69,35 @@ class MarkdownFormatTest {
         assertThat(x.accept(Paths.get("hello.xml"))).isFalse();
         assertThat(x.accept(Paths.get("hello.md"))).isTrue();
         assertThat(x.accept(Paths.get("hello.MD"))).isTrue();
+    }
+
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
+    @Test
+    void testGetShortNameIndex() {
+        assertThat(getShortNameIndex(emptyList()))
+                .isEqualTo(0);
+
+        assertThat(getShortNameIndex(asList(
+                new MarkdownFormat.Header(URI.create(""), null)
+        ))).isEqualTo(0);
+
+        assertThat(getShortNameIndex(asList(
+                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null)
+        ))).isEqualTo(0);
+
+        assertThat(getShortNameIndex(asList(
+                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null),
+                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null)
+        ))).isEqualTo(0);
+
+        assertThat(getShortNameIndex(asList(
+                new MarkdownFormat.Header(URI.create("https://github.com/jdemetra/jdplus-benchmarking"), null),
+                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null)
+        ))).isEqualTo(19);
+
+        assertThat(getShortNameIndex(asList(
+                new MarkdownFormat.Header(URI.create("https://github.com/jdemetra/jdplus-benchmarking"), null),
+                new MarkdownFormat.Header(URI.create("https://github.com/jdemetra/jdplus-incubator"), null)
+        ))).isEqualTo(35);
     }
 }
