@@ -6,8 +6,8 @@ import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.StaticFactoryMethod;
 import nbbrd.io.sys.EndOfProcessException;
+import nbbrd.io.sys.OS;
 import nbbrd.io.sys.ProcessReader;
-import nbbrd.io.win.WhereWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.BufferedReader;
@@ -29,15 +29,17 @@ public final class CommandLineBuild implements Build {
 
     @StaticFactoryMethod
     public static @NonNull CommandLineBuild getDefault() throws IOException {
-        if (!WhereWrapper.isAvailable("mvn.cmd")) throw new IOException("mvn not found in PATH");
-        if (!WhereWrapper.isAvailable("git")) throw new IOException("git not found in PATH");
         return CommandLineBuild.builder().build();
     }
 
     private final @Nullable Path mvn;
 
     public String getMvn() {
-        return mvn != null ? mvn.toString() : "mvn.cmd";
+        return mvn != null ? mvn.toString() : getDefaultMvn();
+    }
+
+    private static String getDefaultMvn() {
+        return OS.NAME.equals(OS.Name.WINDOWS) ? "mvn.cmd" : "mvn";
     }
 
     @Override
