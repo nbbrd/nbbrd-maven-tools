@@ -4,8 +4,6 @@ import internal.compatibility.spi.NoOpBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tests.compatibility.MockedBuilder;
-import tests.compatibility.MockedProject;
-import tests.compatibility.MockedVersion;
 
 import java.io.IOException;
 import java.net.URI;
@@ -216,29 +214,11 @@ class CompatibilityTest {
         assertThat(tmp).isEmptyDirectory();
     }
 
-    private final MockedBuilder example = MockedBuilder
-            .builder()
-            .project(MockedProject
-                    .builder()
-                    .projectId("source-project")
-                    .version(MockedVersion.builderOf("2.3.4").build())
-                    .version(MockedVersion.builderOf("2.4.0").build())
-                    .version(MockedVersion.builderOf("3.0.0").build())
-                    .build())
-            .project(MockedProject
-                    .builder()
-                    .projectId("target-project")
-                    .version(MockedVersion.builderOf("1.0.0").property("x", "2.3.4").build())
-                    .version(MockedVersion.builderOf("1.0.1").property("x", "2.4.0").build())
-                    .version(MockedVersion.builderOf("1.0.2").property("x", "3.0.0").build())
-                    .build())
-            .build();
-
     private Compatibility noOpCompatibility() {
         return Compatibility.ofServiceLoader().toBuilder().builder(NoOpBuilder.INSTANCE).build();
     }
 
     private Compatibility mockedCompatibility() {
-        return Compatibility.ofServiceLoader().toBuilder().builder(example).build();
+        return Compatibility.ofServiceLoader().toBuilder().builder(MockedBuilder.EXAMPLE).build();
     }
 }

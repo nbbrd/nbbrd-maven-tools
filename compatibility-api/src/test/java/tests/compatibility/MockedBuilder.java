@@ -189,4 +189,22 @@ public class MockedBuilder implements Builder {
     public static URI remoteURI(String name) {
         return URI.create("mocked:" + name);
     }
+
+    public static final MockedBuilder EXAMPLE = MockedBuilder
+            .builder()
+            .project(MockedProject
+                    .builder()
+                    .projectId("source-project")
+                    .version(MockedVersion.builderOf("2.3.4").build())
+                    .version(MockedVersion.builderOf("2.4.0").build())
+                    .version(MockedVersion.builderOf("3.0.0").build())
+                    .build())
+            .project(MockedProject
+                    .builder()
+                    .projectId("target-project")
+                    .version(MockedVersion.builderOf("1.0.0").property("x", "2.3.4").build())
+                    .version(MockedVersion.builderOf("1.0.1").property("x", "2.4.0").build())
+                    .version(MockedVersion.builderOf("1.0.2").property("x", "3.0.0").build())
+                    .build())
+            .build();
 }

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static nbbrd.compatibility.Filter.parseLocalDate;
 import static org.assertj.core.api.Assertions.*;
 
@@ -104,6 +106,27 @@ public class FilterTest {
 
         assertThat(parseLocalDate("2010-02-03"))
                 .isEqualTo("2010-02-03");
+    }
+
+    @Test
+    void testApply() {
+        assertThat(Filter.builder().build().apply(emptyList()))
+                .containsExactly();
+
+        assertThat(Filter.builder().build().apply(asList(v1_1_0, v1_0_0)))
+                .containsExactly(v1_1_0, v1_0_0);
+
+        assertThat(Filter.builder().limit(1).build().apply(asList(v1_1_0, v1_0_0)))
+                .containsExactly(v1_0_0);
+
+        assertThat(Filter.builder().limit(0).build().apply(asList(v1_1_0, v1_0_0)))
+                .containsExactly();
+
+        assertThat(Filter.builder().from(parseLocalDate("2019")).build().apply(asList(v1_1_0, v1_0_0)))
+                .containsExactly(v1_1_0);
+
+        assertThat(Filter.builder().to(parseLocalDate("2018")).build().apply(asList(v1_1_0, v1_0_0)))
+                .containsExactly(v1_0_0);
     }
 
     private static Condition<Filter> containing(Tag version) {

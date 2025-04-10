@@ -34,4 +34,4 @@ With a pom file:
 
 Without a pom file (standalone mode):
 
-`mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-downstream -Dcompatibility.source=https://github.com/jdemetra/jdplus-main -Dcompatibility.source.ref=v3.4.0 -Dcompatibility.targets=https://github.com/nbbrd/jdplus-sdmx -Dcompatibility.property=jdplus-main.version`
+`mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-downstream -Dcompatibility.source=https://github.com/jdemetra/jdplus-main -Dcompatibility.source.ref=v3.4.0 -Dcompatibility.targets=https://github.com/nbbrd/jdplus-sdmx -Dcompatibility.property=jdplus-main.version -Dcompatibility.target.limit=2`

@@ -52,13 +52,11 @@ public interface ProjectContext {
                 Path directory = Files.createTempDirectory(workingDir, "project");
                 directory(directory).deleteOnExit(true);
                 build.clone(project.getUri(), directory);
-                for (Tag tag : build.getTags(directory)) {
-                    if (project.getFilter().contains(tag)) {
-                        build.checkoutTag(directory, tag);
-                        version(VersionContext.remote(tag, build.getVersion(directory)));
-                        build.clean(directory);
-                        build.restore(directory);
-                    }
+                for (Tag tag : project.getFilter().apply(build.getTags(directory))) {
+                    build.checkoutTag(directory, tag);
+                    version(VersionContext.remote(tag, build.getVersion(directory)));
+                    build.clean(directory);
+                    build.restore(directory);
                 }
             }
             return uri(project.getUri());

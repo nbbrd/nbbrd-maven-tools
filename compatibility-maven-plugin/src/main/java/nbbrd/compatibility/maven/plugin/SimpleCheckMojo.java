@@ -25,6 +25,9 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
     @Parameter(defaultValue = "+999999999-12-31", property = "compatibility.source.to")
     private String sourceTo;
 
+    @Parameter(defaultValue = "0x7fffffff", property = "compatibility.source.limit")
+    private int sourceLimit;
+
     @Parameter(defaultValue = Target.NO_PROPERTY, property = "compatibility.property")
     private String property;
 
@@ -36,6 +39,9 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
 
     @Parameter(defaultValue = "+999999999-12-31", property = "compatibility.target.to")
     private String targetTo;
+
+    @Parameter(defaultValue = "0x7fffffff", property = "compatibility.target.limit")
+    private int targetLimit;
 
     protected @NonNull String toVersioning() {
         return versioning != null ? versioning : Source.DEFAULT_VERSIONING;
@@ -51,6 +57,7 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
                 .ref(Objects.toString(sourceRef, ""))
                 .from(FROM_PARSER.applyWithMojo(sourceFrom))
                 .to(TO_PARSER.applyWithMojo(sourceTo))
+                .limit(sourceLimit)
                 .build();
     }
 
@@ -60,6 +67,7 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
                 .ref(Objects.toString(targetRef, ""))
                 .from(FROM_PARSER.applyWithMojo(targetFrom))
                 .to(TO_PARSER.applyWithMojo(targetTo))
+                .limit(targetLimit)
                 .build();
     }
 
