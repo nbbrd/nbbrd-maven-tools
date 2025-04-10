@@ -37,7 +37,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
     private File projectBaseDir;
 
-    @Parameter(defaultValue = "${java.io.tmpdir}", readonly = true, property = "compatibility.working.dir")
+    @Parameter(defaultValue = "${java.io.tmpdir}", property = "compatibility.working.dir")
     private File workingDir;
 
     @Parameter(defaultValue = "${project.build.directory}/compatibility.md", property = "compatibility.report.file")
