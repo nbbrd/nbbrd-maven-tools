@@ -4,7 +4,9 @@ import nbbrd.compatibility.Tag;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static tests.compatibility.Examples.generateProject;
 import static tests.compatibility.Examples.resolveResource;
 
+@EnabledOnOs(value = OS.WINDOWS, disabledReason = "Use Windows command line")
 @EnabledForJreRange(min = JRE.JAVA_17, disabledReason = "Use Java 17 in example projects")
 @Execution(ExecutionMode.CONCURRENT)
 class CommandLineBuildTest {
