@@ -55,8 +55,6 @@ public interface ProjectContext {
                 for (Tag tag : project.getFilter().apply(build.getTags(directory))) {
                     build.checkoutTag(directory, tag);
                     version(VersionContext.remote(tag, build.getVersion(directory)));
-                    build.clean(directory);
-                    build.restore(directory);
                 }
             }
             return uri(project.getUri());
