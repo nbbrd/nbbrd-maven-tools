@@ -25,7 +25,7 @@ public final class CommandLineBuilder implements Builder {
 
     @Override
     public boolean isBuilderAvailable() {
-        return OS.NAME.equals(OS.Name.WINDOWS);
+        return true;
     }
 
     @Override

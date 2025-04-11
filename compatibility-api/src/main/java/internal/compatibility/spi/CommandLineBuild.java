@@ -64,18 +64,18 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
-        run(consume(), getMvn(), "-q", "-f", project.toString(), "versions:set-property", "-Dproperty=\"" + propertyName + "\"", "-DnewVersion=\"" + propertyValue + "\"");
+        run(consume(), getMvn(), "-q", "-f", project.toString(), "versions:set-property", "-D\"property=" + propertyName + "\"", "-D\"newVersion=" + propertyValue + "\"");
     }
 
     @Override
     public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
-        return run(toFirst(), getMvn(), "-q", "-f", project.toString(), "help:evaluate", "-Dexpression=\"" + propertyName + "\"", "-DforceStdout")
+        return run(toFirst(), getMvn(), "-q", "-f", project.toString(), "help:evaluate", "-D\"expression=" + propertyName + "\"", "-DforceStdout")
                 .orElseThrow(() -> new IOException("Failed to get property " + propertyName));
     }
 
     @Override
     public @NonNull Version getVersion(@NonNull Path project) throws IOException {
-        return run(toFirst(), getMvn(), "-q", "-f", project.toString(), "help:evaluate", "-Dexpression=\"project.version\"", "-DforceStdout")
+        return run(toFirst(), getMvn(), "-q", "-f", project.toString(), "help:evaluate", "-D\"expression=project.version\"", "-DforceStdout")
                 .map(Version::parse)
                 .orElseThrow(() -> new IOException("Failed to get version"));
     }
