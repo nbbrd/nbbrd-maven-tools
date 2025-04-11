@@ -2,8 +2,6 @@ package internal.compatibility.spi;
 
 import nbbrd.compatibility.spi.Build;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
@@ -19,7 +17,6 @@ class CommandLineBuilderTest {
     }
 
     @Test
-    @EnabledOnOs(OS.WINDOWS)
     void testBuild(@TempDir Path tmp) throws IOException {
         CommandLineBuilder x = new CommandLineBuilder();
 

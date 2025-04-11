@@ -1,6 +1,8 @@
 package internal.compatibility.spi;
 
 import nbbrd.compatibility.*;
+import nbbrd.io.text.Formatter;
+import nbbrd.io.text.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -10,7 +12,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatObject;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
+import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static tests.compatibility.spi.FormatAssert.*;
 
 class JsonFormatTest {
@@ -24,13 +28,22 @@ class JsonFormatTest {
     void testFormatJob() throws IOException {
         JsonFormat x = new JsonFormat();
 
-        assertThat(Job.builder().workingDir(Paths.get("hello")).build())
-                .extracting(withFormatJob(x), STRING)
-                .isEqualTo("{\n" +
-                        "  \"sources\": [],\n" +
-                        "  \"targets\": [],\n" +
-                        "  \"workingDir\": \"hello\"\n" +
-                        "}");
+        Formatter<Job> formatter = asTextFormatter(x, Job.class).asFormatter();
+        Parser<Job> parser = asTextParser(x, Job.class).asParser();
+
+        Job emptyJob = Job
+                .builder()
+                .workingDir(Paths.get("hello"))
+                .build();
+        String emptyJobText = getContentOf(JsonFormatTest.class, "empty_job.json");
+
+        assertThat(emptyJob)
+                .extracting(formatter::format, STRING)
+                .isEqualToNormalizingNewlines(emptyJobText);
+
+        assertThatObject(emptyJobText)
+                .extracting(parser::parse, type(Job.class))
+                .isEqualTo(emptyJob);
 
         Job value = Job
                 .builder()
@@ -42,50 +55,34 @@ class JsonFormatTest {
                         .build())
                 .workingDir(Paths.get("folder"))
                 .build();
+        String valueText = getContentOf(JsonFormatTest.class, "job.json");
 
-        assertThat(formatToString(x, value))
-                .isEqualTo("{\n" +
-                        "  \"sources\": [\n" +
-                        "    {\n" +
-                        "      \"uri\": \"hello:source\",\n" +
-                        "      \"versioning\": \"semver\",\n" +
-                        "      \"filter\": {\n" +
-                        "        \"ref\": \"\",\n" +
-                        "        \"from\": \"-999999999-01-01\",\n" +
-                        "        \"to\": \"+999999999-12-31\",\n" +
-                        "        \"limit\": 2147483647\n" +
-                        "      }\n" +
-                        "    }\n" +
-                        "  ],\n" +
-                        "  \"targets\": [\n" +
-                        "    {\n" +
-                        "      \"uri\": \"hello:target\",\n" +
-                        "      \"property\": \"x\",\n" +
-                        "      \"building\": {\n" +
-                        "        \"parameters\": \"\",\n" +
-                        "        \"jdk\": \"\"\n" +
-                        "      },\n" +
-                        "      \"filter\": {\n" +
-                        "        \"ref\": \"\",\n" +
-                        "        \"from\": \"-999999999-01-01\",\n" +
-                        "        \"to\": \"+999999999-12-31\",\n" +
-                        "        \"limit\": 2147483647\n" +
-                        "      }\n" +
-                        "    }\n" +
-                        "  ],\n" +
-                        "  \"workingDir\": \"folder\"\n" +
-                        "}");
+        assertThat(value)
+                .extracting(formatter::format, STRING)
+                .isEqualToNormalizingNewlines(valueText);
+
+        assertThatObject(valueText)
+                .extracting(parser::parse, type(Job.class))
+                .isEqualTo(value);
     }
 
     @Test
     void testFormatReport() throws IOException {
         JsonFormat x = new JsonFormat();
 
-        assertThat(Report.EMPTY)
-                .extracting(withFormatReport(x), STRING)
-                .isEqualTo("{\n" +
-                        "  \"items\": []\n" +
-                        "}");
+        Formatter<Report> formatter = asTextFormatter(x, Report.class).asFormatter();
+        Parser<Report> parser = asTextParser(x, Report.class).asParser();
+
+        Report emptyReport = Report.EMPTY;
+        String emptyReportText = getContentOf(JsonFormatTest.class, "empty_report.json");
+
+        assertThat(emptyReport)
+                .extracting(formatter::format, STRING)
+                .isEqualToNormalizingNewlines(emptyReportText);
+
+        assertThatObject(emptyReportText)
+                .extracting(parser::parse, type(Report.class))
+                .isEqualTo(emptyReport);
 
         Report value = Report
                 .builder()
@@ -96,19 +93,15 @@ class JsonFormatTest {
                         .target(URI.create("target"), "3.2.1")
                         .build())
                 .build();
+        String valueText = getContentOf(JsonFormatTest.class, "report.json");
 
-        assertThat(formatToString(x, value))
-                .isEqualTo("{\n" +
-                        "  \"items\": [\n" +
-                        "    {\n" +
-                        "      \"exitStatus\": \"VERIFIED\",\n" +
-                        "      \"sourceUri\": \"source\",\n" +
-                        "      \"sourceVersion\": \"1.2.3\",\n" +
-                        "      \"targetUri\": \"target\",\n" +
-                        "      \"targetVersion\": \"3.2.1\"\n" +
-                        "    }\n" +
-                        "  ]\n" +
-                        "}");
+        assertThat(value)
+                .extracting(formatter::format, STRING)
+                .isEqualToNormalizingNewlines(valueText);
+
+        assertThatObject(valueText)
+                .extracting(parser::parse, type(Report.class))
+                .isEqualTo(value);
     }
 
     @Test

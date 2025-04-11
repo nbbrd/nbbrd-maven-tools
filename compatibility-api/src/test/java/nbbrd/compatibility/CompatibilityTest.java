@@ -10,8 +10,7 @@ import java.net.URI;
 import java.nio.file.Path;
 
 import static nbbrd.compatibility.ExitStatus.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIOException;
+import static org.assertj.core.api.Assertions.*;
 import static tests.compatibility.MockedBuilder.localURI;
 import static tests.compatibility.MockedBuilder.remoteURI;
 
@@ -212,6 +211,33 @@ class CompatibilityTest {
                 );
 
         assertThat(tmp).isEmptyDirectory();
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    @Test
+    void testGetFormatterById() {
+        Compatibility x = Compatibility.ofServiceLoader();
+
+        assertThatNullPointerException().isThrownBy(() -> x.getFormatterById(null, "json"));
+        assertThatNullPointerException().isThrownBy(() -> x.getFormatterById(Job.class, null));
+
+        assertThat(x.getFormatterById(Job.class, "json")).isNotEmpty();
+        assertThat(x.getFormatterById(Job.class, "stuff")).isEmpty();
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    @Test
+    void testGetFormatterByFile(@TempDir Path tmp) {
+        Compatibility x = Compatibility.ofServiceLoader();
+
+        Path json = tmp.resolve("hello.json");
+        Path stuff = tmp.resolve("hello.stuff");
+
+        assertThatNullPointerException().isThrownBy(() -> x.getFormatterByFile(null, json));
+        assertThatNullPointerException().isThrownBy(() -> x.getFormatterByFile(Job.class, null));
+
+        assertThat(x.getFormatterByFile(Job.class, json)).isNotEmpty();
+        assertThat(x.getFormatterByFile(Job.class, stuff)).isEmpty();
     }
 
     private Compatibility noOpCompatibility() {

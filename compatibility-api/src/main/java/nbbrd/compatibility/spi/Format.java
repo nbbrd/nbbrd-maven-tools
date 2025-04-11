@@ -1,13 +1,12 @@
 package nbbrd.compatibility.spi;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Job;
-import nbbrd.compatibility.Report;
+import nbbrd.compatibility.Formatter;
+import nbbrd.compatibility.Parser;
 import nbbrd.service.Quantifier;
 import nbbrd.service.ServiceDefinition;
 import nbbrd.service.ServiceId;
 
-import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 
@@ -23,13 +22,13 @@ public interface Format {
     @NonNull
     String getFormatName();
 
-    boolean canFormatJob();
+    boolean canFormat(@NonNull Class<?> type);
 
-    void formatJob(@NonNull Appendable appendable, @NonNull Job job) throws IOException;
+    <T> Formatter<T> getFormatter(@NonNull Class<T> type);
 
-    boolean canFormatReport();
+    boolean canParse(@NonNull Class<?> type);
 
-    void formatReport(@NonNull Appendable appendable, @NonNull Report report) throws IOException;
+    <T> Parser<T> getParser(@NonNull Class<T> type);
 
     @NonNull
     DirectoryStream.Filter<? super Path> getFormatFileFilter();

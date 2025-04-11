@@ -77,7 +77,11 @@ public final class Examples {
     }
 
     public static Path resolveResource(String name) throws IOException {
-        URL resource = Examples.class.getResource(name);
+        return resolveResource(Examples.class, name);
+    }
+
+    public static Path resolveResource(Class<?> anchor, String name) throws IOException {
+        URL resource = anchor.getResource(name);
         if (resource == null) {
             throw new IOException("Resource not found: " + name);
         }

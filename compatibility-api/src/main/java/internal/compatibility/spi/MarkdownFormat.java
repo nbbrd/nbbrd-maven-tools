@@ -1,8 +1,13 @@
 package internal.compatibility.spi;
 
 import lombok.NonNull;
-import nbbrd.compatibility.*;
+import nbbrd.compatibility.ExitStatus;
+import nbbrd.compatibility.Report;
+import nbbrd.compatibility.ReportItem;
+import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Format;
+import nbbrd.compatibility.Formatter;
+import nbbrd.compatibility.Parser;
 import nbbrd.design.DirectImpl;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.service.ServiceProvider;
@@ -35,22 +40,31 @@ public final class MarkdownFormat implements Format {
     }
 
     @Override
-    public boolean canFormatJob() {
+    public boolean canFormat(@NonNull Class<?> type) {
+        return Report.class.equals(type);
+    }
+
+    @Override
+    public <T> Formatter<T> getFormatter(@NonNull Class<T> type) {
+        if (!Report.class.equals(type)) {
+            throw new IllegalArgumentException("Not supported");
+        }
+        return (value, writer) -> {
+            formatReport(writer, (Report) value);
+        };
+    }
+
+    @Override
+    public boolean canParse(@NonNull Class<?> type) {
         return false;
     }
 
     @Override
-    public void formatJob(@NonNull Appendable appendable, @NonNull Job job) throws IOException {
-        throw new IOException("Not supported");
+    public <T> Parser<T> getParser(@NonNull Class<T> type) {
+        throw new IllegalArgumentException("Not supported");
     }
 
-    @Override
-    public boolean canFormatReport() {
-        return true;
-    }
-
-    @Override
-    public void formatReport(@NonNull Appendable appendable, @NonNull Report report) throws IOException {
+    private void formatReport(@NonNull Appendable appendable, @NonNull Report report) throws IOException {
         if (report.getItems().isEmpty()) {
             return;
         }

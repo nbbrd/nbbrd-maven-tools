@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static internal.compatibility.IOStreams.*;
 import static java.lang.String.format;
@@ -155,5 +157,33 @@ public class Compatibility {
     @MightBePromoted
     private static boolean isFileScheme(URI uri) {
         return "file".equals(uri.getScheme());
+    }
+
+    public @NonNull <T> Optional<Formatter<T>> getFormatterById(@NonNull Class<T> type, @NonNull String id) {
+        return getFormats()
+                .stream()
+                .filter(format -> format.getFormatId().equals(id))
+                .filter(format -> format.canFormat(type))
+                .map(format -> format.getFormatter(type))
+                .findFirst();
+    }
+
+    public @NonNull <T> Optional<Formatter<T>> getFormatterByFile(@NonNull Class<T> type, @NonNull Path file) {
+        return getFormats()
+                .stream()
+                .filter(onFile(file))
+                .filter(format -> format.canFormat(type))
+                .map(format -> format.getFormatter(type))
+                .findFirst();
+    }
+
+    private static Predicate<Format> onFile(Path file) {
+        return format -> {
+            try {
+                return format.getFormatFileFilter().accept(file);
+            } catch (IOException e) {
+                return false;
+            }
+        };
     }
 }

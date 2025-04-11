@@ -1,7 +1,9 @@
 package internal.compatibility.spi;
 
+import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.ReportItem;
+import nbbrd.io.text.Formatter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -16,7 +18,8 @@ import static java.util.Collections.emptyList;
 import static nbbrd.compatibility.ExitStatus.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
-import static tests.compatibility.spi.FormatAssert.*;
+import static tests.compatibility.spi.FormatAssert.asTextFormatter;
+import static tests.compatibility.spi.FormatAssert.assertFormatCompliance;
 
 class MarkdownFormatTest {
 
@@ -27,16 +30,18 @@ class MarkdownFormatTest {
 
     @Test
     void testFormatJob() {
-        assertThat(new MarkdownFormat().canFormatJob()).isFalse();
+        assertThat(new MarkdownFormat().canFormat(Job.class)).isFalse();
     }
 
     @Test
     void testFormatReport() throws IOException {
         MarkdownFormat x = new MarkdownFormat();
 
+        Formatter<Report> formatter = asTextFormatter(x, Report.class).asFormatter();
+
         assertThat(Report.EMPTY)
-                .extracting(withFormatReport(x), STRING)
-                .isEqualTo("");
+                .extracting(formatter::format, STRING)
+                .isEqualToNormalizingNewlines("");
 
         URI src = URI.create("src");
         URI trg = URI.create("trg");
@@ -53,7 +58,8 @@ class MarkdownFormatTest {
                 .item(ReportItem.builder().exitStatus(VERIFIED).source(src, "3.0.0").target(trg, "1.0.2").build())
                 .build();
 
-        assertThat(formatToString(x, value))
+        assertThat(value)
+                .extracting(formatter::format, STRING)
                 .isEqualToNormalizingNewlines("\n" +
                         "|     |            | v2.3.4 | v2.4.0 | v3.0.0 |\n" +
                         "| --- | ---------- | ------ | ------ | ------ |\n" +

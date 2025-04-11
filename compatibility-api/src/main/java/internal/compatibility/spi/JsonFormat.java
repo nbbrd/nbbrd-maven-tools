@@ -9,6 +9,8 @@ import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Format;
+import nbbrd.compatibility.Formatter;
+import nbbrd.compatibility.Parser;
 import nbbrd.design.DirectImpl;
 import nbbrd.service.ServiceProvider;
 
@@ -19,6 +21,8 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Locale;
 import java.util.function.Function;
+
+import static java.util.Objects.requireNonNull;
 
 @DirectImpl
 @ServiceProvider
@@ -35,31 +39,35 @@ public final class JsonFormat implements Format {
     }
 
     @Override
-    public boolean canFormatJob() {
-        return true;
+    public boolean canFormat(@NonNull Class<?> type) {
+        return Job.class.equals(type) || Report.class.equals(type);
     }
 
     @Override
-    public void formatJob(@NonNull Appendable appendable, @NonNull Job job) throws IOException {
-        try {
-            GSON.toJson(job, appendable);
-        } catch (JsonIOException ex) {
-            throw new IOException(ex);
-        }
+    public <T> Formatter<T> getFormatter(@NonNull Class<T> type) {
+        return (value, writer) -> {
+            try {
+                GSON.toJson(requireNonNull(value, "value"), requireNonNull(writer, "writer"));
+            } catch (JsonIOException ex) {
+                throw new IOException(ex);
+            }
+        };
     }
 
     @Override
-    public boolean canFormatReport() {
-        return true;
+    public boolean canParse(@NonNull Class<?> type) {
+        return Job.class.equals(type) || Report.class.equals(type);
     }
 
     @Override
-    public void formatReport(@NonNull Appendable appendable, @NonNull Report report) throws IOException {
-        try {
-            GSON.toJson(report, appendable);
-        } catch (JsonIOException ex) {
-            throw new IOException(ex);
-        }
+    public <T> Parser<T> getParser(@NonNull Class<T> type) {
+        return reader -> {
+            try {
+                return GSON.fromJson(requireNonNull(reader, "reader"), type);
+            } catch (JsonIOException ex) {
+                throw new IOException(ex);
+            }
+        };
     }
 
     @Override

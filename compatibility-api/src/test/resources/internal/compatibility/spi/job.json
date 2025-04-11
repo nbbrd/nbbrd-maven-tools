@@ -1,0 +1,31 @@
+{
+  "sources": [
+    {
+      "uri": "hello:source",
+      "versioning": "semver",
+      "filter": {
+        "ref": "",
+        "from": "-999999999-01-01",
+        "to": "+999999999-12-31",
+        "limit": 2147483647
+      }
+    }
+  ],
+  "targets": [
+    {
+      "uri": "hello:target",
+      "property": "x",
+      "building": {
+        "parameters": "",
+        "jdk": ""
+      },
+      "filter": {
+        "ref": "",
+        "from": "-999999999-01-01",
+        "to": "+999999999-12-31",
+        "limit": 2147483647
+      }
+    }
+  ],
+  "workingDir": "folder"
+}

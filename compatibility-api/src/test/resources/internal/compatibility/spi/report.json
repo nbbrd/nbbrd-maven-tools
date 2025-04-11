@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "exitStatus": "VERIFIED",
+      "sourceUri": "source",
+      "sourceVersion": "1.2.3",
+      "targetUri": "target",
+      "targetVersion": "3.2.1"
+    }
+  ]
+}
