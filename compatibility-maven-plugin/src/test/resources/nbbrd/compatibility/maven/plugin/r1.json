@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "exitStatus": "VERIFIED",
+      "sourceUri": "https://github.com/jdemetra/jdplus-main",
+      "sourceVersion": "3.4.0",
+      "targetUri": "https://github.com/nbbrd/jdplus-sdmx",
+      "targetVersion": "3.2.0"
+    },
+    {
+      "exitStatus": "VERIFIED",
+      "sourceUri": "https://github.com/jdemetra/jdplus-main",
+      "sourceVersion": "3.4.0",
+      "targetUri": "https://github.com/nbbrd/jdplus-sdmx",
+      "targetVersion": "3.3.0"
+    }
+  ]
+}

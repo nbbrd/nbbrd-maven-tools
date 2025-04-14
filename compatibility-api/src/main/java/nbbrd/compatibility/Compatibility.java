@@ -9,6 +9,7 @@ import nbbrd.design.StaticFactoryMethod;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -159,22 +160,53 @@ public class Compatibility {
         return "file".equals(uri.getScheme());
     }
 
-    public @NonNull <T> Optional<Formatter<T>> getFormatterById(@NonNull Class<T> type, @NonNull String id) {
+    private <T> Optional<Formatter<T>> getFormatter(Class<T> type, Predicate<? super Format> filter) {
         return getFormats()
                 .stream()
-                .filter(format -> format.getFormatId().equals(id))
+                .filter(filter)
                 .filter(format -> format.canFormat(type))
                 .map(format -> format.getFormatter(type))
                 .findFirst();
     }
 
+    public @NonNull <T> Optional<Formatter<T>> getFormatterById(@NonNull Class<T> type, @NonNull String id) {
+        return getFormatter(type, onId(id));
+    }
+
     public @NonNull <T> Optional<Formatter<T>> getFormatterByFile(@NonNull Class<T> type, @NonNull Path file) {
+        return getFormatter(type, onFile(file));
+    }
+
+    private <T> Optional<Parser<T>> getParser(Class<T> type, Predicate<? super Format> filter) {
         return getFormats()
                 .stream()
-                .filter(onFile(file))
-                .filter(format -> format.canFormat(type))
-                .map(format -> format.getFormatter(type))
+                .filter(filter)
+                .filter(format -> format.canParse(type))
+                .map(format -> format.getParser(type))
                 .findFirst();
+    }
+
+    public @NonNull <T> Optional<Parser<T>> getParserById(@NonNull Class<T> type, @NonNull String id) {
+        return getParser(type, onId(id));
+    }
+
+    public @NonNull <T> Optional<Parser<T>> getParserByFile(@NonNull Class<T> type, @NonNull Path file) {
+        return getParser(type, onFile(file));
+    }
+
+    public @NonNull <T> DirectoryStream.Filter<? super Path> getParserFilter(@NonNull Class<T> type) {
+        return file -> getFormats().stream().filter(format -> format.canParse(type)).anyMatch(onFile(file));
+    }
+
+    public @NonNull Report merge(@NonNull List<Report> reports) {
+        return Report
+                .builder()
+                .items(reports.stream().flatMap(report -> report.getItems().stream()).collect(toList()))
+                .build();
+    }
+
+    private static Predicate<Format> onId(String id) {
+        return format -> format.getFormatId().equals(id);
     }
 
     private static Predicate<Format> onFile(Path file) {

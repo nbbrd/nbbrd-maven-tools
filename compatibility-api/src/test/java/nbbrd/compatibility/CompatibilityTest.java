@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static nbbrd.compatibility.ExitStatus.*;
 import static org.assertj.core.api.Assertions.*;
 import static tests.compatibility.MockedBuilder.localURI;
@@ -238,6 +240,67 @@ class CompatibilityTest {
 
         assertThat(x.getFormatterByFile(Job.class, json)).isNotEmpty();
         assertThat(x.getFormatterByFile(Job.class, stuff)).isEmpty();
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    @Test
+    void testGetParserById() {
+        Compatibility x = Compatibility.ofServiceLoader();
+
+        assertThatNullPointerException().isThrownBy(() -> x.getParserById(null, "json"));
+        assertThatNullPointerException().isThrownBy(() -> x.getParserById(Job.class, null));
+
+        assertThat(x.getParserById(Job.class, "json")).isNotEmpty();
+        assertThat(x.getParserById(Job.class, "stuff")).isEmpty();
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    @Test
+    void testGetParserByFile(@TempDir Path tmp) {
+        Compatibility x = Compatibility.ofServiceLoader();
+
+        Path json = tmp.resolve("hello.json");
+        Path stuff = tmp.resolve("hello.stuff");
+
+        assertThatNullPointerException().isThrownBy(() -> x.getParserByFile(null, json));
+        assertThatNullPointerException().isThrownBy(() -> x.getParserByFile(Job.class, null));
+
+        assertThat(x.getParserByFile(Job.class, json)).isNotEmpty();
+        assertThat(x.getParserByFile(Job.class, stuff)).isEmpty();
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    @Test
+    void testGetParserFilter(@TempDir Path tmp) throws IOException {
+        Compatibility x = Compatibility.ofServiceLoader();
+
+        Path json = tmp.resolve("hello.json");
+        Path stuff = tmp.resolve("hello.stuff");
+
+        assertThatNullPointerException().isThrownBy(() -> x.getParserFilter(null));
+
+        assertThat(x.getParserFilter(Report.class).accept(json)).isTrue();
+        assertThat(x.getParserFilter(Report.class).accept(stuff)).isFalse();
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    @Test
+    void testMerge() {
+        Compatibility x = Compatibility.ofServiceLoader();
+
+        assertThatNullPointerException().isThrownBy(() -> x.merge(null));
+
+        assertThat(x.merge(emptyList())).isEqualTo(Report.EMPTY);
+
+        URI remoteSource = remoteURI("source-project");
+        URI remoteTarget = remoteURI("target-project");
+        ReportItem r1 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.2").build();
+        ReportItem r2 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.2").build();
+
+        assertThat(x.merge(asList(
+                Report.builder().item(r1).build(),
+                Report.builder().item(r2).build()))
+        ).isEqualTo(Report.builder().item(r1).item(r2).build());
     }
 
     private Compatibility noOpCompatibility() {

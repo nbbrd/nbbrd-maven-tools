@@ -74,7 +74,7 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
     protected void check(Job job) throws MojoExecutionException {
         Compatibility compatibility = loadCompatibility();
         log(compatibility, job);
-        Report report = exec(compatibility, job);
+        Report report = check(compatibility, job);
         writeReport(compatibility, report);
     }
 

@@ -1,13 +1,11 @@
 package nbbrd.compatibility.maven.plugin;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Compatibility;
-import nbbrd.compatibility.Job;
-import nbbrd.compatibility.Report;
+import nbbrd.compatibility.*;
 import nbbrd.compatibility.spi.Builder;
-import nbbrd.compatibility.Formatter;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.text.TextFormatter;
+import nbbrd.io.text.TextParser;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -73,7 +71,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
         log.info("ReportFile: " + toReportFile());
     }
 
-    protected Report exec(Compatibility compatibility, Job job) throws MojoExecutionException {
+    protected Report check(Compatibility compatibility, Job job) throws MojoExecutionException {
         try {
             return compatibility.check(job);
         } catch (IOException ex) {
@@ -85,10 +83,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
         Path file = toReportFile();
         try {
             Files.createDirectories(file.getParent());
-            compatibility.getFormatterByFile(Report.class, file)
-                    .map(CompatibilityMojo::asTextFormatter)
-                    .orElseThrow(() -> new MojoExecutionException("No formatter found for " + file))
-                    .formatPath(report, file, UTF_8);
+            storeReport(compatibility, file, report);
         } catch (IOException ex) {
             throw new MojoExecutionException("Failed to write report", ex);
         }
@@ -112,7 +107,27 @@ abstract class CompatibilityMojo extends AbstractMojo {
                 .replace("$%7Bproject.basedir%7D/", ""));
     }
 
-    private static <T> TextFormatter<T> asTextFormatter(Formatter<T> format) {
-        return TextFormatter.onFormattingWriter(format::format);
+    protected static <T> TextFormatter<T> asTextFormatter(Formatter<T> formatter) {
+        return TextFormatter.onFormattingWriter(formatter::format);
+    }
+
+    protected static <T> TextParser<T> asTextParser(Parser<T> parser) {
+        return TextParser.onParsingReader(parser::parse);
+    }
+
+    @VisibleForTesting
+    static Report loadReport(Compatibility compatibility, Path file) throws MojoExecutionException, IOException {
+        return compatibility.getParserByFile(Report.class, file)
+                .map(CompatibilityMojo::asTextParser)
+                .orElseThrow(() -> new MojoExecutionException("No parser found for " + file))
+                .parsePath(file, UTF_8);
+    }
+
+    @VisibleForTesting
+    static void storeReport(Compatibility compatibility, Path file, Report report) throws MojoExecutionException, IOException {
+        compatibility.getFormatterByFile(Report.class, file)
+                .map(CompatibilityMojo::asTextFormatter)
+                .orElseThrow(() -> new MojoExecutionException("No formatter found for " + file))
+                .formatPath(report, file, UTF_8);
     }
 }

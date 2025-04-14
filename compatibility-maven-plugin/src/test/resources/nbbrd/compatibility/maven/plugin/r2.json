@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "exitStatus": "VERIFIED",
+      "sourceUri": "https://github.com/jdemetra/jdplus-main",
+      "sourceVersion": "3.4.0",
+      "targetUri": "https://github.com/jdemetra/jdplus-nowcasting",
+      "targetVersion": "1.0.2"
+    },
+    {
+      "exitStatus": "VERIFIED",
+      "sourceUri": "https://github.com/jdemetra/jdplus-main",
+      "sourceVersion": "3.4.0",
+      "targetUri": "https://github.com/jdemetra/jdplus-nowcasting",
+      "targetVersion": "2.0.0"
+    }
+  ]
+}
