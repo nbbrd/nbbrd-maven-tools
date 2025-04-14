@@ -40,7 +40,6 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
                 .builder()
                 .source(toSource())
                 .targets(toTargets())
-                .workingDir(getWorkingDir().toPath())
                 .build();
     }
 

@@ -20,7 +20,7 @@ class CompatibilityTest {
 
     @Test
     void checkNoBuilder(@TempDir Path tmp) {
-        Compatibility x = noOpCompatibility();
+        Compatibility x = noOpCompatibility(tmp);
 
         URI remoteSource = remoteURI("source-project");
         URI remoteTarget = remoteURI("target-project");
@@ -37,7 +37,6 @@ class CompatibilityTest {
                         .uri(remoteTarget)
                         .property("x")
                         .build())
-                .workingDir(tmp)
                 .build();
 
         assertThatIOException()
@@ -49,20 +48,15 @@ class CompatibilityTest {
 
     @Test
     void checkEmptyJob(@TempDir Path tmp) throws IOException {
-        Compatibility x = noOpCompatibility();
+        Compatibility x = noOpCompatibility(tmp);
 
-        Job job = Job
-                .builder()
-                .workingDir(tmp)
-                .build();
-
-        assertThat(x.check(job)).isEqualTo(Report.EMPTY);
+        assertThat(x.check(Job.EMPTY)).isEqualTo(Report.EMPTY);
         assertThat(tmp).isEmptyDirectory();
     }
 
     @Test
     void checkDownstream(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility();
+        Compatibility x = mockedCompatibility(tmp);
 
         URI localSource = localURI(tmp, "source-project");
         URI remoteTarget = remoteURI("target-project");
@@ -79,7 +73,6 @@ class CompatibilityTest {
                         .uri(remoteTarget)
                         .property("x")
                         .build())
-                .workingDir(tmp)
                 .build();
 
         assertThat(x.check(job).getItems())
@@ -94,7 +87,7 @@ class CompatibilityTest {
 
     @Test
     void checkUpstream(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility();
+        Compatibility x = mockedCompatibility(tmp);
 
         URI remoteSource = remoteURI("source-project");
         URI localTarget = localURI(tmp, "target-project");
@@ -111,7 +104,6 @@ class CompatibilityTest {
                         .uri(localTarget)
                         .property("x")
                         .build())
-                .workingDir(tmp)
                 .build();
 
         assertThat(x.check(job).getItems())
@@ -126,7 +118,7 @@ class CompatibilityTest {
 
     @Test
     void checkRemoteStreams(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility();
+        Compatibility x = mockedCompatibility(tmp);
 
         URI remoteSource = remoteURI("source-project");
         URI remoteTarget = remoteURI("target-project");
@@ -143,7 +135,6 @@ class CompatibilityTest {
                         .uri(remoteTarget)
                         .property("x")
                         .build())
-                .workingDir(tmp)
                 .build();
 
         assertThat(x.check(job).getItems())
@@ -173,7 +164,6 @@ class CompatibilityTest {
                         .property("x")
                         .filter(Filter.builder().ref("1.0.2").build())
                         .build())
-                .workingDir(tmp)
                 .build();
 
         assertThat(x.check(jobWithFilter).getItems())
@@ -187,7 +177,7 @@ class CompatibilityTest {
 
     @Test
     void checkLocalStreams(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility();
+        Compatibility x = mockedCompatibility(tmp);
 
         URI localSource = localURI(tmp, "source-project");
         URI localTarget = localURI(tmp, "target-project");
@@ -204,7 +194,6 @@ class CompatibilityTest {
                         .uri(localTarget)
                         .property("x")
                         .build())
-                .workingDir(tmp)
                 .build();
 
         assertThat(x.check(job).getItems())
@@ -303,11 +292,11 @@ class CompatibilityTest {
         ).isEqualTo(Report.builder().item(r1).item(r2).build());
     }
 
-    private Compatibility noOpCompatibility() {
-        return Compatibility.ofServiceLoader().toBuilder().builder(NoOpBuilder.INSTANCE).build();
+    private Compatibility noOpCompatibility(Path workingDir) {
+        return Compatibility.ofServiceLoader().toBuilder().workingDir(workingDir).builder(NoOpBuilder.INSTANCE).build();
     }
 
-    private Compatibility mockedCompatibility() {
-        return Compatibility.ofServiceLoader().toBuilder().builder(MockedBuilder.EXAMPLE).build();
+    private Compatibility mockedCompatibility(Path workingDir) {
+        return Compatibility.ofServiceLoader().toBuilder().workingDir(workingDir).builder(MockedBuilder.EXAMPLE).build();
     }
 }

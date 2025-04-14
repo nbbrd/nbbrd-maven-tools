@@ -1,11 +1,11 @@
 package tests.compatibility.spi;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Formatter;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.spi.Format;
 import nbbrd.compatibility.spi.FormatLoader;
-import nbbrd.compatibility.Formatter;
 import nbbrd.io.text.TextFormatter;
 import nbbrd.io.text.TextParser;
 import org.assertj.core.util.Files;
@@ -35,7 +35,7 @@ public final class FormatAssert {
 
         assertThatNullPointerException().isThrownBy(() -> x.getFormatter(null));
 
-        Job job = Job.builder().build();
+        Job job = Job.EMPTY;
         if (x.canFormat(Job.class)) {
             Formatter<Job> formatter = x.getFormatter(Job.class);
             assertThatNullPointerException().isThrownBy(() -> formatter.format(job, null));

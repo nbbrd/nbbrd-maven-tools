@@ -6,6 +6,7 @@ import lombok.NonNull;
 import nbbrd.compatibility.spi.*;
 import nbbrd.design.MightBePromoted;
 import nbbrd.design.StaticFactoryMethod;
+import nbbrd.io.sys.SystemProperties;
 
 import java.io.IOException;
 import java.net.URI;
@@ -19,6 +20,7 @@ import java.util.function.Predicate;
 import static internal.compatibility.IOStreams.*;
 import static java.lang.String.format;
 import static java.util.Locale.ROOT;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 @lombok.Value
@@ -49,6 +51,10 @@ public class Compatibility {
     Consumer<? super String> onEvent = ignore -> {
     };
 
+    @lombok.NonNull
+    @lombok.Builder.Default
+    Path workingDir = requireNonNull(SystemProperties.DEFAULT.getJavaIoTmpdir());
+
     public @NonNull Report check(@NonNull Job job) throws IOException {
         if (job.getSources().isEmpty()) {
             onEvent.accept("No source provided");
@@ -62,15 +68,15 @@ public class Compatibility {
         try (Build build = builder.getBuild()) {
             Report result = check(
                     build,
-                    collectWithIO(job.getSources(), mappingWithIO(source -> initSource(source, job.getWorkingDir(), build), toList())),
-                    collectWithIO(job.getTargets(), mappingWithIO(target -> initTarget(target, job.getWorkingDir(), build), toList()))
+                    collectWithIO(job.getSources(), mappingWithIO(source -> initSource(source, build), toList())),
+                    collectWithIO(job.getTargets(), mappingWithIO(target -> initTarget(target, build), toList()))
             );
             onEvent.accept("Report created with " + result.getItems().size() + " items");
             return result;
         }
     }
 
-    private SourceContext initSource(Source source, Path workingDir, Build build) throws IOException {
+    private SourceContext initSource(Source source, Build build) throws IOException {
         boolean local = isFileScheme(source.getUri());
         onEvent.accept(format(ROOT, "Initializing %s source %s", local ? "local" : "remote", source.getUri()));
         return SourceContext
@@ -88,7 +94,7 @@ public class Compatibility {
                 .orElseThrow(() -> new IOException("Cannot resolve versioning: " + source.getVersioning()));
     }
 
-    private TargetContext initTarget(Target target, Path workingDir, Build build) throws IOException {
+    private TargetContext initTarget(Target target, Build build) throws IOException {
         boolean local = isFileScheme(target.getUri());
         onEvent.accept(format(ROOT, "Initializing %s target %s", local ? "local" : "remote", target.getUri()));
         return TargetContext

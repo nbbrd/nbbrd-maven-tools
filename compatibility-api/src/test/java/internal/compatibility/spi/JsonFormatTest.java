@@ -31,10 +31,7 @@ class JsonFormatTest {
         Formatter<Job> formatter = asTextFormatter(x, Job.class).asFormatter();
         Parser<Job> parser = asTextParser(x, Job.class).asParser();
 
-        Job emptyJob = Job
-                .builder()
-                .workingDir(Paths.get("hello"))
-                .build();
+        Job emptyJob = Job.EMPTY;
         String emptyJobText = getContentOf(JsonFormatTest.class, "empty_job.json");
 
         assertThat(emptyJob)
@@ -53,7 +50,6 @@ class JsonFormatTest {
                         .uri(URI.create("hello:target"))
                         .property("x")
                         .build())
-                .workingDir(Paths.get("folder"))
                 .build();
         String valueText = getContentOf(JsonFormatTest.class, "job.json");
 

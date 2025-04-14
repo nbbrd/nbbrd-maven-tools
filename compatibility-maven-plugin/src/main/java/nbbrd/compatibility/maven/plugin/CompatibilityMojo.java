@@ -96,6 +96,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
                 .toBuilder()
                 .builder(Builder.logging(getLog()::debug, original.getBuilder()))
                 .onEvent(getLog()::info)
+                .workingDir(getWorkingDir().toPath())
                 .build();
     }
 
