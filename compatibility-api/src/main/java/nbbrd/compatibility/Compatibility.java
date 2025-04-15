@@ -204,11 +204,18 @@ public class Compatibility {
         return file -> getFormats().stream().filter(format -> format.canParse(type)).anyMatch(onFile(file));
     }
 
-    public @NonNull Report merge(@NonNull List<Report> reports) {
+    public @NonNull Report mergeReports(@NonNull List<Report> list) {
         return Report
                 .builder()
-                .items(reports.stream().flatMap(report -> report.getItems().stream()).collect(toList()))
+                .items(list.stream().flatMap(report -> report.getItems().stream()).collect(toList()))
                 .build();
+    }
+
+    public @NonNull List<Job> splitJob(@NonNull Job job) {
+        return job.getTargets()
+                .stream()
+                .map(target -> Job.builder().sources(job.getSources()).target(target).build())
+                .collect(toList());
     }
 
     private static Predicate<Format> onId(String id) {

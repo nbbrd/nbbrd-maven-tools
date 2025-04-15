@@ -1,17 +1,22 @@
 package nbbrd.compatibility.maven.plugin;
 
 import internal.compatibility.maven.plugin.MojoFunction;
+import internal.compatibility.maven.plugin.ParameterParsing;
 import lombok.NonNull;
 import nbbrd.compatibility.*;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Objects;
 
 @lombok.Getter
 @lombok.Setter
-public abstract class SimpleCheckMojo extends CompatibilityMojo {
+public abstract class CheckStreamMojo extends CompatibilityMojo {
 
     @Parameter(defaultValue = Source.DEFAULT_VERSIONING, property = "compatibility.versioning")
     private String versioning;
@@ -43,14 +48,20 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
     @Parameter(defaultValue = "0x7fffffff", property = "compatibility.target.limit")
     private int targetLimit;
 
+    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", property = "compatibility.report.file")
+    private File reportFile;
+
+    @ParameterParsing
     protected @NonNull String toVersioning() {
         return versioning != null ? versioning : Source.DEFAULT_VERSIONING;
     }
 
+    @ParameterParsing
     protected @NonNull String toProperty() {
         return property != null ? property : Target.NO_PROPERTY;
     }
 
+    @ParameterParsing
     protected @NonNull Filter toSourceFilter() throws MojoExecutionException {
         return Filter
                 .builder()
@@ -61,6 +72,7 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
                 .build();
     }
 
+    @ParameterParsing
     protected @NonNull Filter toTargetFilter() throws MojoExecutionException {
         return Filter
                 .builder()
@@ -71,11 +83,29 @@ public abstract class SimpleCheckMojo extends CompatibilityMojo {
                 .build();
     }
 
-    protected void check(Job job) throws MojoExecutionException {
-        Compatibility compatibility = loadCompatibility();
-        log(compatibility, job);
-        Report report = check(compatibility, job);
-        writeReport(compatibility, report);
+    @ParameterParsing
+    protected @NonNull Path toReportFile() {
+        return Paths.get(fixUnresolvedProperties(reportFile.toURI()));
+    }
+
+    protected void checkStream(Job input) throws MojoExecutionException {
+        logJob(input);
+        Compatibility compatibility = toCompatibility();
+
+        Path outputFile = toReportFile();
+        Report output = check(compatibility, input);
+        logReport(output);
+
+        getLog().info("Writing report to " + outputFile);
+        store(compatibility, outputFile, Report.class, output);
+    }
+
+    private static Report check(Compatibility compatibility, Job input) throws MojoExecutionException {
+        try {
+            return compatibility.check(input);
+        } catch (IOException ex) {
+            throw new MojoExecutionException("Failed to check job", ex);
+        }
     }
 
     private static final MojoFunction<String, LocalDate> FROM_PARSER = MojoFunction.of(Filter::parseLocalDate, "Invalid format for 'from' parameter");

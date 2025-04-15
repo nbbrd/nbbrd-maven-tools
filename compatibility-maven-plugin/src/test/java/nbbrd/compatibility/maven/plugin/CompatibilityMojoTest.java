@@ -30,14 +30,16 @@ class CompatibilityMojoTest {
 
     @Test
     void testLoadReport() throws IOException, MojoExecutionException {
-        assertThat(loadReport(Compatibility.ofServiceLoader(), resolveResource(CompatibilityMojoTest.class, "r1.json")))
+        Compatibility compatibility = Compatibility.ofServiceLoader();
+        assertThat(load(compatibility, resolveResource(CompatibilityMojoTest.class, "r1.json"), Report.class))
                 .isEqualTo(Report.builder().item(SDMX_320).item(SDMX_330).build());
     }
 
     @Test
     void testStoreReport(@TempDir Path tempDir) throws IOException, MojoExecutionException {
         Path json = tempDir.resolve("test.json");
-        storeReport(Compatibility.ofServiceLoader(), json, Report.builder().item(SDMX_320).item(SDMX_330).build());
+        Compatibility compatibility = Compatibility.ofServiceLoader();
+        store(compatibility, json, Report.class, Report.builder().item(SDMX_320).item(SDMX_330).build());
         assertThat(json).hasSameTextualContentAs(resolveResource(CompatibilityMojoTest.class, "r1.json"));
     }
 

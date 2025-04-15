@@ -274,22 +274,43 @@ class CompatibilityTest {
 
     @SuppressWarnings("DataFlowIssue")
     @Test
-    void testMerge() {
+    void testMergeReports() {
         Compatibility x = Compatibility.ofServiceLoader();
 
-        assertThatNullPointerException().isThrownBy(() -> x.merge(null));
+        assertThatNullPointerException().isThrownBy(() -> x.mergeReports(null));
 
-        assertThat(x.merge(emptyList())).isEqualTo(Report.EMPTY);
+        assertThat(x.mergeReports(emptyList())).isEqualTo(Report.EMPTY);
 
         URI remoteSource = remoteURI("source-project");
         URI remoteTarget = remoteURI("target-project");
         ReportItem r1 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.2").build();
         ReportItem r2 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.2").build();
 
-        assertThat(x.merge(asList(
+        assertThat(x.mergeReports(asList(
                 Report.builder().item(r1).build(),
                 Report.builder().item(r2).build()))
         ).isEqualTo(Report.builder().item(r1).item(r2).build());
+    }
+
+    @SuppressWarnings("DataFlowIssue")
+    @Test
+    void testSplitJob() {
+        Compatibility x = Compatibility.ofServiceLoader();
+
+        assertThatNullPointerException().isThrownBy(() -> x.splitJob(null));
+
+        assertThat(x.splitJob(Job.EMPTY)).isEmpty();
+
+        Source s1 = Source.builder().uri(remoteURI("source1")).build();
+        Source s2 = Source.builder().uri(remoteURI("source2")).build();
+        Target t1 = Target.builder().uri(remoteURI("target1")).build();
+        Target t2 = Target.builder().uri(remoteURI("target2")).build();
+
+        assertThat(x.splitJob(Job.builder().source(s1).source(s2).target(t1).target(t2).build())
+        ).containsExactly(
+                Job.builder().source(s1).source(s2).target(t1).build(),
+                Job.builder().source(s1).source(s2).target(t2).build()
+        );
     }
 
     private Compatibility noOpCompatibility(Path workingDir) {

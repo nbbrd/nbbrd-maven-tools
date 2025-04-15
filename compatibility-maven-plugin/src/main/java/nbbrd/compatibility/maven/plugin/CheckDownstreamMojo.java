@@ -1,5 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
+import internal.compatibility.maven.plugin.ParameterParsing;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Source;
 import nbbrd.compatibility.Target;
@@ -17,7 +18,7 @@ import static java.util.Objects.requireNonNull;
 @lombok.Getter
 @lombok.Setter
 @Mojo(name = "check-downstream", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
-public final class CheckDownstreamMojo extends SimpleCheckMojo {
+public final class CheckDownstreamMojo extends CheckStreamMojo {
 
     @Parameter(defaultValue = "${project.baseUri}", property = "compatibility.source")
     private URI source;
@@ -25,16 +26,7 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
     @Parameter(defaultValue = "", property = "compatibility.targets")
     private List<URI> targets;
 
-    @Override
-    public void execute() throws MojoExecutionException {
-        if (isSkip()) {
-            getLog().info("Downstream check has been skipped.");
-            return;
-        }
-
-        check(toJob());
-    }
-
+    @ParameterParsing
     private Job toJob() throws MojoExecutionException {
         return Job
                 .builder()
@@ -43,6 +35,7 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
                 .build();
     }
 
+    @ParameterParsing
     private Source toSource() throws MojoExecutionException {
         return Source
                 .builder()
@@ -52,6 +45,7 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
                 .build();
     }
 
+    @ParameterParsing
     private List<Target> toTargets() throws MojoExecutionException {
         List<Target> result = new ArrayList<>();
         for (URI target : targets) {
@@ -60,6 +54,7 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
         return result;
     }
 
+    @ParameterParsing
     private Target toTarget(URI uri) throws MojoExecutionException {
         return Target
                 .builder()
@@ -67,5 +62,15 @@ public final class CheckDownstreamMojo extends SimpleCheckMojo {
                 .property(toProperty())
                 .filter(toTargetFilter())
                 .build();
+    }
+
+    @Override
+    public void execute() throws MojoExecutionException {
+        if (isSkip()) {
+            getLog().info("Downstream check has been skipped.");
+            return;
+        }
+
+        checkStream(toJob());
     }
 }

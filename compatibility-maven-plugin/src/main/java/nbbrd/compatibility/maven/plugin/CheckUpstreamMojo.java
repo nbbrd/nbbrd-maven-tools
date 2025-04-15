@@ -1,5 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
+import internal.compatibility.maven.plugin.ParameterParsing;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Source;
 import nbbrd.compatibility.Target;
@@ -17,7 +18,7 @@ import static java.util.Objects.requireNonNull;
 @lombok.Getter
 @lombok.Setter
 @Mojo(name = "check-upstream", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
-public final class CheckUpstreamMojo extends SimpleCheckMojo {
+public final class CheckUpstreamMojo extends CheckStreamMojo {
 
     @Parameter(defaultValue = "", property = "compatibility.sources")
     private List<URI> sources;
@@ -25,16 +26,7 @@ public final class CheckUpstreamMojo extends SimpleCheckMojo {
     @Parameter(defaultValue = "${project.baseUri}", property = "compatibility.target")
     private URI target;
 
-    @Override
-    public void execute() throws MojoExecutionException {
-        if (isSkip()) {
-            getLog().info("Upstream check has been skipped.");
-            return;
-        }
-
-        check(toJob());
-    }
-
+    @ParameterParsing
     private Job toJob() throws MojoExecutionException {
         return Job
                 .builder()
@@ -43,6 +35,7 @@ public final class CheckUpstreamMojo extends SimpleCheckMojo {
                 .build();
     }
 
+    @ParameterParsing
     private List<Source> toSources() throws MojoExecutionException {
         List<Source> result = new ArrayList<>();
         for (URI source : sources) {
@@ -51,6 +44,7 @@ public final class CheckUpstreamMojo extends SimpleCheckMojo {
         return result;
     }
 
+    @ParameterParsing
     private Source toSource(URI uri) throws MojoExecutionException {
         return Source
                 .builder()
@@ -60,6 +54,7 @@ public final class CheckUpstreamMojo extends SimpleCheckMojo {
                 .build();
     }
 
+    @ParameterParsing
     private Target toTarget() throws MojoExecutionException {
         return Target
                 .builder()
@@ -67,5 +62,15 @@ public final class CheckUpstreamMojo extends SimpleCheckMojo {
                 .property(toProperty())
                 .filter(toTargetFilter())
                 .build();
+    }
+
+    @Override
+    public void execute() throws MojoExecutionException {
+        if (isSkip()) {
+            getLog().info("Upstream check has been skipped.");
+            return;
+        }
+
+        checkStream(toJob());
     }
 }
