@@ -5,6 +5,7 @@ import lombok.NonNull;
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
+import nbbrd.compatibility.ReportItem;
 import nbbrd.compatibility.spi.Builder;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.text.TextFormatter;
@@ -61,7 +62,6 @@ abstract class CompatibilityMojo extends AbstractMojo {
             log.info("  Target:");
             log.info("           URI: " + target.getUri());
             log.info("      Property: " + target.getProperty());
-            log.info("      Building: " + target.getBuilding());
             log.info("        Filter: " + target.getFilter());
         });
     }
@@ -72,8 +72,8 @@ abstract class CompatibilityMojo extends AbstractMojo {
         report.getItems().forEach(item -> {
             log.info("  Item:");
             log.info("    Status: " + item.getExitStatus());
-            log.info("    Source: " + item.getSourceUri() + "@" + item.getSourceVersion());
-            log.info("    Target: " + item.getTargetUri() + "@" + item.getTargetVersion());
+            log.info("    Source: " + ReportItem.toLabel(item.getSourceUri(), item.getSourceVersion()));
+            log.info("    Target: " + ReportItem.toLabel(item.getTargetUri(), item.getTargetVersion()));
         });
     }
 

@@ -3,6 +3,7 @@ package nbbrd.compatibility;
 import lombok.NonNull;
 import nbbrd.design.RepresentableAsString;
 import nbbrd.design.StaticFactoryMethod;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.time.LocalDate;
 
@@ -11,9 +12,8 @@ import java.time.LocalDate;
 public class Tag {
 
     private static final char SEPARATOR = '/';
-    private static final LocalDate NO_DATE_VALUE = LocalDate.MAX;
 
-    public static final Tag NO_TAG = new Tag(NO_DATE_VALUE, "");
+    public static final Tag NO_TAG = new Tag(null, "");
 
     @StaticFactoryMethod
     public static @NonNull Tag parse(@NonNull CharSequence text) throws IllegalArgumentException {
@@ -23,12 +23,12 @@ public class Tag {
             throw new IllegalArgumentException("Invalid tag");
         }
         return new Tag(
-                separatorIndex == 0 ? NO_DATE_VALUE : LocalDate.parse(textString.substring(0, separatorIndex)),
+                separatorIndex == 0 ? null : LocalDate.parse(textString.substring(0, separatorIndex)),
                 textString.substring(separatorIndex + 1)
         );
     }
 
-    @NonNull
+    @Nullable
     LocalDate date;
 
     @NonNull
@@ -36,10 +36,10 @@ public class Tag {
 
     @Override
     public String toString() {
-        return (date.equals(NO_DATE_VALUE) ? "" : date.toString()) + SEPARATOR + ref;
+        return (date == null ? "" : date.toString()) + SEPARATOR + ref;
     }
 
     public @NonNull Tag withoutDate() {
-        return new Tag(NO_DATE_VALUE, ref);
+        return new Tag(null, ref);
     }
 }

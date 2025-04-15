@@ -1,6 +1,7 @@
 package nbbrd.compatibility;
 
 import lombok.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.time.LocalDate;
 import java.time.Year;
@@ -17,31 +18,30 @@ public class Filter {
 
     public static final Filter DEFAULT = Filter.builder().build();
 
-    @NonNull
-    @lombok.Builder.Default
-    String ref = "";
+    @Nullable
+    String ref;
 
-    @lombok.NonNull
-    @lombok.Builder.Default
-    LocalDate from = LocalDate.MIN;
+    @Nullable
+    LocalDate from;
 
-    @lombok.NonNull
-    @lombok.Builder.Default
-    LocalDate to = LocalDate.MAX;
+    @Nullable
+    LocalDate to;
 
     @lombok.Builder.Default
-    int limit = Integer.MAX_VALUE;
+    int limit = -1;
 
-    public boolean containsDate(@NonNull LocalDate date) {
-        return !from.isAfter(date) && !date.isAfter(to);
+    public boolean containsDate(@NonNull Tag tag) {
+        LocalDate date = tag.getDate();
+        if (date == null) date = LocalDate.MAX;
+        return (from == null || !from.isAfter(date)) && (to == null || !date.isAfter(to));
     }
 
     private boolean containsRef(@NonNull Tag tag) {
-        return tag.getRef().contains(ref);
+        return ref == null || tag.getRef().contains(ref);
     }
 
     public boolean contains(@NonNull Tag tag) {
-        return containsRef(tag) && containsDate(tag.getDate());
+        return containsRef(tag) && containsDate(tag);
     }
 
     public List<Tag> apply(@NonNull List<Tag> tags) {
@@ -49,7 +49,7 @@ public class Filter {
                 .map(i -> tags.size() - 1 - i)
                 .mapToObj(tags::get)
                 .filter(this::contains)
-                .limit(limit)
+                .limit(limit >= 0 ? limit : Long.MAX_VALUE)
                 .collect(toList());
         Collections.reverse(result);
         return result;

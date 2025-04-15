@@ -13,6 +13,15 @@ import static org.assertj.core.api.Assertions.*;
 public class FilterTest {
 
     @Test
+    public void testToString() {
+        assertThat(Filter.DEFAULT)
+                .hasToString("Filter(ref=null, from=null, to=null, limit=-1)");
+
+        assertThat(Filter.builder().ref("a").from(v1_0_0.getDate()).to(v1_1_0.getDate()).limit(3).build())
+                .hasToString("Filter(ref=a, from=2017-06-20, to=2019-02-15, limit=3)");
+    }
+
+    @Test
     public void testRef() {
         assertThat(Filter.builder().build())
                 .describedAs("Empty reference")
@@ -90,6 +99,7 @@ public class FilterTest {
                 .isNot(containing(v1_0_0));
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Test
     public void testParseLocalDate() {
         assertThatNullPointerException()

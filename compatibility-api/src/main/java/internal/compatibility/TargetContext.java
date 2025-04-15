@@ -1,7 +1,6 @@
 package internal.compatibility;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Building;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -24,9 +23,6 @@ public class TargetContext implements ProjectContext {
 
     @NonNull
     Broker broker;
-
-    @NonNull
-    Building building;
 
     public static final class Builder implements ProjectContext.Builder<Builder> {
     }

@@ -100,14 +100,13 @@ public class Compatibility {
         return TargetContext
                 .builder()
                 .init(target, local, workingDir, build)
-                .building(target.getBuilding())
                 .broker(resolveBroker(target))
                 .build();
     }
 
     private Broker resolveBroker(Target target) throws IOException {
         String property = target.getProperty();
-        if (property.isEmpty()) {
+        if (property == null || property.isEmpty()) {
             throw new IOException("Cannot resolve broker: target property is empty");
         }
         return new Broker.PropertyBroker(property);
@@ -122,7 +121,7 @@ public class Compatibility {
             for (VersionContext sourceVersion : source.getVersions()) {
                 for (TargetContext target : targets) {
                     for (VersionContext targetVersion : target.getVersions()) {
-                        onEvent.accept("Checking " + ++index + "/" + count + " " + source.getUri() + "@" + sourceVersion.getVersion() + " -> " + target.getUri() + "@" + targetVersion.getVersion());
+                        onEvent.accept("Checking " + ++index + "/" + count + " " + ReportItem.toLabel(source.getUri(), sourceVersion.getVersion()) + " -> " + ReportItem.toLabel(target.getUri(), targetVersion.getVersion()));
                         result.item(check(build, source, sourceVersion, target, targetVersion));
                     }
                 }

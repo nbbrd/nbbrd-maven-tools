@@ -1,5 +1,7 @@
 package nbbrd.compatibility;
 
+import lombok.NonNull;
+
 import java.net.URI;
 
 @lombok.Value
@@ -20,6 +22,12 @@ public class ReportItem {
 
     @lombok.NonNull
     Version targetVersion;
+
+    public static @NonNull String toLabel(@NonNull URI uri, @NonNull Version version) {
+        String path = uri.getPath();
+        String label = path != null ? path.substring(path.lastIndexOf('/') + 1) : uri.toString();
+        return label + "@" + version;
+    }
 
     public static final class Builder {
 
