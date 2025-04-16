@@ -12,10 +12,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static internal.compatibility.spi.MarkdownFormat.Header.getShortNameIndex;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static nbbrd.compatibility.ExitStatus.*;
+import static nbbrd.compatibility.VersionContext.localOf;
 import static nbbrd.compatibility.VersionContext.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
@@ -78,33 +76,33 @@ class MarkdownFormatTest {
         assertThat(x.accept(Paths.get("hello.MD"))).isTrue();
     }
 
-    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     @Test
-    void testGetShortNameIndex() {
-        assertThat(getShortNameIndex(emptyList()))
-                .isEqualTo(0);
+    void testToProjectLabel() {
+        assertThat(new MarkdownFormat.Header(URI.create(""), localOf("1.2.3")).toProjectLabel())
+                .isEqualTo("");
 
-        assertThat(getShortNameIndex(asList(
-                new MarkdownFormat.Header(URI.create(""), null)
-        ))).isEqualTo(0);
+        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), localOf("1.2.3")).toProjectLabel())
+                .isEqualTo("jdplus-sdmx");
 
-        assertThat(getShortNameIndex(asList(
-                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null)
-        ))).isEqualTo(0);
+        assertThat(new MarkdownFormat.Header(URI.create(""), remoteOf("1.2.3")).toProjectLabel())
+                .isEqualTo("");
 
-        assertThat(getShortNameIndex(asList(
-                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null),
-                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null)
-        ))).isEqualTo(0);
+        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("1.2.3")).toProjectLabel())
+                .isEqualTo("jdplus-sdmx");
+    }
 
-        assertThat(getShortNameIndex(asList(
-                new MarkdownFormat.Header(URI.create("https://github.com/jdemetra/jdplus-benchmarking"), null),
-                new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), null)
-        ))).isEqualTo(19);
+    @Test
+    void testToVersionLabel() {
+        assertThat(new MarkdownFormat.Header(URI.create(""), localOf("1.2.3")).toVersionLabel())
+                .isEqualTo("HEAD");
 
-        assertThat(getShortNameIndex(asList(
-                new MarkdownFormat.Header(URI.create("https://github.com/jdemetra/jdplus-benchmarking"), null),
-                new MarkdownFormat.Header(URI.create("https://github.com/jdemetra/jdplus-incubator"), null)
-        ))).isEqualTo(35);
+        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), localOf("1.2.3")).toVersionLabel())
+                .isEqualTo("HEAD");
+
+        assertThat(new MarkdownFormat.Header(URI.create(""), remoteOf("1.2.3")).toVersionLabel())
+                .isEqualTo("v1.2.3");
+
+        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("1.2.3")).toVersionLabel())
+                .isEqualTo("v1.2.3");
     }
 }
