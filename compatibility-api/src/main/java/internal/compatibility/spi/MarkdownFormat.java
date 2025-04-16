@@ -1,13 +1,9 @@
 package internal.compatibility.spi;
 
 import lombok.NonNull;
-import nbbrd.compatibility.ExitStatus;
-import nbbrd.compatibility.Report;
-import nbbrd.compatibility.ReportItem;
-import nbbrd.compatibility.Version;
-import nbbrd.compatibility.spi.Format;
+import nbbrd.compatibility.*;
 import nbbrd.compatibility.Formatter;
-import nbbrd.compatibility.Parser;
+import nbbrd.compatibility.spi.Format;
 import nbbrd.design.DirectImpl;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.service.ServiceProvider;
@@ -69,7 +65,7 @@ public final class MarkdownFormat implements Format {
             return;
         }
 
-        Map<URI, Map<Version, Map<Version, ExitStatus>>> plugins = report.getItems()
+        Map<URI, Map<VersionContext, Map<VersionContext, ExitStatus>>> plugins = report.getItems()
                 .stream()
                 .collect(
                         groupingBy(ReportItem::getTargetUri, LinkedHashMap::new,
@@ -77,7 +73,7 @@ public final class MarkdownFormat implements Format {
                                         toMap(ReportItem::getSourceVersion, ReportItem::getExitStatus)))
                 );
 
-        Set<Version> versions = report.getItems()
+        Set<VersionContext> versions = report.getItems()
                 .stream()
                 .map(ReportItem::getSourceVersion)
                 .collect(toCollection(LinkedHashSet::new));
@@ -113,7 +109,7 @@ public final class MarkdownFormat implements Format {
 
         Collector<CharSequence, ?, String> toRow = joining(" | ", "| ", " |");
 
-        Map<URI, Optional<Version>> max = rows.stream().collect(groupingBy(Header::getUri, mapping(Header::getVersion, reducing((l, r) -> r))));
+        Map<URI, Optional<VersionContext>> max = rows.stream().collect(groupingBy(Header::getUri, mapping(Header::getVersion, reducing((l, r) -> r))));
 
         appendable.append(lineSeparator()).append(Stream.concat(Stream.of(repeat(" ", sizes[0]), repeat(" ", sizes[1])), columns.stream().map(Header::toVersionString)).collect(toRow));
         appendable.append(lineSeparator()).append(IntStream.range(0, 2 + columns.size()).mapToObj(i -> repeat("-", sizes[i])).collect(toRow));
@@ -124,7 +120,10 @@ public final class MarkdownFormat implements Format {
             String shortPluginName = rows.get(i).toShortPluginName(shortNameIndex);
             String label = previous.getAndSet(shortPluginName).equals(shortPluginName) ? "" : shortPluginName;
             String versionString = rows.get(i).toVersionString();
-            boolean important = max.get(rows.get(i).getUri()).orElse(Version.parse("")).equals(Version.parse(versionString.substring(1)));
+            boolean important = max.get(rows.get(i).getUri())
+                    .map(VersionContext::getVersion)
+                    .orElse(Version.parse(""))
+                    .equals(Version.parse(versionString.substring(1)));
             if (important) {
                 versionString = "**" + versionString + "**";
             }
@@ -155,10 +154,10 @@ public final class MarkdownFormat implements Format {
     static class Header {
 
         URI uri;
-        Version version;
+        VersionContext version;
 
         String toVersionString() {
-            return "v" + version.toString();
+            return version.getTag().getRefName();
         }
 
         String toUriString() {

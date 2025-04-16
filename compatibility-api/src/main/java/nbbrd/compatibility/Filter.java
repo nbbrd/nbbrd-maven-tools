@@ -37,7 +37,7 @@ public class Filter {
     }
 
     private boolean containsRef(@NonNull Tag tag) {
-        return ref == null || tag.getRef().contains(ref);
+        return ref == null || tag.getRefName().contains(ref);
     }
 
     public boolean contains(@NonNull Tag tag) {

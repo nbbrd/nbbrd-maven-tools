@@ -25,7 +25,7 @@ public class MockedProject {
 
     public MockedVersion getByTag(Tag tag) throws IOException {
         for (MockedVersion version : versions) {
-            if (version.getTag().equals(tag)) {
+            if (version.getVersion().getTag().equals(tag)) {
                 return version;
             }
         }

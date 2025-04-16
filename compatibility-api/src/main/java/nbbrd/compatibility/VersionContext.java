@@ -1,8 +1,6 @@
-package internal.compatibility;
+package nbbrd.compatibility;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Tag;
-import nbbrd.compatibility.Version;
 import nbbrd.design.StaticFactoryMethod;
 
 @lombok.Value
@@ -20,7 +18,7 @@ public class VersionContext {
     }
 
     @StaticFactoryMethod
-    public static VersionContext local(Version version) {
+    public static @NonNull VersionContext local(@NonNull Version version) {
         return VersionContext
                 .builder()
                 .tag(Tag.NO_TAG)
@@ -29,11 +27,21 @@ public class VersionContext {
     }
 
     @StaticFactoryMethod
-    public static VersionContext remote(Tag tag, Version version) {
+    public static @NonNull VersionContext localOf(@NonNull CharSequence version) {
+        return local(Version.parse(version));
+    }
+
+    @StaticFactoryMethod
+    public static @NonNull VersionContext remote(@NonNull Version version, @NonNull Tag tag) {
         return VersionContext
                 .builder()
                 .tag(tag)
                 .version(version)
                 .build();
+    }
+
+    @StaticFactoryMethod
+    public static @NonNull VersionContext remoteOf(@NonNull CharSequence version) {
+        return remote(Version.parse(version), Tag.ofVersion(version));
     }
 }

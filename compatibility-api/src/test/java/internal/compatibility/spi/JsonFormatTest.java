@@ -11,6 +11,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static nbbrd.compatibility.VersionContext.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatObject;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
@@ -85,8 +86,8 @@ class JsonFormatTest {
                 .item(ReportItem
                         .builder()
                         .exitStatus(ExitStatus.VERIFIED)
-                        .source(URI.create("source"), "1.2.3")
-                        .target(URI.create("target"), "3.2.1")
+                        .source(URI.create("source"), remoteOf("1.2.3"))
+                        .target(URI.create("target"), remoteOf("3.2.1"))
                         .build())
                 .build();
         String valueText = getContentOf(JsonFormatTest.class, "report.json");

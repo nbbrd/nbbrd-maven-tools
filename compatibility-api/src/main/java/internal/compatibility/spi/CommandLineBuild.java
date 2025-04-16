@@ -82,7 +82,7 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
-        run(consume(), "git", "-C", project.toString(), "checkout", "-q", tag.getRef());
+        run(consume(), "git", "-C", project.toString(), "checkout", "-q", tag.getRefName());
     }
 
     @Override

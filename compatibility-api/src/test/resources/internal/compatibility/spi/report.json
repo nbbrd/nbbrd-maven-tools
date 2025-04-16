@@ -3,9 +3,15 @@
     {
       "exitStatus": "VERIFIED",
       "sourceUri": "source",
-      "sourceVersion": "1.2.3",
+      "sourceVersion": {
+        "tag": "/v1.2.3",
+        "version": "1.2.3"
+      },
       "targetUri": "target",
-      "targetVersion": "3.2.1"
+      "targetVersion": {
+        "tag": "/v3.2.1",
+        "version": "3.2.1"
+      }
     }
   ]
 }

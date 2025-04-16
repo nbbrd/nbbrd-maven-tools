@@ -5,12 +5,8 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import lombok.NonNull;
-import nbbrd.compatibility.Job;
-import nbbrd.compatibility.Report;
-import nbbrd.compatibility.Version;
+import nbbrd.compatibility.*;
 import nbbrd.compatibility.spi.Format;
-import nbbrd.compatibility.Formatter;
-import nbbrd.compatibility.Parser;
 import nbbrd.design.DirectImpl;
 import nbbrd.service.ServiceProvider;
 
@@ -76,13 +72,14 @@ public final class JsonFormat implements Format {
     }
 
     private static final Gson GSON = new GsonBuilder()
-            .registerTypeHierarchyAdapter(Path.class, create(Path.class, Paths::get, Path::toString))
-            .registerTypeAdapter(Version.class, create(Version.class, Version::parse, Version::toString))
-            .registerTypeAdapter(LocalDate.class, create(LocalDate.class, LocalDate::parse, LocalDate::toString))
+            .registerTypeHierarchyAdapter(Path.class, representingAsString(Path.class, Paths::get, Path::toString))
+            .registerTypeAdapter(Tag.class, representingAsString(Tag.class, Tag::parse, Tag::toString))
+            .registerTypeAdapter(Version.class, representingAsString(Version.class, Version::parse, Version::toString))
+            .registerTypeAdapter(LocalDate.class, representingAsString(LocalDate.class, LocalDate::parse, LocalDate::toString))
             .setPrettyPrinting()
             .create();
 
-    private static <T> TypeAdapter<T> create(Class<T> type, Function<String, T> parser, Function<T, String> formatter) {
+    private static <T> TypeAdapter<T> representingAsString(Class<T> type, Function<String, T> parser, Function<T, String> formatter) {
         return new TypeAdapter<T>() {
             @Override
             public T read(JsonReader in) throws IOException {

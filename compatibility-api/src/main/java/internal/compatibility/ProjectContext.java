@@ -3,6 +3,7 @@ package internal.compatibility;
 import lombok.NonNull;
 import nbbrd.compatibility.Project;
 import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.VersionContext;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.SealedType;
 
@@ -54,7 +55,7 @@ public interface ProjectContext {
                 build.clone(project.getUri(), directory);
                 for (Tag tag : project.getFilter().apply(build.getTags(directory))) {
                     build.checkoutTag(directory, tag);
-                    version(VersionContext.remote(tag, build.getVersion(directory)));
+                    version(VersionContext.remote(build.getVersion(directory), tag));
                 }
             }
             return uri(project.getUri());

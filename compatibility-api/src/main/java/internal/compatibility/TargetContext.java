@@ -1,6 +1,7 @@
 package internal.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.VersionContext;
 
 import java.net.URI;
 import java.nio.file.Path;

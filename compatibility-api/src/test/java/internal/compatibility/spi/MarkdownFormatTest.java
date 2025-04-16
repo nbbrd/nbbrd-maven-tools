@@ -16,6 +16,7 @@ import static internal.compatibility.spi.MarkdownFormat.Header.getShortNameIndex
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static nbbrd.compatibility.ExitStatus.*;
+import static nbbrd.compatibility.VersionContext.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 import static tests.compatibility.spi.FormatAssert.asTextFormatter;
@@ -47,15 +48,15 @@ class MarkdownFormatTest {
         URI trg = URI.create("trg");
         Report value = Report
                 .builder()
-                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, "2.3.4").target(trg, "1.0.0").build())
-                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, "2.3.4").target(trg, "1.0.1").build())
-                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, "2.3.4").target(trg, "1.0.2").build())
-                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, "2.4.0").target(trg, "1.0.0").build())
-                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, "2.4.0").target(trg, "1.0.1").build())
-                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, "2.4.0").target(trg, "1.0.2").build())
-                .item(ReportItem.builder().exitStatus(BROKEN).source(src, "3.0.0").target(trg, "1.0.0").build())
-                .item(ReportItem.builder().exitStatus(BROKEN).source(src, "3.0.0").target(trg, "1.0.1").build())
-                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, "3.0.0").target(trg, "1.0.2").build())
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.3.4")).target(trg, remoteOf("1.0.0")).build())
+                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, remoteOf("2.3.4")).target(trg, remoteOf("1.0.1")).build())
+                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, remoteOf("2.3.4")).target(trg, remoteOf("1.0.2")).build())
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.0")).build())
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.1")).build())
+                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.2")).build())
+                .item(ReportItem.builder().exitStatus(BROKEN).source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.0")).build())
+                .item(ReportItem.builder().exitStatus(BROKEN).source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.1")).build())
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.2")).build())
                 .build();
 
         assertThat(value)

@@ -6,8 +6,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.LocalDate;
 
-import static nbbrd.compatibility.Tag.of;
-import static nbbrd.compatibility.Tag.parse;
+import static nbbrd.compatibility.Tag.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
@@ -21,14 +20,14 @@ class TagTest {
 
         assertThat(parse("2023-05-02/v3.0.0"))
                 .returns(LocalDate.parse("2023-05-02"), Tag::getDate)
-                .returns("v3.0.0", Tag::getRef);
+                .returns("v3.0.0", Tag::getRefName);
 
         assertThatNullPointerException()
                 .isThrownBy(() -> of(null, null));
 
         assertThat(of(LocalDate.parse("2023-05-02"), "v3.0.0"))
                 .returns(LocalDate.parse("2023-05-02"), Tag::getDate)
-                .returns("v3.0.0", Tag::getRef);
+                .returns("v3.0.0", Tag::getRefName);
     }
 
     @ParameterizedTest
@@ -40,9 +39,11 @@ class TagTest {
     @Test
     void testWithoutDate() {
         assertThat(parse("2023-05-02/v3.0.0").withoutDate())
-                .isEqualTo(parse("/v3.0.0"));
+                .isEqualTo(parse("/v3.0.0"))
+                .isEqualTo(ofVersion("3.0.0"));
 
         assertThat(parse("/v3.0.0").withoutDate())
-                .isEqualTo(parse("/v3.0.0"));
+                .isEqualTo(parse("/v3.0.0"))
+                .isEqualTo(ofVersion("3.0.0"));
     }
 }

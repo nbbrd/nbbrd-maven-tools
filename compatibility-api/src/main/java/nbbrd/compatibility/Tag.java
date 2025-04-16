@@ -20,7 +20,7 @@ public class Tag {
         String textString = text.toString();
         int separatorIndex = textString.indexOf(SEPARATOR);
         if (separatorIndex == -1) {
-            throw new IllegalArgumentException("Invalid tag");
+            throw new IllegalArgumentException("Invalid tag: cannot find separator '" + SEPARATOR + "'");
         }
         return new Tag(
                 separatorIndex == 0 ? null : LocalDate.parse(textString.substring(0, separatorIndex)),
@@ -28,18 +28,25 @@ public class Tag {
         );
     }
 
+    @StaticFactoryMethod
+    public static @NonNull Tag ofVersion(@NonNull CharSequence version) {
+        return new Tag(null, DEFAULT_TAG_PREFIX + version);
+    }
+
+    private static final String DEFAULT_TAG_PREFIX = "v";
+
     @Nullable
     LocalDate date;
 
     @NonNull
-    String ref;
+    String refName;
 
     @Override
     public String toString() {
-        return (date == null ? "" : date.toString()) + SEPARATOR + ref;
+        return (date == null ? "" : date.toString()) + SEPARATOR + refName;
     }
 
     public @NonNull Tag withoutDate() {
-        return new Tag(null, ref);
+        return new Tag(null, refName);
     }
 }

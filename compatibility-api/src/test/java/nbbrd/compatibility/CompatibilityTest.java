@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static nbbrd.compatibility.ExitStatus.*;
+import static nbbrd.compatibility.VersionContext.localOf;
+import static nbbrd.compatibility.VersionContext.remoteOf;
 import static org.assertj.core.api.Assertions.*;
 import static tests.compatibility.MockedBuilder.localURI;
 import static tests.compatibility.MockedBuilder.remoteURI;
@@ -77,9 +79,9 @@ class CompatibilityTest {
 
         assertThat(x.check(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(BROKEN).source(localSource, "3.0.0").target(remoteTarget, "1.0.0").build(),
-                        ReportItem.builder().exitStatus(BROKEN).source(localSource, "3.0.0").target(remoteTarget, "1.0.1").build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(localSource, "3.0.0").target(remoteTarget, "1.0.2").build()
+                        ReportItem.builder().exitStatus(BROKEN).source(localSource, localOf("3.0.0")).target(remoteTarget, remoteOf("1.0.0")).build(),
+                        ReportItem.builder().exitStatus(BROKEN).source(localSource, localOf("3.0.0")).target(remoteTarget, remoteOf("1.0.1")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED).source(localSource, localOf("3.0.0")).target(remoteTarget, remoteOf("1.0.2")).build()
                 );
 
         assertThat(tmp).isEmptyDirectory();
@@ -108,9 +110,9 @@ class CompatibilityTest {
 
         assertThat(x.check(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(localTarget, "1.0.2").build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(localTarget, "1.0.2").build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "3.0.0").target(localTarget, "1.0.2").build()
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(localTarget, localOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(localTarget, localOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("3.0.0")).target(localTarget, localOf("1.0.2")).build()
                 );
 
         assertThat(tmp).isEmptyDirectory();
@@ -139,15 +141,15 @@ class CompatibilityTest {
 
         assertThat(x.check(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.0").build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.1").build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.2").build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.0").build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.1").build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.2").build(),
-                        ReportItem.builder().exitStatus(BROKEN).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.0").build(),
-                        ReportItem.builder().exitStatus(BROKEN).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.1").build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, "3.0.0").target(remoteTarget, "1.0.2").build()
+                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.0")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.1")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.0")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.1")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(BROKEN).source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.0")).build(),
+                        ReportItem.builder().exitStatus(BROKEN).source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.1")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.2")).build()
                 );
 
         Job jobWithFilter = Job
@@ -168,8 +170,8 @@ class CompatibilityTest {
 
         assertThat(x.check(jobWithFilter).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.2").build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.2").build()
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build()
                 );
 
         assertThat(tmp).isEmptyDirectory();
@@ -198,7 +200,7 @@ class CompatibilityTest {
 
         assertThat(x.check(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(VERIFIED).source(localSource, "3.0.0").target(localTarget, "1.0.2").build()
+                        ReportItem.builder().exitStatus(VERIFIED).source(localSource, localOf("3.0.0")).target(localTarget, localOf("1.0.2")).build()
                 );
 
         assertThat(tmp).isEmptyDirectory();
@@ -283,8 +285,8 @@ class CompatibilityTest {
 
         URI remoteSource = remoteURI("source-project");
         URI remoteTarget = remoteURI("target-project");
-        ReportItem r1 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.3.4").target(remoteTarget, "1.0.2").build();
-        ReportItem r2 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, "2.4.0").target(remoteTarget, "1.0.2").build();
+        ReportItem r1 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.2")).build();
+        ReportItem r2 = ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build();
 
         assertThat(x.mergeReports(asList(
                 Report.builder().item(r1).build(),

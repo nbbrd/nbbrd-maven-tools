@@ -3,6 +3,7 @@ package tests.compatibility;
 import lombok.NonNull;
 import nbbrd.compatibility.Tag;
 import nbbrd.compatibility.Version;
+import nbbrd.compatibility.VersionContext;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.compatibility.spi.Builder;
 import org.semver4j.Semver;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static nbbrd.compatibility.VersionContext.remoteOf;
 
 @lombok.Value
 @lombok.Builder
@@ -123,7 +125,7 @@ public class MockedBuilder implements Builder {
         @Override
         public @NonNull Version getVersion(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
-            return Version.parse(stuff.computeIfAbsent(id, this::initStatus).getModified().getVersion());
+            return stuff.computeIfAbsent(id, this::initStatus).getModified().getVersion().getVersion();
         }
 
         @Override
@@ -138,7 +140,8 @@ public class MockedBuilder implements Builder {
             return projects.get(id)
                     .getVersions()
                     .stream()
-                    .map(MockedVersion::getTag)
+                    .map(MockedVersion::getVersion)
+                    .map(VersionContext::getTag)
                     .collect(toList());
         }
 
@@ -195,16 +198,16 @@ public class MockedBuilder implements Builder {
             .project(MockedProject
                     .builder()
                     .projectId("source-project")
-                    .version(MockedVersion.builderOf("2.3.4").build())
-                    .version(MockedVersion.builderOf("2.4.0").build())
-                    .version(MockedVersion.builderOf("3.0.0").build())
+                    .version(MockedVersion.builder().version(remoteOf("2.3.4")).build())
+                    .version(MockedVersion.builder().version(remoteOf("2.4.0")).build())
+                    .version(MockedVersion.builder().version(remoteOf("3.0.0")).build())
                     .build())
             .project(MockedProject
                     .builder()
                     .projectId("target-project")
-                    .version(MockedVersion.builderOf("1.0.0").property("x", "2.3.4").build())
-                    .version(MockedVersion.builderOf("1.0.1").property("x", "2.4.0").build())
-                    .version(MockedVersion.builderOf("1.0.2").property("x", "3.0.0").build())
+                    .version(MockedVersion.builder().version(remoteOf("1.0.0")).property("x", "2.3.4").build())
+                    .version(MockedVersion.builder().version(remoteOf("1.0.1")).property("x", "2.4.0").build())
+                    .version(MockedVersion.builder().version(remoteOf("1.0.2")).property("x", "3.0.0").build())
                     .build())
             .build();
 }

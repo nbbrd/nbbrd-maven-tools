@@ -3,8 +3,7 @@ package internal.compatibility;
 import lombok.NonNull;
 import nbbrd.compatibility.Filter;
 import nbbrd.compatibility.Source;
-import nbbrd.compatibility.Tag;
-import nbbrd.compatibility.Version;
+import nbbrd.compatibility.VersionContext;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.MightBePromoted;
 import org.junit.jupiter.api.Test;
@@ -20,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static nbbrd.compatibility.VersionContext.localOf;
+import static nbbrd.compatibility.VersionContext.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
@@ -38,9 +39,9 @@ class ProjectContextTest {
                     .returns(true, MockedProjectContext::isDeleteOnExit)
                     .extracting(MockedProjectContext::getVersions, list(VersionContext.class))
                     .containsExactly(
-                            VersionContext.remote(Tag.parse("/v2.3.4"), Version.parse("2.3.4")),
-                            VersionContext.remote(Tag.parse("/v2.4.0"), Version.parse("2.4.0")),
-                            VersionContext.remote(Tag.parse("/v3.0.0"), Version.parse("3.0.0"))
+                            remoteOf("2.3.4"),
+                            remoteOf("2.4.0"),
+                            remoteOf("3.0.0")
                     );
             assertThat(tmp).isNotEmptyDirectory();
             x.result.clean();
@@ -52,8 +53,8 @@ class ProjectContextTest {
                     .returns(true, MockedProjectContext::isDeleteOnExit)
                     .extracting(MockedProjectContext::getVersions, list(VersionContext.class))
                     .containsExactly(
-                            VersionContext.remote(Tag.parse("/v2.4.0"), Version.parse("2.4.0")),
-                            VersionContext.remote(Tag.parse("/v3.0.0"), Version.parse("3.0.0"))
+                            remoteOf("2.4.0"),
+                            remoteOf("3.0.0")
                     );
             assertThat(tmp).isNotEmptyDirectory();
             x.result.clean();
@@ -65,7 +66,7 @@ class ProjectContextTest {
                     .returns(false, MockedProjectContext::isDeleteOnExit)
                     .extracting(MockedProjectContext::getVersions, list(VersionContext.class))
                     .containsExactly(
-                            VersionContext.local(Version.parse("3.0.0"))
+                            localOf("3.0.0")
                     );
             assertThat(tmp).isEmptyDirectory();
         }

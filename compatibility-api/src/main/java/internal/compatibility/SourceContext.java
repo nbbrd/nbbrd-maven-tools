@@ -1,6 +1,7 @@
 package internal.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.VersionContext;
 import nbbrd.compatibility.spi.Versioning;
 
 import java.net.URI;

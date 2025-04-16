@@ -1,6 +1,9 @@
 package nbbrd.compatibility;
 
-import internal.compatibility.*;
+import internal.compatibility.Broker;
+import internal.compatibility.ProjectContext;
+import internal.compatibility.SourceContext;
+import internal.compatibility.TargetContext;
 import internal.compatibility.spi.NoOpBuilder;
 import lombok.NonNull;
 import nbbrd.compatibility.spi.*;
@@ -121,7 +124,7 @@ public class Compatibility {
             for (VersionContext sourceVersion : source.getVersions()) {
                 for (TargetContext target : targets) {
                     for (VersionContext targetVersion : target.getVersions()) {
-                        onEvent.accept("Checking " + ++index + "/" + count + " " + ReportItem.toLabel(source.getUri(), sourceVersion.getVersion()) + " -> " + ReportItem.toLabel(target.getUri(), targetVersion.getVersion()));
+                        onEvent.accept("Checking " + ++index + "/" + count + " " + ReportItem.toLabel(source.getUri(), sourceVersion) + " -> " + ReportItem.toLabel(target.getUri(), targetVersion));
                         result.item(check(build, source, sourceVersion, target, targetVersion));
                     }
                 }
@@ -136,9 +139,9 @@ public class Compatibility {
         ReportItem.Builder result = ReportItem
                 .builder()
                 .sourceUri(source.getUri())
-                .sourceVersion(sourceVersion.getVersion())
+                .sourceVersion(sourceVersion)
                 .targetUri(target.getUri())
-                .targetVersion(targetVersion.getVersion());
+                .targetVersion(targetVersion);
         Path project = target.getDirectory();
         if (targetVersion.requiresCheckout()) {
             build.checkoutTag(project, targetVersion.getTag());

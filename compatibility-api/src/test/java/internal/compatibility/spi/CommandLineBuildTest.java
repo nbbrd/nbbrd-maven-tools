@@ -109,7 +109,7 @@ class CommandLineBuildTest {
     void checkoutTag(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
         try (CommandLineBuild x = getJobExecutor()) {
-            x.checkoutTag(project, Tag.parse("/v2.4.0"));
+            x.checkoutTag(project, Tag.ofVersion("2.4.0"));
             assertThat(project.resolve("pom.xml"))
                     .content().contains("<version>2.4.0</version>");
         }
@@ -122,9 +122,9 @@ class CommandLineBuildTest {
             assertThat(x.getTags(project))
                     .map(Tag::withoutDate)
                     .containsExactly(
-                            Tag.parse("/v2.3.4"),
-                            Tag.parse("/v2.4.0"),
-                            Tag.parse("/v3.0.0")
+                            Tag.ofVersion("2.3.4"),
+                            Tag.ofVersion("2.4.0"),
+                            Tag.ofVersion("3.0.0")
                     );
         }
     }
