@@ -1,11 +1,13 @@
 package internal.compatibility;
 
+import nbbrd.io.function.IOBiConsumer;
 import nbbrd.io.function.IOConsumer;
 import nbbrd.io.function.IOFunction;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -21,16 +23,24 @@ public final class IOStreams {
         return collectWithIO(collection.stream(), collector);
     }
 
-    public static <T> void forEachWithIO(Collection<T> collection, IOConsumer<? super T> action) throws IOException {
-        forEachWithIO(collection.stream(), action);
-    }
-
     public static <T, R, A> R collectWithIO(Stream<T> stream, Collector<? super T, A, R> collector) throws IOException {
         try {
             return stream.collect(collector);
         } catch (UncheckedIOException ex) {
             throw ex.getCause();
         }
+    }
+
+    public static <K, V> void forEachWithIO(Map<K, V> map, IOBiConsumer<? super K, ? super V> action) throws IOException {
+        try {
+            map.forEach(action.asUnchecked());
+        } catch (UncheckedIOException ex) {
+            throw ex.getCause();
+        }
+    }
+
+    public static <T> void forEachWithIO(Collection<T> collection, IOConsumer<? super T> action) throws IOException {
+        forEachWithIO(collection.stream(), action);
     }
 
     public static <T> void forEachWithIO(Stream<T> stream, IOConsumer<? super T> action) throws IOException {

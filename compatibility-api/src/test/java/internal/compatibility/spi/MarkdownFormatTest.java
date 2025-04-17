@@ -17,8 +17,7 @@ import static nbbrd.compatibility.VersionContext.localOf;
 import static nbbrd.compatibility.VersionContext.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
-import static tests.compatibility.spi.FormatAssert.asTextFormatter;
-import static tests.compatibility.spi.FormatAssert.assertFormatCompliance;
+import static tests.compatibility.spi.FormatAssert.*;
 
 class MarkdownFormatTest {
 
@@ -59,12 +58,7 @@ class MarkdownFormatTest {
 
         assertThat(value)
                 .extracting(formatter::format, STRING)
-                .isEqualToNormalizingNewlines("\n" +
-                        "|     |            | v2.3.4 | v2.4.0 | v3.0.0 |\n" +
-                        "| --- | ---------- | ------ | ------ | ------ |\n" +
-                        "| trg | v1.0.0     | ✅      | ✅      | ❌      |\n" +
-                        "|     | v1.0.1     |        | ✅      | ❌      |\n" +
-                        "|     | **v1.0.2** |        |        | ✅      |");
+                .isEqualToNormalizingNewlines(getContentOf(MarkdownFormatTest.class, "report.md"));
     }
 
     @Test
