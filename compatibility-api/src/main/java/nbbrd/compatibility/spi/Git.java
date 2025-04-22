@@ -1,7 +1,7 @@
 package nbbrd.compatibility.spi;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Ref;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,10 +12,10 @@ public interface Git {
 
     void restore(@NonNull Path project) throws IOException;
 
-    void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException;
+    void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException;
 
     @NonNull
-    List<Tag> getTags(@NonNull Path project) throws IOException;
+    List<Ref> getTags(@NonNull Path project) throws IOException;
 
     void clone(@NonNull URI from, @NonNull Path to) throws IOException;
 }

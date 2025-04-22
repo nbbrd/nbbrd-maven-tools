@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static nbbrd.compatibility.ExitStatus.VERIFIED;
-import static nbbrd.compatibility.VersionContext.remoteOf;
+import static nbbrd.compatibility.RefVersion.remoteOf;
 import static nbbrd.compatibility.maven.plugin.CompatibilityMojo.*;
 import static org.assertj.core.api.Assertions.assertThat;
 

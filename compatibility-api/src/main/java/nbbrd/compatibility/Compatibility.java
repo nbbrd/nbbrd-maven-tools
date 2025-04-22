@@ -121,9 +121,9 @@ public class Compatibility {
         int index = 0;
         Report.Builder result = Report.builder();
         for (SourceContext source : sources) {
-            for (VersionContext sourceVersion : source.getVersions()) {
+            for (RefVersion sourceVersion : source.getVersions()) {
                 for (TargetContext target : targets) {
-                    for (VersionContext targetVersion : target.getVersions()) {
+                    for (RefVersion targetVersion : target.getVersions()) {
                         onEvent.accept("Checking " + ++index + "/" + count + " " + ReportItem.toLabel(source.getUri(), sourceVersion) + " -> " + ReportItem.toLabel(target.getUri(), targetVersion));
                         result.item(check(build, source, sourceVersion, target, targetVersion));
                     }
@@ -135,7 +135,7 @@ public class Compatibility {
         return result.build();
     }
 
-    private ReportItem check(Build build, SourceContext source, VersionContext sourceVersion, TargetContext target, VersionContext targetVersion) throws IOException {
+    private ReportItem check(Build build, SourceContext source, RefVersion sourceVersion, TargetContext target, RefVersion targetVersion) throws IOException {
         ReportItem.Builder result = ReportItem
                 .builder()
                 .sourceUri(source.getUri())
@@ -144,7 +144,7 @@ public class Compatibility {
                 .targetVersion(targetVersion);
         Path project = target.getDirectory();
         if (targetVersion.requiresCheckout()) {
-            build.checkoutTag(project, targetVersion.getTag());
+            build.checkoutTag(project, targetVersion.getRef());
         }
         if (!isSkip(source.getVersioning(), target.getBroker().getVersion(build, project), sourceVersion.getVersion())) {
             target.getBroker().setVersion(build, project, sourceVersion.getVersion());

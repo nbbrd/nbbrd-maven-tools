@@ -3,7 +3,7 @@ package internal.compatibility;
 import lombok.NonNull;
 import nbbrd.compatibility.Filter;
 import nbbrd.compatibility.Source;
-import nbbrd.compatibility.VersionContext;
+import nbbrd.compatibility.RefVersion;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.MightBePromoted;
 import org.junit.jupiter.api.Test;
@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static nbbrd.compatibility.VersionContext.localOf;
-import static nbbrd.compatibility.VersionContext.remoteOf;
+import static nbbrd.compatibility.RefVersion.localOf;
+import static nbbrd.compatibility.RefVersion.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.list;
 
@@ -37,7 +37,7 @@ class ProjectContextTest {
                     .returns(remote, MockedProjectContext::getUri)
                     .returns(getFirstDir(tmp), MockedProjectContext::getDirectory)
                     .returns(true, MockedProjectContext::isDeleteOnExit)
-                    .extracting(MockedProjectContext::getVersions, list(VersionContext.class))
+                    .extracting(MockedProjectContext::getVersions, list(RefVersion.class))
                     .containsExactly(
                             remoteOf("2.3.4"),
                             remoteOf("2.4.0"),
@@ -51,7 +51,7 @@ class ProjectContextTest {
                     .returns(remote, MockedProjectContext::getUri)
                     .returns(getFirstDir(tmp), MockedProjectContext::getDirectory)
                     .returns(true, MockedProjectContext::isDeleteOnExit)
-                    .extracting(MockedProjectContext::getVersions, list(VersionContext.class))
+                    .extracting(MockedProjectContext::getVersions, list(RefVersion.class))
                     .containsExactly(
                             remoteOf("2.4.0"),
                             remoteOf("3.0.0")
@@ -64,7 +64,7 @@ class ProjectContextTest {
                     .returns(local, MockedProjectContext::getUri)
                     .returns(Paths.get(local), MockedProjectContext::getDirectory)
                     .returns(false, MockedProjectContext::isDeleteOnExit)
-                    .extracting(MockedProjectContext::getVersions, list(VersionContext.class))
+                    .extracting(MockedProjectContext::getVersions, list(RefVersion.class))
                     .containsExactly(
                             localOf("3.0.0")
                     );
@@ -77,7 +77,7 @@ class ProjectContextTest {
         URI uri;
         Path directory;
         boolean deleteOnExit;
-        List<VersionContext> versions = new ArrayList<>();
+        List<RefVersion> versions = new ArrayList<>();
     }
 
     private static class MockedProjectContextBuilder implements ProjectContext.Builder<MockedProjectContextBuilder> {
@@ -103,7 +103,7 @@ class ProjectContextTest {
         }
 
         @Override
-        public MockedProjectContextBuilder version(@NonNull VersionContext version) {
+        public MockedProjectContextBuilder version(@NonNull RefVersion version) {
             result.getVersions().add(version);
             return this;
         }

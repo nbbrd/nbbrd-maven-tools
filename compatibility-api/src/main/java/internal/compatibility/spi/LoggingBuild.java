@@ -1,7 +1,7 @@
 package internal.compatibility.spi;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,13 +31,13 @@ public final class LoggingBuild implements Build {
     }
 
     @Override
-    public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
-        onEvent.accept("checking out tag " + tag + " in " + project);
-        delegate.checkoutTag(project, tag);
+    public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
+        onEvent.accept("checking out tag " + ref + " in " + project);
+        delegate.checkoutTag(project, ref);
     }
 
     @Override
-    public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
+    public @NonNull List<Ref> getTags(@NonNull Path project) throws IOException {
         onEvent.accept("getting tags for " + project);
         return delegate.getTags(project);
     }

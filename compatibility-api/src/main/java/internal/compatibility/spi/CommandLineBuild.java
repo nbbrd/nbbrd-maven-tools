@@ -1,7 +1,7 @@
 package internal.compatibility.spi;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.StaticFactoryMethod;
@@ -106,19 +106,19 @@ public final class CommandLineBuild implements Build {
     }
 
     @Override
-    public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
+    public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
         new GitCommandBuilder()
                 .binary(git)
                 .quiet()
                 .workingDir(project)
                 .command("checkout")
-                .parameter(tag.getRefName())
+                .parameter(ref.getName())
                 .build()
                 .collect(consuming());
     }
 
     @Override
-    public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
+    public @NonNull List<Ref> getTags(@NonNull Path project) throws IOException {
         return new GitCommandBuilder()
                 .binary(git)
                 .workingDir(project)
@@ -126,7 +126,7 @@ public final class CommandLineBuild implements Build {
                 .option("--sort", "creatordate")
                 .option("--format", "%(creatordate:short)/%(refname:strip=2)")
                 .build()
-                .collect(mapping(Tag::parse, toList()));
+                .collect(mapping(Ref::parse, toList()));
     }
 
     @Override

@@ -1,7 +1,7 @@
 package tests.compatibility;
 
 import lombok.NonNull;
-import nbbrd.compatibility.VersionContext;
+import nbbrd.compatibility.RefVersion;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import java.io.IOException;
 public class MockedVersion {
 
     @NonNull
-    VersionContext version;
+    RefVersion version;
 
     String name;
 

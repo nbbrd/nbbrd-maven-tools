@@ -4,12 +4,12 @@
       "exitStatus": "VERIFIED",
       "sourceUri": "https://github.com/jdemetra/jdplus-main",
       "sourceVersion": {
-        "tag": "/v3.4.0",
+        "ref": "/v3.4.0",
         "version": "3.4.0"
       },
       "targetUri": "https://github.com/jdemetra/jdplus-nowcasting",
       "targetVersion": {
-        "tag": "/v1.0.2",
+        "ref": "/v1.0.2",
         "version": "1.0.2"
       }
     },
@@ -17,12 +17,12 @@
       "exitStatus": "VERIFIED",
       "sourceUri": "https://github.com/jdemetra/jdplus-main",
       "sourceVersion": {
-        "tag": "/v3.4.0",
+        "ref": "/v3.4.0",
         "version": "3.4.0"
       },
       "targetUri": "https://github.com/jdemetra/jdplus-nowcasting",
       "targetVersion": {
-        "tag": "/v2.0.0",
+        "ref": "/v2.0.0",
         "version": "2.0.0"
       }
     }

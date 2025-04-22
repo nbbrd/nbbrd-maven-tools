@@ -4,12 +4,12 @@
       "exitStatus": "VERIFIED",
       "sourceUri": "https://github.com/jdemetra/jdplus-main",
       "sourceVersion": {
-        "tag": "/v3.4.0",
+        "ref": "/v3.4.0",
         "version": "3.4.0"
       },
       "targetUri": "https://github.com/nbbrd/jdplus-sdmx",
       "targetVersion": {
-        "tag": "/v3.2.0",
+        "ref": "/v3.2.0",
         "version": "3.2.0"
       }
     },
@@ -17,12 +17,12 @@
       "exitStatus": "VERIFIED",
       "sourceUri": "https://github.com/jdemetra/jdplus-main",
       "sourceVersion": {
-        "tag": "/v3.4.0",
+        "ref": "/v3.4.0",
         "version": "3.4.0"
       },
       "targetUri": "https://github.com/nbbrd/jdplus-sdmx",
       "targetVersion": {
-        "tag": "/v3.3.0",
+        "ref": "/v3.3.0",
         "version": "3.3.0"
       }
     }

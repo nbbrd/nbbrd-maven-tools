@@ -2,8 +2,8 @@ package internal.compatibility;
 
 import lombok.NonNull;
 import nbbrd.compatibility.Project;
-import nbbrd.compatibility.Tag;
-import nbbrd.compatibility.VersionContext;
+import nbbrd.compatibility.Ref;
+import nbbrd.compatibility.RefVersion;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.SealedType;
 
@@ -26,7 +26,7 @@ public interface ProjectContext {
     boolean isDeleteOnExit();
 
     @NonNull
-    List<VersionContext> getVersions();
+    List<RefVersion> getVersions();
 
     default void clean() throws IOException {
         if (isDeleteOnExit()) {
@@ -42,20 +42,20 @@ public interface ProjectContext {
 
         T deleteOnExit(boolean deleteOnExit);
 
-        T version(@NonNull VersionContext version);
+        T version(@NonNull RefVersion version);
 
         default T init(Project project, boolean local, Path workingDir, Build build) throws IOException {
             if (local) {
                 Path directory = Paths.get(project.getUri());
                 directory(directory).deleteOnExit(false);
-                version(VersionContext.local(build.getVersion(directory)));
+                version(RefVersion.local(build.getVersion(directory)));
             } else {
                 Path directory = Files.createTempDirectory(workingDir, "project");
                 directory(directory).deleteOnExit(true);
                 build.clone(project.getUri(), directory);
-                for (Tag tag : project.getFilter().apply(build.getTags(directory))) {
-                    build.checkoutTag(directory, tag);
-                    version(VersionContext.remote(build.getVersion(directory), tag));
+                for (Ref ref : project.getFilter().apply(build.getTags(directory))) {
+                    build.checkoutTag(directory, ref);
+                    version(RefVersion.remote(build.getVersion(directory), ref));
                 }
             }
             return uri(project.getUri());

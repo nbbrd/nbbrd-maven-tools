@@ -1,7 +1,7 @@
 package internal.compatibility;
 
 import lombok.NonNull;
-import nbbrd.compatibility.VersionContext;
+import nbbrd.compatibility.RefVersion;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -20,7 +20,7 @@ public class TargetContext implements ProjectContext {
     boolean deleteOnExit;
 
     @lombok.Singular
-    List<VersionContext> versions;
+    List<RefVersion> versions;
 
     @NonNull
     Broker broker;

@@ -1,7 +1,7 @@
 package internal.compatibility;
 
 import lombok.NonNull;
-import nbbrd.compatibility.VersionContext;
+import nbbrd.compatibility.RefVersion;
 import nbbrd.compatibility.spi.Versioning;
 
 import java.net.URI;
@@ -21,7 +21,7 @@ public class SourceContext implements ProjectContext {
     boolean deleteOnExit;
 
     @lombok.Singular
-    List<VersionContext> versions;
+    List<RefVersion> versions;
 
     @NonNull
     Versioning versioning;

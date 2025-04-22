@@ -1,6 +1,6 @@
 package internal.compatibility.spi;
 
-import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Ref;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
@@ -109,7 +109,7 @@ class CommandLineBuildTest {
     void checkoutTag(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp);
         try (CommandLineBuild x = getJobExecutor()) {
-            x.checkoutTag(project, Tag.ofVersion("2.4.0"));
+            x.checkoutTag(project, Ref.ofVersion("2.4.0"));
             assertThat(project.resolve("pom.xml"))
                     .content().contains("<version>2.4.0</version>");
         }
@@ -120,11 +120,11 @@ class CommandLineBuildTest {
         Path project = copy(tmp);
         try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getTags(project))
-                    .map(Tag::withoutDate)
+                    .map(Ref::withoutDate)
                     .containsExactly(
-                            Tag.ofVersion("2.3.4"),
-                            Tag.ofVersion("2.4.0"),
-                            Tag.ofVersion("3.0.0")
+                            Ref.ofVersion("2.3.4"),
+                            Ref.ofVersion("2.4.0"),
+                            Ref.ofVersion("3.0.0")
                     );
         }
     }

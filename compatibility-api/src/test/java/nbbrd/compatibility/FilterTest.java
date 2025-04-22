@@ -139,11 +139,11 @@ public class FilterTest {
                 .containsExactly(v1_0_0);
     }
 
-    private static Condition<Filter> containing(Tag version) {
+    private static Condition<Filter> containing(Ref version) {
         return new Condition<>(parent -> parent.contains(version), "Must contain %s", version);
     }
 
-    private final Tag unreleased = Tag.of(LocalDate.MAX, "Unreleased");
-    private final Tag v1_1_0 = Tag.of(LocalDate.parse("2019-02-15"), "1.1.0");
-    private final Tag v1_0_0 = Tag.of(LocalDate.parse("2017-06-20"), "1.0.0");
+    private final Ref unreleased = Ref.of(LocalDate.MAX, "Unreleased");
+    private final Ref v1_1_0 = Ref.of(LocalDate.parse("2019-02-15"), "1.1.0");
+    private final Ref v1_0_0 = Ref.of(LocalDate.parse("2017-06-20"), "1.0.0");
 }

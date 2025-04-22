@@ -30,24 +30,24 @@ public class Filter {
     @lombok.Builder.Default
     int limit = -1;
 
-    public boolean containsDate(@NonNull Tag tag) {
-        LocalDate date = tag.getDate();
+    public boolean containsDate(@NonNull Ref ref) {
+        LocalDate date = ref.getDate();
         if (date == null) date = LocalDate.MAX;
         return (from == null || !from.isAfter(date)) && (to == null || !date.isAfter(to));
     }
 
-    private boolean containsRef(@NonNull Tag tag) {
-        return ref == null || tag.getRefName().contains(ref);
+    private boolean containsRef(@NonNull Ref ref) {
+        return this.ref == null || ref.getName().contains(this.ref);
     }
 
-    public boolean contains(@NonNull Tag tag) {
-        return containsRef(tag) && containsDate(tag);
+    public boolean contains(@NonNull Ref ref) {
+        return containsRef(ref) && containsDate(ref);
     }
 
-    public List<Tag> apply(@NonNull List<Tag> tags) {
-        List<Tag> result = IntStream.range(0, tags.size())
-                .map(i -> tags.size() - 1 - i)
-                .mapToObj(tags::get)
+    public List<Ref> apply(@NonNull List<Ref> refs) {
+        List<Ref> result = IntStream.range(0, refs.size())
+                .map(i -> refs.size() - 1 - i)
+                .mapToObj(refs::get)
                 .filter(this::contains)
                 .limit(limit >= 0 ? limit : Long.MAX_VALUE)
                 .collect(toList());

@@ -1,9 +1,9 @@
 package tests.compatibility;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
-import nbbrd.compatibility.VersionContext;
+import nbbrd.compatibility.RefVersion;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.compatibility.spi.Builder;
 import org.semver4j.Semver;
@@ -19,7 +19,7 @@ import java.util.Map;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static nbbrd.compatibility.VersionContext.remoteOf;
+import static nbbrd.compatibility.RefVersion.remoteOf;
 
 @lombok.Value
 @lombok.Builder
@@ -129,19 +129,19 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
-        public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
+        public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
             String id = toProjectId(project);
-            stuff.put(id, MockedStatus.of(projects.get(id).getByTag(tag)));
+            stuff.put(id, MockedStatus.of(projects.get(id).getByTag(ref)));
         }
 
         @Override
-        public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
+        public @NonNull List<Ref> getTags(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
             return projects.get(id)
                     .getVersions()
                     .stream()
                     .map(MockedVersion::getVersion)
-                    .map(VersionContext::getTag)
+                    .map(RefVersion::getRef)
                     .collect(toList());
         }
 

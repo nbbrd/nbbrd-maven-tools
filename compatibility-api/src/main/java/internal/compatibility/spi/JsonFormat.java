@@ -73,7 +73,7 @@ public final class JsonFormat implements Format {
 
     private static final Gson GSON = new GsonBuilder()
             .registerTypeHierarchyAdapter(Path.class, representingAsString(Path.class, Paths::get, Path::toString))
-            .registerTypeAdapter(Tag.class, representingAsString(Tag.class, Tag::parse, Tag::toString))
+            .registerTypeAdapter(Ref.class, representingAsString(Ref.class, Ref::parse, Ref::toString))
             .registerTypeAdapter(Version.class, representingAsString(Version.class, Version::parse, Version::toString))
             .registerTypeAdapter(LocalDate.class, representingAsString(LocalDate.class, LocalDate::parse, LocalDate::toString))
             .setPrettyPrinting()

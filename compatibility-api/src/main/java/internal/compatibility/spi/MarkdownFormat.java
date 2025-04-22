@@ -83,7 +83,7 @@ public final class MarkdownFormat implements Format {
 
         Collector<CharSequence, ?, String> toRow = joining(" | ", "| ", " |");
 
-        Map<URI, Optional<VersionContext>> max = matrix.rows.stream().collect(groupingBy(Header::getUri, mapping(Header::getVersion, reducing((l, r) -> r))));
+        Map<URI, Optional<RefVersion>> max = matrix.rows.stream().collect(groupingBy(Header::getUri, mapping(Header::getVersion, reducing((l, r) -> r))));
 
         appendable.append("Compatibility matrix for **").append(matrix.columns.get(0).toProjectLabel()).append("**").append(lineSeparator());
         appendable.append(lineSeparator()).append(Stream.concat(Stream.of(repeat(" ", sizes[0]), repeat(" ", sizes[1])), matrix.columns.stream().map(Header::toVersionLabel)).collect(toRow));
@@ -96,7 +96,7 @@ public final class MarkdownFormat implements Format {
             String label = previous.getAndSet(projectLabel).equals(projectLabel) ? "" : projectLabel;
             String versionLabel = matrix.rows.get(i).toVersionLabel();
             boolean important = max.get(matrix.rows.get(i).getUri())
-                    .map(VersionContext::getVersion)
+                    .map(RefVersion::getVersion)
                     .orElse(Version.parse(""))
                     .equals(Version.parse(versionLabel.substring(1)));
             if (important) {
@@ -132,7 +132,7 @@ public final class MarkdownFormat implements Format {
         URI uri;
 
         @lombok.NonNull
-        VersionContext version;
+        RefVersion version;
 
         String toProjectLabel() {
             String path = uri.getPath();
@@ -144,8 +144,8 @@ public final class MarkdownFormat implements Format {
         }
 
         String toVersionLabel() {
-            Tag tag = version.getTag();
-            return Tag.NO_TAG.equals(tag) ? "HEAD" : tag.getRefName();
+            Ref ref = version.getRef();
+            return Ref.NO_REF.equals(ref) ? "HEAD" : ref.getName();
         }
     }
 
@@ -175,7 +175,7 @@ public final class MarkdownFormat implements Format {
         ExitStatus[][] body;
 
         public static Matrix of(URI sourceUri, List<ReportItem> items) {
-            Map<URI, Map<VersionContext, Map<VersionContext, ExitStatus>>> plugins = items
+            Map<URI, Map<RefVersion, Map<RefVersion, ExitStatus>>> plugins = items
                     .stream()
                     .collect(
                             groupingBy(ReportItem::getTargetUri, LinkedHashMap::new,
@@ -183,7 +183,7 @@ public final class MarkdownFormat implements Format {
                                             toMap(ReportItem::getSourceVersion, ReportItem::getExitStatus)))
                     );
 
-            Set<VersionContext> versions = items
+            Set<RefVersion> versions = items
                     .stream()
                     .map(ReportItem::getSourceVersion)
                     .collect(toCollection(LinkedHashSet::new));

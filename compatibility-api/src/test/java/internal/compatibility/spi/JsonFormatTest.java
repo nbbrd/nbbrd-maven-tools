@@ -11,7 +11,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static nbbrd.compatibility.VersionContext.remoteOf;
+import static nbbrd.compatibility.RefVersion.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatObject;
 import static org.assertj.core.api.InstanceOfAssertFactories.STRING;

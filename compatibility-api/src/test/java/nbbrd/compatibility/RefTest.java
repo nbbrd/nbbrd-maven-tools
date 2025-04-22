@@ -6,11 +6,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.LocalDate;
 
-import static nbbrd.compatibility.Tag.*;
+import static nbbrd.compatibility.Ref.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
-class TagTest {
+class RefTest {
 
     @SuppressWarnings("DataFlowIssue")
     @Test
@@ -19,15 +19,15 @@ class TagTest {
                 .isThrownBy(() -> parse(null));
 
         assertThat(parse("2023-05-02/v3.0.0"))
-                .returns(LocalDate.parse("2023-05-02"), Tag::getDate)
-                .returns("v3.0.0", Tag::getRefName);
+                .returns(LocalDate.parse("2023-05-02"), Ref::getDate)
+                .returns("v3.0.0", Ref::getName);
 
         assertThatNullPointerException()
                 .isThrownBy(() -> of(null, null));
 
         assertThat(of(LocalDate.parse("2023-05-02"), "v3.0.0"))
-                .returns(LocalDate.parse("2023-05-02"), Tag::getDate)
-                .returns("v3.0.0", Tag::getRefName);
+                .returns(LocalDate.parse("2023-05-02"), Ref::getDate)
+                .returns("v3.0.0", Ref::getName);
     }
 
     @ParameterizedTest

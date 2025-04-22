@@ -1,7 +1,7 @@
 package tests.compatibility;
 
 import lombok.NonNull;
-import nbbrd.compatibility.Tag;
+import nbbrd.compatibility.Ref;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,12 +23,12 @@ public class MockedProject {
         return versions.get(versions.size() - 1);
     }
 
-    public MockedVersion getByTag(Tag tag) throws IOException {
+    public MockedVersion getByTag(Ref ref) throws IOException {
         for (MockedVersion version : versions) {
-            if (version.getVersion().getTag().equals(tag)) {
+            if (version.getVersion().getRef().equals(ref)) {
                 return version;
             }
         }
-        throw new IOException("Tag not found: '" + tag + "'");
+        throw new IOException("Tag not found: '" + ref + "'");
     }
 }
