@@ -6,13 +6,9 @@ import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.StaticFactoryMethod;
 import nbbrd.io.sys.EndOfProcessException;
-import nbbrd.io.sys.OS;
-import nbbrd.io.sys.ProcessReader;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +17,6 @@ import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.*;
 
 @lombok.Builder
@@ -34,28 +29,43 @@ public final class CommandLineBuild implements Build {
 
     private final @Nullable Path mvn;
 
-    public String getMvn() {
-        return mvn != null ? mvn.toString() : getDefaultMvn();
-    }
+    private final @Nullable Path git;
 
-    private static String getDefaultMvn() {
-        return OS.NAME.equals(OS.Name.WINDOWS) ? "mvn.cmd" : "mvn";
+    private MvnCommandBuilder mvnOf(Path project) {
+        return new MvnCommandBuilder().binary(mvn).quiet().file(project);
     }
 
     @Override
     public void clean(@NonNull Path project) throws IOException {
-        run(consume(), getMvn(), "-q", "-f", project.toString(), "clean");
+        mvnOf(project)
+                .goal("clean")
+                .build()
+                .collect(consuming());
     }
 
     @Override
     public void restore(@NonNull Path project) throws IOException {
-        run(consume(), "git", "-C", project.toString(), "restore", ".");
+        new GitCommandBuilder()
+                .binary(git)
+                .quiet()
+                .workingDir(project)
+                .command("restore")
+                .parameter(".")
+                .build()
+                .collect(consuming());
     }
 
     @Override
     public int verify(@NonNull Path project) throws IOException {
         try {
-            run(toLast(), getMvn(), "-q", "-f", project.toString(), "clean", "verify", "-U", "-DskipTests", "-Denforcer.skip");
+            mvnOf(project)
+                    .goal("clean")
+                    .goal("verify")
+                    .updateSnapshots()
+                    .define("skipTests")
+                    .define("enforcer.skip")
+                    .build()
+                    .collect(toLast());
             return 0;
         } catch (EndOfProcessException ex) {
             return ex.getExitValue();
@@ -63,36 +73,72 @@ public final class CommandLineBuild implements Build {
     }
 
     @Override
-    public void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
-        run(consume(), getMvn(), "-q", "-f", project.toString(), "versions:set-property", "-D\"property=" + propertyName + "\"", "-D\"newVersion=" + propertyValue + "\"");
+    public void setProperty(@NonNull Path project, @NonNull String propertyName, @Nullable String propertyValue) throws IOException {
+        mvnOf(project)
+                .goal("versions:set-property")
+                .define("property", propertyName)
+                .define("newVersion", propertyValue)
+                .build()
+                .collect(consuming());
     }
 
     @Override
     public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
-        return run(toFirst(), getMvn(), "-q", "-f", project.toString(), "help:evaluate", "-D\"expression=" + propertyName + "\"", "-DforceStdout")
+        return mvnOf(project)
+                .goal("help:evaluate")
+                .define("expression", propertyName)
+                .define("forceStdout")
+                .build()
+                .collect(toFirst())
                 .orElseThrow(() -> new IOException("Failed to get property " + propertyName));
     }
 
     @Override
     public @NonNull Version getVersion(@NonNull Path project) throws IOException {
-        return run(toFirst(), getMvn(), "-q", "-f", project.toString(), "help:evaluate", "-D\"expression=project.version\"", "-DforceStdout")
+        return mvnOf(project)
+                .goal("help:evaluate")
+                .define("expression", "project.version")
+                .define("forceStdout")
+                .build()
+                .collect(toFirst())
                 .map(Version::parse)
                 .orElseThrow(() -> new IOException("Failed to get version"));
     }
 
     @Override
     public void checkoutTag(@NonNull Path project, @NonNull Tag tag) throws IOException {
-        run(consume(), "git", "-C", project.toString(), "checkout", "-q", tag.getRefName());
+        new GitCommandBuilder()
+                .binary(git)
+                .quiet()
+                .workingDir(project)
+                .command("checkout")
+                .parameter(tag.getRefName())
+                .build()
+                .collect(consuming());
     }
 
     @Override
     public @NonNull List<Tag> getTags(@NonNull Path project) throws IOException {
-        return run(mapping(Tag::parse, toList()), "git", "-C", project.toString(), "tag", "--sort=creatordate", "--format=%(creatordate:short)/%(refname:strip=2)");
+        return new GitCommandBuilder()
+                .binary(git)
+                .workingDir(project)
+                .command("tag")
+                .option("--sort", "creatordate")
+                .option("--format", "%(creatordate:short)/%(refname:strip=2)")
+                .build()
+                .collect(mapping(Tag::parse, toList()));
     }
 
     @Override
     public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
-        run(consume(), "git", "clone", "-q", from.toString(), to.toString());
+        new GitCommandBuilder()
+                .binary(git)
+                .quiet()
+                .command("clone")
+                .parameter(from.toString())
+                .parameter(to.toString())
+                .build()
+                .collect(consuming());
         fixReadOnlyFiles(to);
     }
 
@@ -108,7 +154,7 @@ public final class CommandLineBuild implements Build {
         return reducing((ignore, second) -> second);
     }
 
-    private static <X> Collector<X, ?, Void> consume() {
+    private static <X> Collector<X, ?, Void> consuming() {
         return reducing(null, ignore -> null, (ignoreFirst, ignoreSecond) -> null);
     }
 
@@ -116,14 +162,6 @@ public final class CommandLineBuild implements Build {
     private static void fixReadOnlyFiles(Path to) throws IOException {
         try (Stream<Path> files = Files.list(to.resolve(".git").resolve("objects").resolve("pack"))) {
             files.forEach(file -> file.toFile().setWritable(true));
-        }
-    }
-
-    private static <X> X run(Collector<String, ?, X> collector, String... command) throws IOException {
-        try (BufferedReader reader = ProcessReader.newReader(UTF_8, command)) {
-            return reader.lines().collect(collector);
-        } catch (UncheckedIOException ex) {
-            throw ex.getCause();
         }
     }
 }
