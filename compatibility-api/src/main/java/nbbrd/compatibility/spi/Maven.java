@@ -1,6 +1,7 @@
 package nbbrd.compatibility.spi;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Version;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -20,4 +21,9 @@ public interface Maven {
 
     @NonNull
     Version getVersion(@NonNull Path project) throws IOException;
+
+    @Nullable
+    Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException;
+
+    void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException;
 }

@@ -14,6 +14,9 @@ public class Target implements Project {
     @Nullable
     String property;
 
+    @Nullable
+    Artifact artifact;
+
     @lombok.NonNull
     @lombok.Builder.Default
     Filter filter = Filter.DEFAULT;

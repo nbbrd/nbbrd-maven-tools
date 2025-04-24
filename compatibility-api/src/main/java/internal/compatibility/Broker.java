@@ -1,6 +1,7 @@
 package internal.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Maven;
 import nbbrd.design.SealedType;
@@ -8,7 +9,7 @@ import nbbrd.design.SealedType;
 import java.io.IOException;
 import java.nio.file.Path;
 
-@SealedType(Broker.PropertyBroker.class)
+@SealedType({Broker.ByProperty.class, Broker.ByArtifact.class})
 public abstract class Broker {
 
     private Broker() {
@@ -21,7 +22,7 @@ public abstract class Broker {
 
     @lombok.Value
     @lombok.EqualsAndHashCode(callSuper = false)
-    public static class PropertyBroker extends Broker {
+    public static class ByProperty extends Broker {
 
         @NonNull
         String property;
@@ -35,6 +36,25 @@ public abstract class Broker {
         @Override
         public void setVersion(@NonNull Maven maven, @NonNull Path project, @NonNull Version version) throws IOException {
             maven.setProperty(project, property, version.toString());
+        }
+    }
+
+    @lombok.Value
+    @lombok.EqualsAndHashCode(callSuper = false)
+    public static class ByArtifact extends Broker {
+
+        @NonNull
+        Artifact artifact;
+
+        @Override
+        public @NonNull Version getVersion(@NonNull Maven maven, @NonNull Path project) throws IOException {
+            Version result = maven.getArtifactVersion(project, artifact);
+            return result != null ? result : Version.NO_VERSION;
+        }
+
+        @Override
+        public void setVersion(@NonNull Maven maven, @NonNull Path project, @NonNull Version version) throws IOException {
+            maven.setArtifactVersion(project, artifact, version);
         }
     }
 }

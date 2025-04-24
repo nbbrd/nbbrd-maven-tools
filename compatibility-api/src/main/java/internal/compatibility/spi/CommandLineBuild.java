@@ -1,11 +1,15 @@
 package internal.compatibility.spi;
 
+import internal.compatibility.TempPath;
 import lombok.NonNull;
+import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.StaticFactoryMethod;
+import nbbrd.design.VisibleForTesting;
 import nbbrd.io.sys.EndOfProcessException;
+import nbbrd.io.text.TextParser;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
@@ -13,10 +17,12 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.*;
 
 @lombok.Builder
@@ -32,7 +38,7 @@ public final class CommandLineBuild implements Build {
     private final @Nullable Path git;
 
     private MvnCommandBuilder mvnOf(Path project) {
-        return new MvnCommandBuilder().binary(mvn).quiet().file(project);
+        return new MvnCommandBuilder().binary(mvn).quiet().batchMode().file(project);
     }
 
     @Override
@@ -106,6 +112,47 @@ public final class CommandLineBuild implements Build {
     }
 
     @Override
+    public @Nullable Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException {
+        try (TempPath list = TempPath.of(Files.createTempFile("list", ".txt"))) {
+
+            MvnCommandBuilder command = mvnOf(project)
+                    .goal("dependency:list")
+                    .define("includeScope", "compile")
+                    .define("mdep.outputScope", "false")
+                    .define("excludeTransitive")
+                    .define("outputFile", list.toString())
+                    .define("appendOutput");
+            if (!artifact.getGroupId().isEmpty()) command.define("includeGroupIds", artifact.getGroupId());
+            if (!artifact.getArtifactId().isEmpty()) command.define("includeArtifactIds", artifact.getArtifactId());
+            if (!artifact.getClassifier().isEmpty()) command.define("includeClassifiers", artifact.getClassifier());
+            if (!artifact.getType().isEmpty()) command.define("includeTypes", artifact.getType());
+            command.build().collect(consuming());
+
+            return TextParser.onParsingLines(CommandLineBuild::parseDependencyList)
+                    .parsePath(list.getPath(), UTF_8)
+                    .stream()
+                    .map(Artifact::getVersion)
+                    .map(Version::parse)
+                    .distinct()
+                    .collect(toSingle())
+                    .orElse(null);
+        }
+    }
+
+    @Override
+    public void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException {
+        mvnOf(project)
+                .goal("versions:use-dep-version")
+                .define("depVersion", version.toString())
+                .define("includes", artifact.toString())
+                .define("processProperties")
+                .define("generateBackupPoms", "false")
+                .define("forceVersion")
+                .build()
+                .collect(consuming());
+    }
+
+    @Override
     public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
         new GitCommandBuilder()
                 .binary(git)
@@ -154,6 +201,10 @@ public final class CommandLineBuild implements Build {
         return reducing((ignore, second) -> second);
     }
 
+    private static <X> Collector<X, ?, Optional<X>> toSingle() {
+        return collectingAndThen(toList(), list -> list.size() == 1 ? Optional.of(list.get(0)) : Optional.empty());
+    }
+
     private static <X> Collector<X, ?, Void> consuming() {
         return reducing(null, ignore -> null, (ignoreFirst, ignoreSecond) -> null);
     }
@@ -163,5 +214,32 @@ public final class CommandLineBuild implements Build {
         try (Stream<Path> files = Files.list(to.resolve(".git").resolve("objects").resolve("pack"))) {
             files.forEach(file -> file.toFile().setWritable(true));
         }
+    }
+
+    @VisibleForTesting
+    static List<Artifact> parseDependencyList(Stream<String> lines) {
+        return lines
+                .map(CommandLineBuild::parseDependency)
+                .filter(Objects::nonNull)
+                .collect(toList());
+    }
+
+    private static Artifact parseDependency(String line) {
+        if (!line.startsWith("   ") || line.equals("   none")) {
+            return null;
+        }
+        line = line.substring(3);
+        int index = line.indexOf(' ');
+        line = index != -1 ? line.substring(0, index) : line;
+        String[] items = line.split(":", -1);
+        if (items.length != 4) {
+            return null;
+        }
+        return Artifact.builder()
+                .groupId(items[0])
+                .artifactId(items[1])
+                .type(items[2])
+                .version(items[3])
+                .build();
     }
 }

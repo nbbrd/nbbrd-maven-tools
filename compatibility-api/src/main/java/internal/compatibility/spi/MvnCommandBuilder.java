@@ -13,6 +13,7 @@ final class MvnCommandBuilder {
 
     private Path binary = null;
     private boolean quiet = false;
+    private boolean batchMode = false;
     private boolean updateSnapshots = false;
     private Path file = null;
     private final List<String> goals = new ArrayList<>();
@@ -25,6 +26,11 @@ final class MvnCommandBuilder {
 
     public MvnCommandBuilder quiet() {
         this.quiet = true;
+        return this;
+    }
+
+    public MvnCommandBuilder batchMode() {
+        this.batchMode = true;
         return this;
     }
 
@@ -48,7 +54,7 @@ final class MvnCommandBuilder {
         return this;
     }
 
-    public MvnCommandBuilder define(String key, String value) {
+    public MvnCommandBuilder define(String key, CharSequence value) {
         this.userProperties.add(key + "=" + value);
         return this;
     }
@@ -57,6 +63,7 @@ final class MvnCommandBuilder {
         TextCommand.Builder result = TextCommand.builder();
         result.command(binary != null ? binary.toString() : getDefaultBinary());
         if (quiet) result.command("-q");
+        if (batchMode) result.command("-B");
         if (updateSnapshots) result.command("-U");
         if (file != null) result.command("-f").command(file.toString());
         result.commands(goals);

@@ -1,6 +1,7 @@
 package internal.compatibility.spi;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
@@ -76,5 +77,17 @@ public final class LoggingBuild implements Build {
     public @NonNull Version getVersion(@NonNull Path project) throws IOException {
         onEvent.accept("getting version from " + project);
         return delegate.getVersion(project);
+    }
+
+    @Override
+    public @NonNull Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException {
+        onEvent.accept("getting version of " + artifact + " from " + project);
+        return delegate.getArtifactVersion(project, artifact);
+    }
+
+    @Override
+    public void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException {
+        onEvent.accept("setting version of " + artifact + " to " + version + " in " + project);
+        delegate.setArtifactVersion(project, artifact, version);
     }
 }

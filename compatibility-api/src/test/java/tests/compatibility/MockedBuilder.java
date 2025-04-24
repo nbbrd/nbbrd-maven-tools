@@ -1,11 +1,13 @@
 package tests.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Ref;
-import nbbrd.compatibility.Version;
 import nbbrd.compatibility.RefVersion;
+import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.compatibility.spi.Builder;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.semver4j.Semver;
 
 import java.io.IOException;
@@ -126,6 +128,17 @@ public class MockedBuilder implements Builder {
         public @NonNull Version getVersion(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
             return stuff.computeIfAbsent(id, this::initStatus).getModified().getVersion().getVersion();
+        }
+
+        @Override
+        public @Nullable Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException {
+            String property = getProperty(project, artifact.getGroupId());
+            return property != null ? Version.parse(property) : null;
+        }
+
+        @Override
+        public void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException {
+            setProperty(project, artifact.getGroupId(), version.toString());
         }
 
         @Override

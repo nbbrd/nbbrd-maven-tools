@@ -108,11 +108,11 @@ public class Compatibility {
     }
 
     private Broker resolveBroker(Target target) throws IOException {
+        Artifact artifact = target.getArtifact();
+        if (artifact != null) return new Broker.ByArtifact(artifact);
         String property = target.getProperty();
-        if (property == null || property.isEmpty()) {
-            throw new IOException("Cannot resolve broker: target property is empty");
-        }
-        return new Broker.PropertyBroker(property);
+        if (property != null && !property.isEmpty()) return new Broker.ByProperty(property);
+        throw new IOException("Cannot resolve broker");
     }
 
     private Report check(Build build, List<SourceContext> sources, List<TargetContext> targets) throws IOException {

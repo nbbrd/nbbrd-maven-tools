@@ -44,8 +44,8 @@ final class GitCommandBuilder {
         return this;
     }
 
-    public GitCommandBuilder option(String key, String value) {
-        this.options.put(key, value);
+    public GitCommandBuilder option(String key, CharSequence value) {
+        this.options.put(key, value.toString());
         return this;
     }
 

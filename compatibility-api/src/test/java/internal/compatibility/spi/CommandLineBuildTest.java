@@ -1,6 +1,9 @@
 package internal.compatibility.spi;
 
+import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Ref;
+import nbbrd.compatibility.Version;
+import nbbrd.io.text.TextParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
@@ -37,7 +40,7 @@ class CommandLineBuildTest {
 
     @Test
     void cleanAndRestore(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getJobExecutor()) {
             Path target = project.resolve("target");
             Path pom = project.resolve("pom.xml");
@@ -64,7 +67,7 @@ class CommandLineBuildTest {
 
     @Test
     void verify(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.verify(project))
                     .isEqualTo(0);
@@ -77,7 +80,7 @@ class CommandLineBuildTest {
 
     @Test
     void setProperty(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getJobExecutor()) {
             Path pom = project.resolve("pom.xml");
             assertThat(pom).content().contains("<maven.compiler.target>11</maven.compiler.target>");
@@ -89,7 +92,7 @@ class CommandLineBuildTest {
 
     @Test
     void getProperty(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getProperty(project, "maven.compiler.target"))
                     .isEqualTo("11");
@@ -98,7 +101,7 @@ class CommandLineBuildTest {
 
     @Test
     void getVersion(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getVersion(project))
                     .hasToString("3.0.0");
@@ -106,8 +109,48 @@ class CommandLineBuildTest {
     }
 
     @Test
+    void testGetArtifactVersionByDependency(@TempDir Path tmp) throws IOException {
+        Path project = copy(tmp, targetProject);
+        try (CommandLineBuild x = getJobExecutor()) {
+            assertThat(x.getArtifactVersion(project, Artifact.parse("test:source-project")))
+                    .hasToString("3.0.0");
+        }
+    }
+
+    @Test
+    void testGetArtifactVersionByProperty(@TempDir Path tmp) throws IOException {
+        Path project = copy(tmp, targetProject);
+        try (CommandLineBuild x = getJobExecutor()) {
+            assertThat(x.getArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv")))
+                    .hasToString("2.5.1");
+        }
+    }
+
+    @Test
+    void testSetArtifactVersionByDependency(@TempDir Path tmp) throws IOException {
+        Path project = copy(tmp, targetProject);
+        try (CommandLineBuild x = getJobExecutor()) {
+            assertThatCode(() -> x.setArtifactVersion(project, Artifact.parse("test:source-project"), Version.parse("6.5.0")))
+                    .doesNotThrowAnyException();
+            assertThat(project.resolve("pom.xml"))
+                    .hasSameTextualContentAs(resolveResource(CommandLineBuildTest.class, "target-pom-by-dependency.xml"));
+        }
+    }
+
+    @Test
+    void testSetArtifactVersionByProperty(@TempDir Path tmp) throws IOException {
+        Path project = copy(tmp, targetProject);
+        try (CommandLineBuild x = getJobExecutor()) {
+            assertThatCode(() -> x.setArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv:"), Version.parse("6.5.0")))
+                    .doesNotThrowAnyException();
+            assertThat(project.resolve("pom.xml"))
+                    .hasSameTextualContentAs(resolveResource(CommandLineBuildTest.class, "target-pom-by-property.xml"));
+        }
+    }
+
+    @Test
     void checkoutTag(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getJobExecutor()) {
             x.checkoutTag(project, Ref.ofVersion("2.4.0"));
             assertThat(project.resolve("pom.xml"))
@@ -117,7 +160,7 @@ class CommandLineBuildTest {
 
     @Test
     void getTags(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getJobExecutor()) {
             assertThat(x.getTags(project))
                     .map(Ref::withoutDate)
@@ -131,7 +174,7 @@ class CommandLineBuildTest {
 
     @Test
     void clone(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp);
+        Path project = copy(tmp, sourceProject);
         Path clonedProject = tmp.resolve("clonedProject");
         createDirectory(clonedProject);
         try (CommandLineBuild x = getJobExecutor()) {
@@ -148,9 +191,20 @@ class CommandLineBuildTest {
     void close(@TempDir Path tmp) {
     }
 
-    private static Path copy(Path tmp) throws IOException {
+    @Test
+    void testParseDependencyList() throws IOException {
+        assertThat(TextParser.onParsingLines(CommandLineBuild::parseDependencyList)
+                .parseResource(CommandLineBuildTest.class, "deplist.txt", UTF_8))
+                .containsExactly(
+                        Artifact.parse("eu.europa.ec.joinup.sat:jdplus-toolkit-base-tsp:jar::3.1.1"),
+                        Artifact.parse("eu.europa.ec.joinup.sat:jdplus-main-desktop-design:jar::3.1.1"),
+                        Artifact.parse("eu.europa.ec.joinup.sat:jdplus-toolkit-desktop-plugin:jar::3.1.1")
+                );
+    }
+
+    private static Path copy(Path tmp, Path project) throws IOException {
         Path target = tmp.resolve("project");
-        Examples.copyFolder(sourceProject, target);
+        Examples.copyFolder(project, target);
         return target;
     }
 

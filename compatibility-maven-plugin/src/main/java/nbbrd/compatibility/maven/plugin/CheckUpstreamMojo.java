@@ -59,6 +59,7 @@ public final class CheckUpstreamMojo extends CheckStreamMojo {
         return Target
                 .builder()
                 .uri(requireNonNull(target, "Target URI must not be null"))
+                .artifact(toArtifact())
                 .property(toProperty())
                 .filter(toTargetFilter())
                 .build();
