@@ -114,7 +114,7 @@ public final class CommandLineBuild implements Build {
         try (TempPath list = TempPath.of(Files.createTempFile("list", ".txt"))) {
 
             MvnCommandBuilder command = mvnOf(project)
-                    .goal("dependency:list")
+                    .goal("dependency:LATEST:collect")
                     .define("includeScope", "compile")
                     .define("mdep.outputScope", "false")
                     .define("excludeTransitive")

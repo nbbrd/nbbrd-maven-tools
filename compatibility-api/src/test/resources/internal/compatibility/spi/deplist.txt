@@ -12,7 +12,7 @@ The following files have been resolved:
 
 
 The following files have been resolved:
-   eu.europa.ec.joinup.sat:jdplus-toolkit-base-tsp:jar:3.1.1 -- module jdplus.toolkit.base.tsp
+   eu.europa.ec.joinup.sat:jdplus-toolkit-base-tsp:jar:3.1.1
 
 
 The following files have been resolved:
@@ -28,8 +28,8 @@ The following files have been resolved:
 
 
 The following files have been resolved:
-   eu.europa.ec.joinup.sat:jdplus-main-desktop-design:jar:3.1.1 -- module jdplus.main.desktop.design (auto)
-   eu.europa.ec.joinup.sat:jdplus-toolkit-desktop-plugin:jar:3.1.1 -- module jdplus.toolkit.desktop.plugin (auto)
+   eu.europa.ec.joinup.sat:jdplus-main-desktop-design:jar:3.1.1
+   eu.europa.ec.joinup.sat:jdplus-toolkit-desktop-plugin:jar:3.1.1
 
 
 The following files have been resolved:
