@@ -41,17 +41,14 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void clean(@NonNull Path project) throws IOException {
-        onEvent.accept("cleaning " + project);
         mvnOf(project)
                 .goal("clean")
                 .build()
-                .report(onEvent)
-                .collect(consuming());
+                .collect(consuming(), onEvent);
     }
 
     @Override
     public void restore(@NonNull Path project) throws IOException {
-        onEvent.accept("restoring " + project);
         new GitCommandBuilder()
                 .binary(git)
                 .quiet()
@@ -59,13 +56,11 @@ public final class CommandLineBuild implements Build {
                 .command("restore")
                 .parameter(".")
                 .build()
-                .report(onEvent)
-                .collect(consuming());
+                .collect(consuming(), onEvent);
     }
 
     @Override
     public int verify(@NonNull Path project) throws IOException {
-        onEvent.accept("verifying " + project);
         try {
             mvnOf(project)
                     .goal("clean")
@@ -74,8 +69,7 @@ public final class CommandLineBuild implements Build {
                     .define("skipTests")
                     .define("enforcer.skip")
                     .build()
-                    .report(onEvent)
-                    .collect(toLast());
+                    .collect(toLast(), onEvent);
             return 0;
         } catch (EndOfProcessException ex) {
             return ex.getExitValue();
@@ -84,46 +78,39 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void setProperty(@NonNull Path project, @NonNull String propertyName, @Nullable String propertyValue) throws IOException {
-        onEvent.accept("setting property " + propertyName + "=" + propertyValue + " to " + project);
         mvnOf(project)
                 .goal("versions:set-property")
                 .define("property", propertyName)
                 .define("newVersion", propertyValue)
                 .build()
-                .report(onEvent)
-                .collect(consuming());
+                .collect(consuming(), onEvent);
     }
 
     @Override
     public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
-        onEvent.accept("getting property " + propertyName + " from " + project);
         return mvnOf(project)
                 .goal("help:evaluate")
                 .define("expression", propertyName)
                 .define("forceStdout")
                 .build()
-                .report(onEvent)
-                .collect(toFirst())
+                .collect(toFirst(), onEvent)
                 .orElseThrow(() -> new IOException("Failed to get property " + propertyName));
     }
 
     @Override
     public @NonNull Version getVersion(@NonNull Path project) throws IOException {
-        onEvent.accept("getting version from " + project);
         return mvnOf(project)
                 .goal("help:evaluate")
                 .define("expression", "project.version")
                 .define("forceStdout")
                 .build()
-                .report(onEvent)
-                .collect(toFirst())
+                .collect(toFirst(), onEvent)
                 .map(Version::parse)
                 .orElseThrow(() -> new IOException("Failed to get version"));
     }
 
     @Override
     public @Nullable Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException {
-        onEvent.accept("getting version of " + artifact + " from " + project);
         try (TempPath list = TempPath.of(Files.createTempFile("list", ".txt"))) {
 
             MvnCommandBuilder command = mvnOf(project)
@@ -139,8 +126,7 @@ public final class CommandLineBuild implements Build {
             if (!artifact.getType().isEmpty()) command.define("includeTypes", artifact.getType());
             command
                     .build()
-                    .report(onEvent)
-                    .collect(consuming());
+                    .collect(consuming(), onEvent);
 
             return TextParser.onParsingLines(CommandLineBuild::parseDependencyList)
                     .parsePath(list.getPath(), UTF_8)
@@ -155,7 +141,6 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException {
-        onEvent.accept("setting artifact " + artifact + "=" + version + " to " + project);
         mvnOf(project)
                 .goal("versions:use-dep-version")
                 .define("depVersion", version.toString())
@@ -164,13 +149,11 @@ public final class CommandLineBuild implements Build {
                 .define("generateBackupPoms", "false")
                 .define("forceVersion")
                 .build()
-                .report(onEvent)
-                .collect(consuming());
+                .collect(consuming(), onEvent);
     }
 
     @Override
     public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
-        onEvent.accept("checking out tag " + ref + " to " + project);
         new GitCommandBuilder()
                 .binary(git)
                 .quiet()
@@ -178,13 +161,11 @@ public final class CommandLineBuild implements Build {
                 .command("checkout")
                 .parameter(ref.getName())
                 .build()
-                .report(onEvent)
-                .collect(consuming());
+                .collect(consuming(), onEvent);
     }
 
     @Override
     public @NonNull List<Ref> getTags(@NonNull Path project) throws IOException {
-        onEvent.accept("getting tags from " + project);
         return new GitCommandBuilder()
                 .binary(git)
                 .workingDir(project)
@@ -192,13 +173,11 @@ public final class CommandLineBuild implements Build {
                 .option("--sort", "creatordate")
                 .option("--format", "%(creatordate:short)/%(refname:strip=2)")
                 .build()
-                .report(onEvent)
-                .collect(mapping(Ref::parse, toList()));
+                .collect(mapping(Ref::parse, toList()), onEvent);
     }
 
     @Override
     public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
-        onEvent.accept("cloning " + from + " to " + to);
         new GitCommandBuilder()
                 .binary(git)
                 .quiet()
@@ -206,14 +185,12 @@ public final class CommandLineBuild implements Build {
                 .parameter(from.toString())
                 .parameter(to.toString())
                 .build()
-                .report(onEvent)
-                .collect(consuming());
+                .collect(consuming(), onEvent);
         fixReadOnlyFiles(to);
     }
 
     @Override
     public void close() {
-        onEvent.accept("closing build");
     }
 
     private static <X> Collector<X, ?, Optional<X>> toFirst() {

@@ -20,9 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.createDirectory;
 import static java.nio.file.StandardOpenOption.APPEND;
+import static java.util.stream.Collectors.joining;
 import static nbbrd.compatibility.spi.Builder.IGNORE_EVENT;
 import static org.assertj.core.api.Assertions.*;
 import static tests.compatibility.Examples.generateProject;
@@ -119,7 +121,7 @@ class CommandLineBuildTest {
             assertThat(x.getArtifactVersion(project, Artifact.parse("test:source-project")))
                     .hasToString("3.0.0");
         } catch (IOException ex) {
-            fail(String.join(System.lineSeparator(), events), ex);
+            fail(events.stream().map(event -> "[EVENT] " + event).collect(joining(lineSeparator())), ex);
         }
     }
 
@@ -131,7 +133,7 @@ class CommandLineBuildTest {
             assertThat(x.getArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv")))
                     .hasToString("2.5.1");
         } catch (IOException ex) {
-            fail(String.join(System.lineSeparator(), events), ex);
+            fail(events.stream().map(event -> "[EVENT] " + event).collect(joining(lineSeparator())), ex);
         }
     }
 

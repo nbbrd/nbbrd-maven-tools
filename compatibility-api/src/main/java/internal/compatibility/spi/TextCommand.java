@@ -23,14 +23,10 @@ class TextCommand {
     @lombok.Builder.Default
     Charset charset = StandardCharsets.UTF_8;
 
-    public @NonNull TextCommand report(@NonNull Consumer<? super String> consumer) {
+    public <X> X collect(@NonNull Collector<String, ?, X> collector, @NonNull Consumer<? super String> consumer) throws IOException {
         consumer.accept(String.join(" ", commands));
-        return this;
-    }
-
-    public <X> X collect(@NonNull Collector<String, ?, X> collector) throws IOException {
         try (BufferedReader reader = ProcessReader.newReader(charset, commands.toArray(new String[0]))) {
-            return reader.lines().collect(collector);
+            return reader.lines().peek(consumer).collect(collector);
         } catch (UncheckedIOException ex) {
             throw ex.getCause();
         }
