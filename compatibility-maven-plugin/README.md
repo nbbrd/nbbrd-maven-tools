@@ -3,7 +3,7 @@
 Compatibility is a Maven plugin that checks the compatibility between projects.
 
 Its main use case is when a library/application has extensions/plugins developed outside the main repository, the
-developers need to ensure that everything stays compatible. A minor modification in on side may trigger a major problem
+developers need to ensure that everything stays compatible. A minor modification on one side may trigger a major problem
 on the other side.
 
 The main purpose of this plugin is to automate the compatibility check as much as possible to catch problems as early as possible.
