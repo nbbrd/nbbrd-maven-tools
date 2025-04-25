@@ -12,10 +12,7 @@ public class Target implements Project {
     URI uri;
 
     @Nullable
-    String property;
-
-    @Nullable
-    Artifact artifact;
+    String binding;
 
     @lombok.NonNull
     @lombok.Builder.Default

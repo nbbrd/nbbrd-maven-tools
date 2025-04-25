@@ -84,31 +84,10 @@ class CommandLineBuildTest {
     }
 
     @Test
-    void setProperty(@TempDir Path tmp) throws IOException {
+    void getProjectVersion(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
-            Path pom = project.resolve("pom.xml");
-            assertThat(pom).content().contains("<maven.compiler.target>11</maven.compiler.target>");
-            assertThatCode(() -> x.setProperty(project, "maven.compiler.target", "stuff"))
-                    .doesNotThrowAnyException();
-            assertThat(pom).content().contains("<maven.compiler.target>stuff</maven.compiler.target>");
-        }
-    }
-
-    @Test
-    void getProperty(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
-            assertThat(x.getProperty(project, "maven.compiler.target"))
-                    .isEqualTo("11");
-        }
-    }
-
-    @Test
-    void getVersion(@TempDir Path tmp) throws IOException {
-        Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
-            assertThat(x.getVersion(project))
+            assertThat(x.getProjectVersion(project))
                     .hasToString("3.0.0");
         }
     }

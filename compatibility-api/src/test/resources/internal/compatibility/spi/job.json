@@ -11,7 +11,7 @@
   "targets": [
     {
       "uri": "hello:target",
-      "property": "x",
+      "binding": "x",
       "filter": {
         "limit": -1
       }

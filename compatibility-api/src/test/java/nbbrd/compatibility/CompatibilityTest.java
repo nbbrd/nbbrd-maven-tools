@@ -37,7 +37,7 @@ class CompatibilityTest {
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .property("x")
+                        .binding("x")
                         .build())
                 .build();
 
@@ -73,7 +73,7 @@ class CompatibilityTest {
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .property("x")
+                        .binding("x")
                         .build())
                 .build();
 
@@ -104,7 +104,7 @@ class CompatibilityTest {
                 .target(Target
                         .builder()
                         .uri(localTarget)
-                        .property("x")
+                        .binding("x")
                         .build())
                 .build();
 
@@ -135,7 +135,7 @@ class CompatibilityTest {
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .property("x")
+                        .binding("x")
                         .build())
                 .build();
 
@@ -163,7 +163,7 @@ class CompatibilityTest {
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .property("x")
+                        .binding("x")
                         .filter(Filter.builder().ref("1.0.2").build())
                         .build())
                 .build();
@@ -194,7 +194,7 @@ class CompatibilityTest {
                 .target(Target
                         .builder()
                         .uri(localTarget)
-                        .property("x")
+                        .binding("x")
                         .build())
                 .build();
 

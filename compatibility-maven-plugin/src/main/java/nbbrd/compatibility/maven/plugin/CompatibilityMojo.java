@@ -59,7 +59,7 @@ abstract class CompatibilityMojo extends AbstractMojo {
         job.getTargets().forEach(target -> {
             log.info("  Target:");
             log.info("           URI: " + target.getUri());
-            log.info("      Property: " + target.getProperty());
+            log.info("       Binding: " + target.getBinding());
             log.info("        Filter: " + target.getFilter());
         });
     }

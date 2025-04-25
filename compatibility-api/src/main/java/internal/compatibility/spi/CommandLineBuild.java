@@ -77,28 +77,7 @@ public final class CommandLineBuild implements Build {
     }
 
     @Override
-    public void setProperty(@NonNull Path project, @NonNull String propertyName, @Nullable String propertyValue) throws IOException {
-        mvnOf(project)
-                .goal("versions:set-property")
-                .define("property", propertyName)
-                .define("newVersion", propertyValue)
-                .build()
-                .collect(consuming(), onEvent);
-    }
-
-    @Override
-    public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
-        return mvnOf(project)
-                .goal("help:evaluate")
-                .define("expression", propertyName)
-                .define("forceStdout")
-                .build()
-                .collect(toFirst(), onEvent)
-                .orElseThrow(() -> new IOException("Failed to get property " + propertyName));
-    }
-
-    @Override
-    public @NonNull Version getVersion(@NonNull Path project) throws IOException {
+    public @NonNull Version getProjectVersion(@NonNull Path project) throws IOException {
         return mvnOf(project)
                 .goal("help:evaluate")
                 .define("expression", "project.version")

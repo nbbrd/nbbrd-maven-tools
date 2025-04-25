@@ -113,20 +113,18 @@ public class MockedBuilder implements Builder {
             return 0;
         }
 
-        @Override
-        public void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
+        private void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
             String id = toProjectId(project);
             stuff.put(id, stuff.computeIfAbsent(id, this::initStatus).withProperty(propertyName, propertyValue));
         }
 
-        @Override
-        public String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
+        private String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
             String id = toProjectId(project);
             return stuff.computeIfAbsent(id, this::initStatus).getProperty(propertyName);
         }
 
         @Override
-        public @NonNull Version getVersion(@NonNull Path project) throws IOException {
+        public @NonNull Version getProjectVersion(@NonNull Path project) throws IOException {
             String id = toProjectId(project);
             return stuff.computeIfAbsent(id, this::initStatus).getModified().getVersion().getVersion();
         }

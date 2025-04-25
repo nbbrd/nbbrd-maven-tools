@@ -11,7 +11,6 @@ import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static nbbrd.compatibility.RefVersion.remoteOf;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,7 +50,7 @@ class JsonFormatTest {
                 .target(Target
                         .builder()
                         .uri(URI.create("hello:target"))
-                        .property("x")
+                        .binding("x")
                         .build())
                 .build();
         String valueText = getContentOf(JsonFormatTest.class, "job.json");

@@ -23,10 +23,9 @@ With a pom file:
             <configuration>
                 <source>https://github.com/jdemetra/jdplus-main</source>
                 <sourceRef>v3.4.0</sourceRef>
-                <targets>
-                    <target>https://github.com/nbbrd/jdplus-sdmx</target>
-                </targets>
-                <property>jdplus-main.version</property>
+                <targets>https://github.com/nbbrd/jdplus-sdmx</targets>
+                <targetBinding>eu.europa.ec.joinup.sat</targetBinding>
+                <targetLimit>2</targetLimit>
             </configuration>
         </execution>
     </executions>
@@ -40,7 +39,7 @@ mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-downstr
   -D"compatibility.source=https://github.com/jdemetra/jdplus-main" \
   -D"compatibility.source.ref=v3.4.0" \
   -D"compatibility.targets=https://github.com/nbbrd/jdplus-sdmx" \
-  -D"compatibility.property=jdplus-main.version" \
+  -D"compatibility.target.binding=eu.europa.ec.joinup.sat" \
   -D"compatibility.target.limit=2"
 ```
 

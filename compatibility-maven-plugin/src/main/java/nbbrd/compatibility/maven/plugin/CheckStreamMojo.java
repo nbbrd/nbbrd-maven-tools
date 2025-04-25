@@ -33,11 +33,8 @@ public abstract class CheckStreamMojo extends CompatibilityMojo {
     @Parameter(defaultValue = "-1", property = "compatibility.source.limit")
     private int sourceLimit;
 
-    @Parameter(property = "compatibility.artifact")
-    private String artifact;
-
-    @Parameter(property = "compatibility.property")
-    private String property;
+    @Parameter(property = "compatibility.target.binding")
+    private String targetBinding;
 
     @Parameter(property = "compatibility.target.ref")
     private String targetRef;
@@ -60,13 +57,8 @@ public abstract class CheckStreamMojo extends CompatibilityMojo {
     }
 
     @ParameterParsing
-    protected @Nullable Artifact toArtifact() {
-        return artifact != null ? Artifact.parse(artifact) : null;
-    }
-
-    @ParameterParsing
-    protected @Nullable String toProperty() {
-        return property;
+    protected @Nullable String toTargetBinding() {
+        return targetBinding;
     }
 
     @ParameterParsing

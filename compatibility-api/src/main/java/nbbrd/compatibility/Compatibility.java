@@ -113,10 +113,8 @@ public class Compatibility {
     }
 
     private Broker resolveBroker(Target target) throws IOException {
-        Artifact artifact = target.getArtifact();
-        if (artifact != null) return new Broker.ByArtifact(artifact);
-        String property = target.getProperty();
-        if (property != null && !property.isEmpty()) return new Broker.ByProperty(property);
+        String binding = target.getBinding();
+        if (binding != null) return new Broker.ByArtifact(Artifact.parse(binding));
         throw new IOException("Cannot resolve broker");
     }
 

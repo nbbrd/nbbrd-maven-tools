@@ -48,14 +48,14 @@ public interface ProjectContext {
             if (local) {
                 Path directory = Paths.get(project.getUri());
                 directory(directory).deleteOnExit(false);
-                version(RefVersion.local(build.getVersion(directory)));
+                version(RefVersion.local(build.getProjectVersion(directory)));
             } else {
                 Path directory = Files.createTempDirectory(workingDir, "project");
                 directory(directory).deleteOnExit(true);
                 build.clone(project.getUri(), directory);
                 for (Ref ref : project.getFilter().apply(build.getTags(directory))) {
                     build.checkoutTag(directory, ref);
-                    version(RefVersion.remote(build.getVersion(directory), ref));
+                    version(RefVersion.remote(build.getProjectVersion(directory), ref));
                 }
             }
             return uri(project.getUri());
