@@ -5,10 +5,12 @@ import nbbrd.compatibility.Report;
 import nbbrd.compatibility.ReportItem;
 import nbbrd.io.text.Formatter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -62,12 +64,20 @@ class MarkdownFormatTest {
     }
 
     @Test
-    void testGetFormatFileFilter() throws IOException {
+    void testGetFormatFileFilter(@TempDir Path tmp) throws IOException {
         DirectoryStream.Filter<? super Path> x = new MarkdownFormat().getFormatFileFilter();
 
-        assertThat(x.accept(Paths.get("hello.xml"))).isFalse();
-        assertThat(x.accept(Paths.get("hello.md"))).isTrue();
-        assertThat(x.accept(Paths.get("hello.MD"))).isTrue();
+        assertThat(x.accept(tmp.resolve("a.xml"))).isFalse();
+        assertThat(x.accept(tmp.resolve("b.md"))).isTrue();
+        assertThat(x.accept(tmp.resolve("c.MD"))).isTrue();
+
+        assertThat(x.accept(Files.createTempFile(tmp, "a", ".xml"))).isFalse();
+        assertThat(x.accept(Files.createTempFile(tmp, "b", ".md"))).isTrue();
+        assertThat(x.accept(Files.createTempFile(tmp, "c", ".MD"))).isTrue();
+
+        assertThat(x.accept(Files.createDirectory(tmp.resolve("a.xml")))).isFalse();
+        assertThat(x.accept(Files.createDirectory(tmp.resolve("b.md")))).isFalse();
+        assertThat(x.accept(Files.createDirectory(tmp.resolve("c.MD")))).isFalse();
     }
 
     @Test

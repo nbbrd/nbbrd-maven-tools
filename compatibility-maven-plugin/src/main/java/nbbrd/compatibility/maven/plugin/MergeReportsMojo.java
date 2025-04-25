@@ -1,5 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
+import internal.compatibility.Files2;
 import internal.compatibility.maven.plugin.ParameterParsing;
 import lombok.NonNull;
 import nbbrd.compatibility.Compatibility;
@@ -17,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -68,23 +70,24 @@ public final class MergeReportsMojo extends CompatibilityMojo {
 
     @VisibleForTesting
     static List<Report> loadAll(Compatibility compatibility, List<Path> files) throws MojoExecutionException {
-        DirectoryStream.Filter<? super Path> filter = compatibility.getParserFilter(Report.class);
         List<Report> result = new ArrayList<>();
-        for (Path report : files) {
-            if (Files.isRegularFile(report)) {
-                result.add(load(compatibility, report, Report.class));
-            } else if (Files.isDirectory(report)) {
-                try (DirectoryStream<Path> paths = Files.newDirectoryStream(report, filter)) {
-                    for (Path path : paths) {
-                        if (Files.isRegularFile(path)) {
-                            result.add(load(compatibility, path, Report.class));
-                        }
-                    }
-                } catch (IOException ex) {
-                    throw new MojoExecutionException("Failed to list files in dir " + report, ex);
+        for (Path path : files) {
+            if (Files.isRegularFile(path)) {
+                result.add(load(compatibility, path, Report.class));
+            } else if (Files.isDirectory(path)) {
+                for (Path file : getFilesSortedByName(path, compatibility.getParserFilter(Report.class))) {
+                    result.add(load(compatibility, file, Report.class));
                 }
             }
         }
         return result;
+    }
+
+    private static List<Path> getFilesSortedByName(Path dir, DirectoryStream.Filter<? super Path> filter) throws MojoExecutionException {
+        try {
+            return Files2.getSortedFiles(dir, filter, Comparator.comparing(Path::toString));
+        } catch (IOException ex) {
+            throw new MojoExecutionException("Failed to list files in dir " + dir, ex);
+        }
     }
 }

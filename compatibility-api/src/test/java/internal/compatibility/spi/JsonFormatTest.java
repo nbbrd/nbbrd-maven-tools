@@ -4,10 +4,12 @@ import nbbrd.compatibility.*;
 import nbbrd.io.text.Formatter;
 import nbbrd.io.text.Parser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -102,11 +104,19 @@ class JsonFormatTest {
     }
 
     @Test
-    void testGetFormatFileFilter() throws IOException {
+    void testGetFormatFileFilter(@TempDir Path tmp) throws IOException {
         DirectoryStream.Filter<? super Path> x = new JsonFormat().getFormatFileFilter();
 
-        assertThat(x.accept(Paths.get("hello.xml"))).isFalse();
-        assertThat(x.accept(Paths.get("hello.json"))).isTrue();
-        assertThat(x.accept(Paths.get("hello.JSON"))).isTrue();
+        assertThat(x.accept(tmp.resolve("a.xml"))).isFalse();
+        assertThat(x.accept(tmp.resolve("b.json"))).isTrue();
+        assertThat(x.accept(tmp.resolve("c.JSON"))).isTrue();
+
+        assertThat(x.accept(Files.createTempFile(tmp, "a", ".xml"))).isFalse();
+        assertThat(x.accept(Files.createTempFile(tmp, "b", ".json"))).isTrue();
+        assertThat(x.accept(Files.createTempFile(tmp, "c", ".JSON"))).isTrue();
+
+        assertThat(x.accept(Files.createDirectory(tmp.resolve("a.xml")))).isFalse();
+        assertThat(x.accept(Files.createDirectory(tmp.resolve("b.json")))).isFalse();
+        assertThat(x.accept(Files.createDirectory(tmp.resolve("c.JSON")))).isFalse();
     }
 }

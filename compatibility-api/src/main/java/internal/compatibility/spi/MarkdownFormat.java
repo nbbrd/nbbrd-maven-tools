@@ -1,5 +1,6 @@
 package internal.compatibility.spi;
 
+import internal.compatibility.Files2;
 import lombok.NonNull;
 import nbbrd.compatibility.*;
 import nbbrd.compatibility.Formatter;
@@ -11,6 +12,7 @@ import nbbrd.service.ServiceProvider;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -70,7 +72,7 @@ public final class MarkdownFormat implements Format {
 
     @Override
     public DirectoryStream.@NonNull Filter<? super Path> getFormatFileFilter() {
-        return file -> file.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".md");
+        return file -> (!Files.exists(file) || Files.isRegularFile(file)) && Files2.hasExtension(file, ".md");
     }
 
     private static void printMarkdown(Appendable appendable, Matrix matrix) throws IOException {

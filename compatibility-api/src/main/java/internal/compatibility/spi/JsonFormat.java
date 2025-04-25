@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import internal.compatibility.Files2;
 import lombok.NonNull;
 import nbbrd.compatibility.*;
 import nbbrd.compatibility.spi.Format;
@@ -12,10 +13,10 @@ import nbbrd.service.ServiceProvider;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.Locale;
 import java.util.function.Function;
 
 import static java.util.Objects.requireNonNull;
@@ -68,7 +69,7 @@ public final class JsonFormat implements Format {
 
     @Override
     public DirectoryStream.@NonNull Filter<? super Path> getFormatFileFilter() {
-        return file -> file.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".json");
+        return file -> (!Files.exists(file) || Files.isRegularFile(file)) && Files2.hasExtension(file, ".json");
     }
 
     private static final Gson GSON = new GsonBuilder()
