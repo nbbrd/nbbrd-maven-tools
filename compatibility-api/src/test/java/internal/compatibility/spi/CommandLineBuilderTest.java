@@ -1,6 +1,7 @@
 package internal.compatibility.spi;
 
 import nbbrd.compatibility.spi.Build;
+import nbbrd.compatibility.spi.Builder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -20,7 +21,7 @@ class CommandLineBuilderTest {
     void testBuild(@TempDir Path tmp) throws IOException {
         CommandLineBuilder x = new CommandLineBuilder();
 
-        try (Build build = x.getBuild()) {
+        try (Build build = x.getBuild(Builder.IGNORE_EVENT)) {
         }
     }
 }

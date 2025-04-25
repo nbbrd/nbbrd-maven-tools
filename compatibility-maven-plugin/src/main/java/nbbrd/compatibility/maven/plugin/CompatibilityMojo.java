@@ -6,7 +6,6 @@ import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.ReportItem;
-import nbbrd.compatibility.spi.Builder;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.text.TextFormatter;
 import nbbrd.io.text.TextParser;
@@ -35,11 +34,10 @@ abstract class CompatibilityMojo extends AbstractMojo {
 
     @ParameterParsing
     protected @NonNull Compatibility toCompatibility() {
-        Compatibility original = Compatibility.ofServiceLoader();
-        return original
+        return Compatibility.ofServiceLoader()
                 .toBuilder()
-                .builder(Builder.logging(getLog()::debug, original.getBuilder()))
                 .onEvent(getLog()::info)
+                .onDebug(getLog()::debug)
                 .workingDir(toWorkingDir())
                 .build();
     }

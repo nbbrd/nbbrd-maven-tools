@@ -5,6 +5,7 @@ import nbbrd.compatibility.spi.Builder;
 import nbbrd.compatibility.spi.Build;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 public enum NoOpBuilder implements Builder {
 
@@ -26,7 +27,7 @@ public enum NoOpBuilder implements Builder {
     }
 
     @Override
-    public @NonNull Build getBuild() throws IOException {
+    public @NonNull Build getBuild(@NonNull Consumer<? super String> onEvent) throws IOException {
         throw new IOException(getBuilderName());
     }
 }

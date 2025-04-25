@@ -56,6 +56,11 @@ public class Compatibility {
 
     @lombok.NonNull
     @lombok.Builder.Default
+    Consumer<? super String> onDebug = ignore -> {
+    };
+
+    @lombok.NonNull
+    @lombok.Builder.Default
     Path workingDir = requireNonNull(SystemProperties.DEFAULT.getJavaIoTmpdir());
 
     public @NonNull Report check(@NonNull Job job) throws IOException {
@@ -68,7 +73,7 @@ public class Compatibility {
             return Report.EMPTY;
         }
         onEvent.accept("Using builder " + builder.getBuilderId());
-        try (Build build = builder.getBuild()) {
+        try (Build build = builder.getBuild(onDebug)) {
             Report result = check(
                     build,
                     collectWithIO(job.getSources(), mappingWithIO(source -> initSource(source, build), toList())),

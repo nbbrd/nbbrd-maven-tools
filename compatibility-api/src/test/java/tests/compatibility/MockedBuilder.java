@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -55,7 +56,7 @@ public class MockedBuilder implements Builder {
     }
 
     @Override
-    public @NonNull Build getBuild() {
+    public @NonNull Build getBuild(@NonNull Consumer<? super String> onEvent) {
         return MockedBuild.open(projects);
     }
 

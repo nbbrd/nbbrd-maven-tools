@@ -1,6 +1,5 @@
 package nbbrd.compatibility.spi;
 
-import internal.compatibility.spi.LoggingBuilder;
 import lombok.NonNull;
 import nbbrd.service.ServiceDefinition;
 import nbbrd.service.ServiceFilter;
@@ -23,9 +22,8 @@ public interface Builder {
     boolean isBuilderAvailable();
 
     @NonNull
-    Build getBuild() throws IOException;
+    Build getBuild(@NonNull Consumer<? super String> onEvent) throws IOException;
 
-    static @NonNull Builder logging(@NonNull Consumer<? super String> onEvent, @NonNull Builder builder) {
-        return new LoggingBuilder(onEvent, builder);
-    }
+    Consumer<? super String> IGNORE_EVENT = ignore -> {
+    };
 }

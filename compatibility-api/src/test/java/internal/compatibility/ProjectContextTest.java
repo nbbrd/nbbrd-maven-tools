@@ -2,9 +2,10 @@ package internal.compatibility;
 
 import lombok.NonNull;
 import nbbrd.compatibility.Filter;
-import nbbrd.compatibility.Source;
 import nbbrd.compatibility.RefVersion;
+import nbbrd.compatibility.Source;
 import nbbrd.compatibility.spi.Build;
+import nbbrd.compatibility.spi.Builder;
 import nbbrd.design.MightBePromoted;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -30,7 +31,7 @@ class ProjectContextTest {
     void testBuilderInit(@TempDir Path tmp) throws IOException {
         URI local = MockedBuilder.localURI(tmp, "source-project");
         URI remote = MockedBuilder.remoteURI("source-project");
-        try (Build build = MockedBuilder.EXAMPLE.getBuild()) {
+        try (Build build = MockedBuilder.EXAMPLE.getBuild(Builder.IGNORE_EVENT)) {
             MockedProjectContextBuilder x = new MockedProjectContextBuilder();
 
             assertThat(x.clear().init(Source.builder().uri(remote).build(), false, tmp, build).result)

@@ -16,12 +16,15 @@ import tests.compatibility.Examples;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.createDirectory;
 import static java.nio.file.StandardOpenOption.APPEND;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
+import static nbbrd.compatibility.spi.Builder.IGNORE_EVENT;
+import static org.assertj.core.api.Assertions.*;
 import static tests.compatibility.Examples.generateProject;
 import static tests.compatibility.Examples.resolveResource;
 
@@ -41,7 +44,7 @@ class CommandLineBuildTest {
     @Test
     void cleanAndRestore(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             Path target = project.resolve("target");
             Path pom = project.resolve("pom.xml");
 
@@ -68,7 +71,7 @@ class CommandLineBuildTest {
     @Test
     void verify(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             assertThat(x.verify(project))
                     .isEqualTo(0);
 
@@ -81,7 +84,7 @@ class CommandLineBuildTest {
     @Test
     void setProperty(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             Path pom = project.resolve("pom.xml");
             assertThat(pom).content().contains("<maven.compiler.target>11</maven.compiler.target>");
             assertThatCode(() -> x.setProperty(project, "maven.compiler.target", "stuff"))
@@ -93,7 +96,7 @@ class CommandLineBuildTest {
     @Test
     void getProperty(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             assertThat(x.getProperty(project, "maven.compiler.target"))
                     .isEqualTo("11");
         }
@@ -102,7 +105,7 @@ class CommandLineBuildTest {
     @Test
     void getVersion(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             assertThat(x.getVersion(project))
                     .hasToString("3.0.0");
         }
@@ -111,25 +114,31 @@ class CommandLineBuildTest {
     @Test
     void testGetArtifactVersionByDependency(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, targetProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        List<String> events = new ArrayList<>();
+        try (CommandLineBuild x = getBuild(events::add)) {
             assertThat(x.getArtifactVersion(project, Artifact.parse("test:source-project")))
                     .hasToString("3.0.0");
+        } catch (IOException ex) {
+            fail(String.join(System.lineSeparator(), events), ex);
         }
     }
 
     @Test
     void testGetArtifactVersionByProperty(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, targetProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        List<String> events = new ArrayList<>();
+        try (CommandLineBuild x = getBuild(events::add)) {
             assertThat(x.getArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv")))
                     .hasToString("2.5.1");
+        } catch (IOException ex) {
+            fail(String.join(System.lineSeparator(), events), ex);
         }
     }
 
     @Test
     void testSetArtifactVersionByDependency(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, targetProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             assertThatCode(() -> x.setArtifactVersion(project, Artifact.parse("test:source-project"), Version.parse("6.5.0")))
                     .doesNotThrowAnyException();
             assertThat(project.resolve("pom.xml"))
@@ -140,7 +149,7 @@ class CommandLineBuildTest {
     @Test
     void testSetArtifactVersionByProperty(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, targetProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             assertThatCode(() -> x.setArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv:"), Version.parse("6.5.0")))
                     .doesNotThrowAnyException();
             assertThat(project.resolve("pom.xml"))
@@ -151,7 +160,7 @@ class CommandLineBuildTest {
     @Test
     void checkoutTag(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             x.checkoutTag(project, Ref.ofVersion("2.4.0"));
             assertThat(project.resolve("pom.xml"))
                     .content().contains("<version>2.4.0</version>");
@@ -161,7 +170,7 @@ class CommandLineBuildTest {
     @Test
     void getTags(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             assertThat(x.getTags(project))
                     .map(Ref::withoutDate)
                     .containsExactly(
@@ -177,7 +186,7 @@ class CommandLineBuildTest {
         Path project = copy(tmp, sourceProject);
         Path clonedProject = tmp.resolve("clonedProject");
         createDirectory(clonedProject);
-        try (CommandLineBuild x = getJobExecutor()) {
+        try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
             x.clone(project.toUri(), clonedProject);
         }
         assertThat(clonedProject.resolve("pom.xml")).exists();
@@ -208,8 +217,8 @@ class CommandLineBuildTest {
         return target;
     }
 
-    private static CommandLineBuild getJobExecutor() throws IOException {
-        return CommandLineBuild.getDefault();
+    private static CommandLineBuild getBuild(Consumer<? super String> onEvent) {
+        return CommandLineBuild.builder().onEvent(onEvent).build();
     }
 
     private static void doNothing(Object ignore) {
