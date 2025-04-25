@@ -16,10 +16,10 @@ import java.nio.file.Paths;
 
 import static nbbrd.compatibility.ExitStatus.VERIFIED;
 import static nbbrd.compatibility.RefVersion.remoteOf;
-import static nbbrd.compatibility.maven.plugin.CompatibilityMojo.*;
+import static nbbrd.compatibility.maven.plugin.AbstractCompatibilityMojo.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CompatibilityMojoTest {
+class AbstractCompatibilityMojoTest {
 
     @Test
     void testFixUnresolvedProperties() {
@@ -32,7 +32,7 @@ class CompatibilityMojoTest {
     @Test
     void testLoadReport() throws IOException, MojoExecutionException {
         Compatibility compatibility = Compatibility.ofServiceLoader();
-        assertThat(load(compatibility, resolveResource(CompatibilityMojoTest.class, "r1.json"), Report.class))
+        assertThat(load(compatibility, resolveResource(AbstractCompatibilityMojoTest.class, "r1.json"), Report.class))
                 .isEqualTo(Report.builder().item(SDMX_320).item(SDMX_330).build());
     }
 
@@ -41,7 +41,7 @@ class CompatibilityMojoTest {
         Path json = tempDir.resolve("test.json");
         Compatibility compatibility = Compatibility.ofServiceLoader();
         store(compatibility, json, Report.class, Report.builder().item(SDMX_320).item(SDMX_330).build());
-        assertThat(json).hasSameTextualContentAs(resolveResource(CompatibilityMojoTest.class, "r1.json"));
+        assertThat(json).hasSameTextualContentAs(resolveResource(AbstractCompatibilityMojoTest.class, "r1.json"));
     }
 
     static final ReportItem SDMX_320 = ReportItem.builder().exitStatus(VERIFIED).source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("3.2.0")).build();

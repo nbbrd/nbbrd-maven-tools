@@ -26,12 +26,12 @@ import static java.util.stream.Collectors.toList;
 @lombok.Getter
 @lombok.Setter
 @Mojo(name = "merge-reports", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
-public final class MergeReportsMojo extends CompatibilityMojo {
+public final class MergeReportsMojo extends AbstractCompatibilityMojo {
 
-    @Parameter(defaultValue = "", property = "compatibility.reports")
+    @Parameter(property = "compatibility.reports")
     private List<File> reports;
 
-    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", property = "compatibility.report.file")
+    @Parameter(property = "compatibility.reportFile", defaultValue = "${project.build.directory}/compatibility.md")
     private File reportFile;
 
     @ParameterParsing

@@ -37,10 +37,10 @@ Without a pom file (standalone mode):
 ```bash
 mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-downstream \
   -D"compatibility.source=https://github.com/jdemetra/jdplus-main" \
-  -D"compatibility.source.ref=v3.4.0" \
+  -D"compatibility.sourceRef=v3.4.0" \
   -D"compatibility.targets=https://github.com/nbbrd/jdplus-sdmx" \
-  -D"compatibility.target.binding=eu.europa.ec.joinup.sat" \
-  -D"compatibility.target.limit=2"
+  -D"compatibility.targetBinding=eu.europa.ec.joinup.sat" \
+  -D"compatibility.targetLimit=2"
 ```
 
 ### merge-reports
@@ -50,5 +50,5 @@ Without a pom file (standalone mode):
 ```bash
 mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::merge-reports \
   -D"compatibility.reports=r1.json,r2.json" \
-  -D"compatibility.report.file=merged.md"
+  -D"compatibility.reportFile=merged.md"
 ```

@@ -24,12 +24,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @lombok.Getter
 @lombok.Setter
-abstract class CompatibilityMojo extends AbstractMojo {
+abstract class AbstractCompatibilityMojo extends AbstractMojo {
 
-    @Parameter(defaultValue = "false", property = "compatibility.skip")
+    @Parameter(property = "compatibility.skip", defaultValue = "false")
     private boolean skip;
 
-    @Parameter(defaultValue = "${java.io.tmpdir}", property = "compatibility.working.dir")
+    @Parameter(property = "compatibility.workingDir", defaultValue = "${java.io.tmpdir}")
     private File workingDir;
 
     @ParameterParsing

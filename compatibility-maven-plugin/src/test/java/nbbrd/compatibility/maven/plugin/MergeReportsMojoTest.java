@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static java.util.Collections.singletonList;
-import static nbbrd.compatibility.maven.plugin.CompatibilityMojoTest.*;
+import static nbbrd.compatibility.maven.plugin.AbstractCompatibilityMojoTest.*;
 import static nbbrd.compatibility.maven.plugin.MergeReportsMojo.loadAll;
 import static org.assertj.core.api.Assertions.assertThat;
 

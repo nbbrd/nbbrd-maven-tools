@@ -17,9 +17,9 @@ import java.util.function.Function;
 @lombok.Getter
 @lombok.Setter
 @Mojo(name = "split-job", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
-public final class SplitJobMojo extends CompatibilityMojo {
+public final class SplitJobMojo extends AbstractCompatibilityMojo {
 
-    @Parameter(defaultValue = "", property = "compatibility.job")
+    @Parameter(property = "compatibility.job")
     private File job;
 
     @ParameterParsing

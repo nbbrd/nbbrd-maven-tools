@@ -16,39 +16,39 @@ import java.time.format.DateTimeParseException;
 
 @lombok.Getter
 @lombok.Setter
-public abstract class CheckStreamMojo extends CompatibilityMojo {
+abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
 
-    @Parameter(defaultValue = Source.DEFAULT_VERSIONING, property = "compatibility.versioning")
+    @Parameter(property = "compatibility.versioning", defaultValue = Source.DEFAULT_VERSIONING)
     private String versioning;
 
-    @Parameter(property = "compatibility.source.ref")
+    @Parameter(property = "compatibility.sourceRef")
     private String sourceRef;
 
-    @Parameter(property = "compatibility.source.from")
+    @Parameter(property = "compatibility.sourceFrom")
     private String sourceFrom;
 
-    @Parameter(property = "compatibility.source.to")
+    @Parameter(property = "compatibility.sourceTo")
     private String sourceTo;
 
-    @Parameter(defaultValue = "-1", property = "compatibility.source.limit")
+    @Parameter(property = "compatibility.sourceLimit", defaultValue = "-1")
     private int sourceLimit;
 
-    @Parameter(property = "compatibility.target.binding")
+    @Parameter(property = "compatibility.targetBinding")
     private String targetBinding;
 
-    @Parameter(property = "compatibility.target.ref")
+    @Parameter(property = "compatibility.targetRef")
     private String targetRef;
 
-    @Parameter(property = "compatibility.target.from")
+    @Parameter(property = "compatibility.targetFrom")
     private String targetFrom;
 
-    @Parameter(property = "compatibility.target.to")
+    @Parameter(property = "compatibility.targetTo")
     private String targetTo;
 
-    @Parameter(defaultValue = "-1", property = "compatibility.target.limit")
+    @Parameter(property = "compatibility.targetLimit", defaultValue = "-1")
     private int targetLimit;
 
-    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", property = "compatibility.report.file")
+    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", property = "compatibility.reportFile")
     private File reportFile;
 
     @ParameterParsing

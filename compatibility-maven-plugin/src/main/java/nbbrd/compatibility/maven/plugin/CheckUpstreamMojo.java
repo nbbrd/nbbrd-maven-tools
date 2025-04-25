@@ -18,12 +18,12 @@ import static java.util.Objects.requireNonNull;
 @lombok.Getter
 @lombok.Setter
 @Mojo(name = "check-upstream", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
-public final class CheckUpstreamMojo extends CheckStreamMojo {
+public final class CheckUpstreamMojo extends AbstractCheckStreamMojo {
 
-    @Parameter(defaultValue = "", property = "compatibility.sources")
+    @Parameter(property = "compatibility.sources")
     private List<URI> sources;
 
-    @Parameter(defaultValue = "${project.baseUri}", property = "compatibility.target")
+    @Parameter(property = "compatibility.target", defaultValue = "${project.baseUri}")
     private URI target;
 
     @ParameterParsing
