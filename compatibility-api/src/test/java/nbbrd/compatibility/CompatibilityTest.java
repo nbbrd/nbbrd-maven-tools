@@ -33,11 +33,11 @@ class CompatibilityTest {
                         .builder()
                         .uri(remoteSource)
                         .versioning("semver")
+                        .binding("x")
                         .build())
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .binding("x")
                         .build())
                 .build();
 
@@ -69,11 +69,11 @@ class CompatibilityTest {
                         .builder()
                         .uri(localSource)
                         .versioning("semver")
+                        .binding("x")
                         .build())
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .binding("x")
                         .build())
                 .build();
 
@@ -100,11 +100,11 @@ class CompatibilityTest {
                         .builder()
                         .uri(remoteSource)
                         .versioning("semver")
+                        .binding("x")
                         .build())
                 .target(Target
                         .builder()
                         .uri(localTarget)
-                        .binding("x")
                         .build())
                 .build();
 
@@ -131,11 +131,11 @@ class CompatibilityTest {
                         .builder()
                         .uri(remoteSource)
                         .versioning("semver")
+                        .binding("x")
                         .build())
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .binding("x")
                         .build())
                 .build();
 
@@ -158,12 +158,12 @@ class CompatibilityTest {
                         .builder()
                         .uri(remoteSource)
                         .versioning("semver")
+                        .binding("x")
                         .filter(Filter.builder().ref("2.").build())
                         .build())
                 .target(Target
                         .builder()
                         .uri(remoteTarget)
-                        .binding("x")
                         .filter(Filter.builder().ref("1.0.2").build())
                         .build())
                 .build();
@@ -190,11 +190,11 @@ class CompatibilityTest {
                         .builder()
                         .uri(localSource)
                         .versioning("semver")
+                        .binding("x")
                         .build())
                 .target(Target
                         .builder()
                         .uri(localTarget)
-                        .binding("x")
                         .build())
                 .build();
 

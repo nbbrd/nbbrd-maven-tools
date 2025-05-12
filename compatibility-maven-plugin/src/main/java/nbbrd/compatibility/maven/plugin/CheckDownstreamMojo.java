@@ -20,11 +20,41 @@ import static java.util.Objects.requireNonNull;
 @Mojo(name = "check-downstream", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
 public final class CheckDownstreamMojo extends AbstractCheckStreamMojo {
 
-    @Parameter(property = "compatibility.source", defaultValue = "${project.baseUri}")
+    @Parameter(property = "compatibility.source", required = true, defaultValue = "${project.baseUri}")
     private URI source;
 
-    @Parameter(property = "compatibility.targets")
+    @Parameter(property = "compatibility.sourceBinding", required = true)
+    private String sourceBinding;
+
+    @Parameter(property = "compatibility.sourceVersioning", defaultValue = Source.DEFAULT_VERSIONING)
+    private String sourceVersioning;
+
+    @Parameter(property = "compatibility.sourceRef")
+    private String sourceRef;
+
+    @Parameter(property = "compatibility.sourceFrom")
+    private String sourceFrom;
+
+    @Parameter(property = "compatibility.sourceTo")
+    private String sourceTo;
+
+    @Parameter(property = "compatibility.sourceLimit", defaultValue = NO_LIMIT)
+    private int sourceLimit;
+
+    @Parameter(property = "compatibility.targets", required = true)
     private List<URI> targets;
+
+    @Parameter(property = "compatibility.targetRefs")
+    private List<String> targetRefs;
+
+    @Parameter(property = "compatibility.targetFroms")
+    private List<String> targetFroms;
+
+    @Parameter(property = "compatibility.targetTos")
+    private List<String> targetTos;
+
+    @Parameter(property = "compatibility.targetLimits", defaultValue = NO_LIMIT)
+    private List<Integer> targetLimits;
 
     @ParameterParsing
     private Job toJob() throws MojoExecutionException {
@@ -40,28 +70,38 @@ public final class CheckDownstreamMojo extends AbstractCheckStreamMojo {
         return Source
                 .builder()
                 .uri(requireNonNull(source, "Source URI must not be null"))
-                .versioning(toVersioning())
-                .filter(toSourceFilter())
+                .binding(requireNonNull(sourceBinding, "Source binding must not be null"))
+                .versioning(parseVersioning(sourceVersioning))
+                .filter(parserFilter(sourceRef, sourceFrom, sourceTo, sourceLimit))
                 .build();
     }
 
     @ParameterParsing
     private List<Target> toTargets() throws MojoExecutionException {
+        int size = targets.size();
+
+        // required
+        if (size == 0) throw new MojoExecutionException("No targets provided");
+
+        // optional
+        if (hasItems(targetRefs)) checkSize(targetRefs, size, "targetRefs");
+        if (hasItems(targetFroms)) checkSize(targetFroms, size, "targetFroms");
+        if (hasItems(targetTos)) checkSize(targetTos, size, "targetTos");
+        if (hasItems(targetLimits)) checkSize(targetLimits, size, "targetLimits");
+
         List<Target> result = new ArrayList<>();
-        for (URI target : targets) {
-            result.add(toTarget(target));
+        for (int i = 0; i < size; i++) {
+            result.add(Target
+                    .builder()
+                    .uri(targets.get(i))
+                    .filter(parserFilter(
+                            hasItems(targetRefs) ? targetRefs.get(i) : null,
+                            hasItems(targetFroms) ? targetFroms.get(i) : null,
+                            hasItems(targetTos) ? targetTos.get(i) : null,
+                            hasItems(targetLimits) ? targetLimits.get(i) : -1))
+                    .build());
         }
         return result;
-    }
-
-    @ParameterParsing
-    private Target toTarget(URI uri) throws MojoExecutionException {
-        return Target
-                .builder()
-                .uri(requireNonNull(uri, "Target URI must not be null"))
-                .binding(toTargetBinding())
-                .filter(toTargetFilter())
-                .build();
     }
 
     @Override

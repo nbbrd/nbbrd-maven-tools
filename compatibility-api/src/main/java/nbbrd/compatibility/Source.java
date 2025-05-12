@@ -1,5 +1,7 @@
 package nbbrd.compatibility;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.net.URI;
 
 @lombok.Value
@@ -8,6 +10,9 @@ public class Source implements Project {
 
     @lombok.NonNull
     URI uri;
+
+    @Nullable
+    String binding;
 
     @lombok.Builder.Default
     String versioning = DEFAULT_VERSIONING;

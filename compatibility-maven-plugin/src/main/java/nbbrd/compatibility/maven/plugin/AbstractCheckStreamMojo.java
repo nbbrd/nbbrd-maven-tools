@@ -13,75 +13,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 @lombok.Getter
 @lombok.Setter
 abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
 
-    @Parameter(property = "compatibility.versioning", defaultValue = Source.DEFAULT_VERSIONING)
-    private String versioning;
-
-    @Parameter(property = "compatibility.sourceRef")
-    private String sourceRef;
-
-    @Parameter(property = "compatibility.sourceFrom")
-    private String sourceFrom;
-
-    @Parameter(property = "compatibility.sourceTo")
-    private String sourceTo;
-
-    @Parameter(property = "compatibility.sourceLimit", defaultValue = "-1")
-    private int sourceLimit;
-
-    @Parameter(property = "compatibility.targetBinding")
-    private String targetBinding;
-
-    @Parameter(property = "compatibility.targetRef")
-    private String targetRef;
-
-    @Parameter(property = "compatibility.targetFrom")
-    private String targetFrom;
-
-    @Parameter(property = "compatibility.targetTo")
-    private String targetTo;
-
-    @Parameter(property = "compatibility.targetLimit", defaultValue = "-1")
-    private int targetLimit;
-
-    @Parameter(defaultValue = "${project.build.directory}/compatibility.md", property = "compatibility.reportFile")
+    @Parameter(defaultValue = "${project.build.directory}/report.md", property = "compatibility.reportFile")
     private File reportFile;
-
-    @ParameterParsing
-    protected @NonNull String toVersioning() {
-        return versioning != null ? versioning : Source.DEFAULT_VERSIONING;
-    }
-
-    @ParameterParsing
-    protected @Nullable String toTargetBinding() {
-        return targetBinding;
-    }
-
-    @ParameterParsing
-    protected @NonNull Filter toSourceFilter() throws MojoExecutionException {
-        return Filter
-                .builder()
-                .ref(sourceRef)
-                .from(parseLocalDate(sourceFrom))
-                .to(parseLocalDate(sourceTo))
-                .limit(sourceLimit)
-                .build();
-    }
-
-    @ParameterParsing
-    protected @NonNull Filter toTargetFilter() throws MojoExecutionException {
-        return Filter
-                .builder()
-                .ref(targetRef)
-                .from(parseLocalDate(targetFrom))
-                .to(parseLocalDate(targetTo))
-                .limit(targetLimit)
-                .build();
-    }
 
     @ParameterParsing
     protected @NonNull Path toReportFile() {
@@ -108,7 +47,7 @@ abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
         }
     }
 
-    private LocalDate parseLocalDate(String text) throws MojoExecutionException {
+    static @Nullable LocalDate parseLocalDate(@Nullable String text) throws MojoExecutionException {
         if (text == null || text.isEmpty()) {
             return null;
         }
@@ -117,6 +56,32 @@ abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
         } catch (DateTimeParseException ex) {
             throw new MojoExecutionException(ex);
         }
+    }
+
+    static @NonNull String parseVersioning(@Nullable String text) {
+        return text != null && !text.isEmpty() ? text : Source.DEFAULT_VERSIONING;
+    }
+
+    static Filter parserFilter(String ref, String from, String to, int limit) throws MojoExecutionException {
+        return Filter
+                .builder()
+                .ref(ref)
+                .from(parseLocalDate(from))
+                .to(parseLocalDate(to))
+                .limit(limit)
+                .build();
+    }
+
+    static final String NO_LIMIT = "-1";
+
+    static void checkSize(List<?> list, int expectedSize, String name) throws MojoExecutionException {
+        if (list.size() != expectedSize) {
+            throw new MojoExecutionException(name + " must have " + expectedSize + " elements");
+        }
+    }
+
+    static boolean hasItems(List<?> list) {
+        return !list.isEmpty();
     }
 }
 

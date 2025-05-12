@@ -2,6 +2,7 @@
   "sources": [
     {
       "uri": "hello:source",
+      "binding": "x",
       "versioning": "semver",
       "filter": {
         "limit": -1
@@ -11,7 +12,6 @@
   "targets": [
     {
       "uri": "hello:target",
-      "binding": "x",
       "filter": {
         "limit": -1
       }

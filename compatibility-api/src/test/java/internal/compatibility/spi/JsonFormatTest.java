@@ -46,11 +46,10 @@ class JsonFormatTest {
 
         Job value = Job
                 .builder()
-                .source(Source.builder().uri(URI.create("hello:source")).build())
+                .source(Source.builder().uri(URI.create("hello:source")).binding("x").build())
                 .target(Target
                         .builder()
                         .uri(URI.create("hello:target"))
-                        .binding("x")
                         .build())
                 .build();
         String valueText = getContentOf(JsonFormatTest.class, "job.json");

@@ -22,9 +22,6 @@ public class TargetContext implements ProjectContext {
     @lombok.Singular
     List<RefVersion> versions;
 
-    @NonNull
-    Broker broker;
-
     public static final class Builder implements ProjectContext.Builder<Builder> {
     }
 }

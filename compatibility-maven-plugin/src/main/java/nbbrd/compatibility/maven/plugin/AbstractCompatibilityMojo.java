@@ -54,12 +54,12 @@ abstract class AbstractCompatibilityMojo extends AbstractMojo {
             log.info("  Source:");
             log.info("           URI: " + source.getUri());
             log.info("    Versioning: " + source.getVersioning());
+            log.info("       Binding: " + source.getBinding());
             log.info("        Filter: " + source.getFilter());
         });
         job.getTargets().forEach(target -> {
             log.info("  Target:");
             log.info("           URI: " + target.getUri());
-            log.info("       Binding: " + target.getBinding());
             log.info("        Filter: " + target.getFilter());
         });
     }

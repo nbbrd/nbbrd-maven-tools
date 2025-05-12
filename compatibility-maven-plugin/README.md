@@ -55,10 +55,10 @@ With a pom file:
             </goals>
             <configuration>
                 <source>https://github.com/jdemetra/jdplus-main</source>
+                <sourceBinding>eu.europa.ec.joinup.sat</sourceBinding>
                 <sourceRef>v3.4.0</sourceRef>
                 <targets>https://github.com/nbbrd/jdplus-sdmx,https://github.com/jdemetra/jdplus-nowcasting</targets>
-                <targetBinding>eu.europa.ec.joinup.sat</targetBinding>
-                <targetLimit>1</targetLimit>
+                <targetLimits>1,1</targetLimits>
             </configuration>
         </execution>
     </executions>
@@ -70,11 +70,12 @@ Without a pom file (standalone mode):
 ```bash
 mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-downstream \
   -D "compatibility.source=https://github.com/jdemetra/jdplus-main" \
+  -D "compatibility.sourceBinding=eu.europa.ec.joinup.sat" \
   -D "compatibility.sourceRef=v3.4.0" \
   -D "compatibility.targets=https://github.com/nbbrd/jdplus-sdmx,https://github.com/jdemetra/jdplus-nowcasting" \
-  -D "compatibility.targetBinding=eu.europa.ec.joinup.sat" \
-  -D "compatibility.targetLimit=1"
+  -D "compatibility.targetLimits=1,1"
 ```
+
 ### check-upstream
 
 ```mermaid
@@ -88,6 +89,40 @@ graph BT
         T1["`jdplus-sdmx`"]
     end
     TARGETS -. check-upstream .-> SOURCES
+```
+With a pom file:
+
+```xml
+<plugin>
+    <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
+    <artifactId>compatibility-maven-plugin</artifactId>
+    <executions>
+        <execution>
+            <phase>validate</phase>
+            <goals>
+                <goal>check-upstream</goal>
+            </goals>
+            <configuration>
+                <sources>https://github.com/jdemetra/jdplus-main,https://github.com/nbbrd/sdmx-dl</sources>
+                <sourceBindings>eu.europa.ec.joinup.sat,com.github.nbbrd.sdmx-dl</sourceBindings>
+                <sourceLimits>1,1</sourceLimits>
+                <target>https://github.com/nbbrd/jdplus-sdmx</target>
+                <targetRef>v3.3.0</targetRef>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+Without a pom file (standalone mode):
+
+```bash
+mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-upstream \
+  -D "compatibility.sources=https://github.com/jdemetra/jdplus-main,https://github.com/nbbrd/sdmx-dl" \
+  -D "compatibility.sourceBindings=eu.europa.ec.joinup.sat,com.github.nbbrd.sdmx-dl" \
+  -D "compatibility.sourceLimits=1,1" \
+  -D "compatibility.target=https://github.com/nbbrd/jdplus-sdmx" \
+  -D "compatibility.targetRef=v3.3.0"
 ```
 
 ### merge-reports

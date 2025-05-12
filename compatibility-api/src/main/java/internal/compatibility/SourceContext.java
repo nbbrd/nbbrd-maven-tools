@@ -26,6 +26,9 @@ public class SourceContext implements ProjectContext {
     @NonNull
     Versioning versioning;
 
+    @NonNull
+    Broker broker;
+
     public static final class Builder implements ProjectContext.Builder<Builder> {
     }
 }

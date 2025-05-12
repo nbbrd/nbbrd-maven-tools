@@ -91,6 +91,7 @@ public class Compatibility {
                 .builder()
                 .init(source, local, workingDir, build)
                 .versioning(resolveVersioning(source))
+                .broker(resolveBroker(source))
                 .build();
     }
 
@@ -108,12 +109,11 @@ public class Compatibility {
         return TargetContext
                 .builder()
                 .init(target, local, workingDir, build)
-                .broker(resolveBroker(target))
                 .build();
     }
 
-    private Broker resolveBroker(Target target) throws IOException {
-        String binding = target.getBinding();
+    private Broker resolveBroker(Source source) throws IOException {
+        String binding = source.getBinding();
         if (binding != null) return new Broker.ByArtifact(Artifact.parse(binding));
         throw new IOException("Cannot resolve broker");
     }
@@ -149,8 +149,8 @@ public class Compatibility {
         if (targetVersion.requiresCheckout()) {
             build.checkoutTag(project, targetVersion.getRef());
         }
-        if (!isSkip(source.getVersioning(), target.getBroker().getVersion(build, project), sourceVersion.getVersion())) {
-            target.getBroker().setVersion(build, project, sourceVersion.getVersion());
+        if (!isSkip(source.getVersioning(), source.getBroker().getVersion(build, project), sourceVersion.getVersion())) {
+            source.getBroker().setVersion(build, project, sourceVersion.getVersion());
             result.exitStatus(build.verify(project) == 0 ? ExitStatus.VERIFIED : ExitStatus.BROKEN);
             build.clean(project);
         } else {
