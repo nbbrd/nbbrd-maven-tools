@@ -7,4 +7,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/develop...HEAD
+## [1.0.0] - 2025-05-12
+
+Initial release.
+
+[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/develop...v1.0.0
