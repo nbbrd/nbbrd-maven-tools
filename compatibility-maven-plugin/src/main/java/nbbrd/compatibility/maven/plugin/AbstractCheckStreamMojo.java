@@ -19,8 +19,19 @@ import java.util.List;
 @lombok.Setter
 abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
 
-    @Parameter(defaultValue = "${project.build.directory}/report.md", property = "compatibility.reportFile")
+    @Parameter(property = "compatibility.jobFile", defaultValue = "${project.build.directory}/job.json")
+    private File jobFile;
+
+    @Parameter(property = "compatibility.dryRun")
+    private boolean dryRun;
+
+    @Parameter(property = "compatibility.reportFile", defaultValue = "${project.build.directory}/report.md")
     private File reportFile;
+
+    @ParameterParsing
+    protected @NonNull Path toJobFile() {
+        return Paths.get(fixUnresolvedProperties(jobFile.toURI()));
+    }
 
     @ParameterParsing
     protected @NonNull Path toReportFile() {
@@ -28,15 +39,24 @@ abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
     }
 
     protected void checkStream(Job input) throws MojoExecutionException {
-        logJob(input);
         Compatibility compatibility = toCompatibility();
 
-        Path outputFile = toReportFile();
-        Report output = check(compatibility, input);
-        logReport(output);
+        logJob(input);
+        Path jobFile = toJobFile();
+        getLog().info("Writing job to " + jobFile);
+        store(compatibility, jobFile, Job.class, input);
 
-        getLog().info("Writing report to " + outputFile);
-        store(compatibility, outputFile, Report.class, output);
+        if (dryRun) {
+            getLog().info("Dry run, skipping check");
+            return;
+        }
+
+        Report output = check(compatibility, input);
+
+        logReport(output);
+        Path reportFile = toReportFile();
+        getLog().info("Writing report to " + reportFile);
+        store(compatibility, reportFile, Report.class, output);
     }
 
     private static Report check(Compatibility compatibility, Job input) throws MojoExecutionException {

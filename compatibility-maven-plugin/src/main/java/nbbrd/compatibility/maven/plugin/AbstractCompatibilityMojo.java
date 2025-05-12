@@ -49,7 +49,7 @@ abstract class AbstractCompatibilityMojo extends AbstractMojo {
 
     protected void logJob(Job job) {
         Log log = getLog();
-        log.info("Job:");
+        log.info("Job summary:");
         job.getSources().forEach(source -> {
             log.info("  Source:");
             log.info("           URI: " + source.getUri());
@@ -66,7 +66,7 @@ abstract class AbstractCompatibilityMojo extends AbstractMojo {
 
     protected void logReport(Report report) {
         Log log = getLog();
-        log.info("Report:");
+        log.info("Report summary:");
         report.getItems().forEach(item -> {
             log.info("  Item:");
             log.info("    Status: " + item.getExitStatus());
