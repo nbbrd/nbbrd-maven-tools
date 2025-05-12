@@ -109,6 +109,7 @@ public final class MarkdownFormat implements Format {
                     IntStream.range(0, matrix.body[i].length).mapToObj(j -> padRight(emoji(matrix.body[i][j], important), sizes[j + 2]))
             ).collect(toRow));
         }
+        appendable.append(lineSeparator()).append(lineSeparator());
     }
 
     private static String emoji(ExitStatus exitStatus, boolean important) {
