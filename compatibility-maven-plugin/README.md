@@ -125,12 +125,22 @@ mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-upstrea
   -D "compatibility.targetRef=v3.3.0"
 ```
 
+### split-job
+
+Without a pom file (standalone mode):
+
+```bash
+mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::split-job \
+  -D "compatibility.jobFile=job.json" \
+  -D "compatibility.workingDir=./jobs"
+```
+
 ### merge-reports
 
 Without a pom file (standalone mode):
 
 ```bash
 mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::merge-reports \
-  -D"compatibility.reports=r1.json,r2.json" \
-  -D"compatibility.reportFile=merged.md"
+  -D "compatibility.reports=r1.json,r2.json" \
+  -D "compatibility.reportFile=merged.md"
 ```

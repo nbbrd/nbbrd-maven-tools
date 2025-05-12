@@ -11,6 +11,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -19,12 +20,12 @@ import java.util.function.Function;
 @Mojo(name = "split-job", defaultPhase = LifecyclePhase.NONE, threadSafe = true, requiresProject = false)
 public final class SplitJobMojo extends AbstractCompatibilityMojo {
 
-    @Parameter(property = "compatibility.job")
-    private File job;
+    @Parameter(property = "compatibility.jobFile", defaultValue = "${project.build.directory}/job.json")
+    private File jobFile;
 
     @ParameterParsing
     private Path toJobFile() {
-        return job.toPath();
+        return Paths.get(fixUnresolvedProperties(jobFile.toURI()));
     }
 
     @Override
@@ -34,7 +35,9 @@ public final class SplitJobMojo extends AbstractCompatibilityMojo {
             return;
         }
 
-        if (job == null || !Files.isRegularFile(job.toPath())) {
+        Path inputFile = toJobFile();
+
+        if (!Files.isRegularFile(inputFile)) {
             getLog().info("No job to split.");
             return;
         }
@@ -42,7 +45,6 @@ public final class SplitJobMojo extends AbstractCompatibilityMojo {
         Compatibility compatibility = toCompatibility();
         Function<Job, Path> outputFileFactory = getFileNameFactory().andThen(toWorkingDir()::resolve);
 
-        Path inputFile = toJobFile();
         Job input = load(compatibility, inputFile, Job.class);
 
         for (Job output : compatibility.splitJob(input)) {

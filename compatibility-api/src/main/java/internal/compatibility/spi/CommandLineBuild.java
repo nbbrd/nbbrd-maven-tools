@@ -184,8 +184,8 @@ public final class CommandLineBuild implements Build {
         return collectingAndThen(toList(), list -> list.size() == 1 ? Optional.of(list.get(0)) : Optional.empty());
     }
 
-    private static <X> Collector<X, ?, Void> consuming() {
-        return reducing(null, ignore -> null, (ignoreFirst, ignoreSecond) -> null);
+    private static <X> Collector<X, ?, String> consuming() {
+        return reducing("", ignore -> "", (ignoreFirst, ignoreSecond) -> "");
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
