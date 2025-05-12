@@ -571,6 +571,7 @@
                         <artifactId>gitflow-maven-plugin</artifactId>
                         <configuration>
                             <gitFlowConfig>
+                                <productionBranch>main</productionBranch>
                                 <versionTagPrefix>v</versionTagPrefix>
                             </gitFlowConfig>
                         </configuration>
