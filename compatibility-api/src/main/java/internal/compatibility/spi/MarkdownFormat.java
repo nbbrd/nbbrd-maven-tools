@@ -138,10 +138,12 @@ public final class MarkdownFormat implements Format {
         RefVersion version;
 
         String toProjectLabel() {
-            String path = uri.getPath();
+            String path = uri.normalize().getPath();
             if (path != null) {
-                int index = path.lastIndexOf('/');
-                return index != -1 ? path.substring(index + 1) : path;
+                return Stream.of(path.split("/", -1))
+                        .filter(item -> !item.isEmpty())
+                        .collect(CommandLineBuild.toLast())
+                        .orElse(path);
             }
             return uri.toString();
         }

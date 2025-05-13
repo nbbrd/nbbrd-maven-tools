@@ -23,7 +23,7 @@ public final class CheckDownstreamMojo extends AbstractCheckStreamMojo {
     @Parameter(property = "compatibility.source", required = true, defaultValue = "${project.baseUri}")
     private URI source;
 
-    @Parameter(property = "compatibility.sourceBinding", required = true)
+    @Parameter(property = "compatibility.sourceBinding", required = true, defaultValue = "${project.groupId}")
     private String sourceBinding;
 
     @Parameter(property = "compatibility.sourceVersioning", defaultValue = Source.DEFAULT_VERSIONING)
@@ -53,7 +53,7 @@ public final class CheckDownstreamMojo extends AbstractCheckStreamMojo {
     @Parameter(property = "compatibility.targetTos")
     private List<String> targetTos;
 
-    @Parameter(property = "compatibility.targetLimits", defaultValue = NO_LIMIT)
+    @Parameter(property = "compatibility.targetLimits")
     private List<Integer> targetLimits;
 
     @ParameterParsing

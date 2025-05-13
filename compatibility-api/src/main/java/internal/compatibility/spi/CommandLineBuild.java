@@ -6,6 +6,7 @@ import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
+import nbbrd.design.MightBePromoted;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.sys.EndOfProcessException;
 import nbbrd.io.text.TextParser;
@@ -172,14 +173,17 @@ public final class CommandLineBuild implements Build {
     public void close() {
     }
 
+    @MightBePromoted
     private static <X> Collector<X, ?, Optional<X>> toFirst() {
         return reducing((first, ignore) -> first);
     }
 
-    private static <X> Collector<X, ?, Optional<X>> toLast() {
+    @MightBePromoted
+    static <X> Collector<X, ?, Optional<X>> toLast() {
         return reducing((ignore, second) -> second);
     }
 
+    @MightBePromoted
     private static <X> Collector<X, ?, Optional<X>> toSingle() {
         return collectingAndThen(toList(), list -> list.size() == 1 ? Optional.of(list.get(0)) : Optional.empty());
     }

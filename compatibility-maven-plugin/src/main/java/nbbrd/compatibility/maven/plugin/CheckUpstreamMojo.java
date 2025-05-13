@@ -38,7 +38,7 @@ public final class CheckUpstreamMojo extends AbstractCheckStreamMojo {
     @Parameter(property = "compatibility.sourceTos")
     private List<String> sourceTos;
 
-    @Parameter(property = "compatibility.sourceLimits", defaultValue = NO_LIMIT)
+    @Parameter(property = "compatibility.sourceLimits")
     private List<Integer> sourceLimits;
 
     @Parameter(property = "compatibility.target", required = true, defaultValue = "${project.baseUri}")
