@@ -10,6 +10,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - Fix limits default value in mojos
+- Fix sourceBinding default value in mojos
 
 ## [1.0.0] - 2025-05-12
 
