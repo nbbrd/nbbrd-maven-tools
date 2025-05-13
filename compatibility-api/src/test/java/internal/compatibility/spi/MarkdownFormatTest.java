@@ -1,6 +1,7 @@
 package internal.compatibility.spi;
 
 import nbbrd.compatibility.Job;
+import nbbrd.compatibility.RefVersion;
 import nbbrd.compatibility.Report;
 import nbbrd.compatibility.ReportItem;
 import nbbrd.io.text.Formatter;
@@ -82,16 +83,26 @@ class MarkdownFormatTest {
 
     @Test
     void testToProjectLabel() {
-        assertThat(new MarkdownFormat.Header(URI.create(""), localOf("1.2.3")).toProjectLabel())
+        RefVersion local = localOf("1.2.3");
+
+        assertThat(new MarkdownFormat.Header(URI.create(""), local).toProjectLabel())
                 .isEqualTo("");
 
-        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), localOf("1.2.3")).toProjectLabel())
+        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), local).toProjectLabel())
                 .isEqualTo("jdplus-sdmx");
 
-        assertThat(new MarkdownFormat.Header(URI.create(""), remoteOf("1.2.3")).toProjectLabel())
+        assertThat(new MarkdownFormat.Header(URI.create("file:///C:/nbbrd/jdplus-sdmx/jdplus-sdmx-bom//../"), local).toProjectLabel())
+                .isEqualTo("jdplus-sdmx");
+
+        RefVersion remote = remoteOf("1.2.3");
+
+        assertThat(new MarkdownFormat.Header(URI.create(""), remote).toProjectLabel())
                 .isEqualTo("");
 
-        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("1.2.3")).toProjectLabel())
+        assertThat(new MarkdownFormat.Header(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remote).toProjectLabel())
+                .isEqualTo("jdplus-sdmx");
+
+        assertThat(new MarkdownFormat.Header(URI.create("file:///C:/nbbrd/jdplus-sdmx/jdplus-sdmx-bom//../"), remote).toProjectLabel())
                 .isEqualTo("jdplus-sdmx");
     }
 

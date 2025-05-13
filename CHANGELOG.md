@@ -11,6 +11,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Fix limits default value in mojos
 - Fix sourceBinding default value in mojos
+- Fix empty label in MarkdownFormat
 
 ## [1.0.0] - 2025-05-12
 
