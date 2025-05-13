@@ -251,6 +251,7 @@
     <modules>
         <module>compatibility-api</module>
         <module>compatibility-maven-plugin</module>
+        <module>nbbrd-maven-bom</module>
     </modules>
 
     <profiles>
