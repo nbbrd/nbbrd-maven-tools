@@ -53,7 +53,7 @@ public final class CheckDownstreamMojo extends AbstractCheckStreamMojo {
     @Parameter(property = "compatibility.targetTos")
     private List<String> targetTos;
 
-    @Parameter(property = "compatibility.targetLimits", defaultValue = NO_LIMIT)
+    @Parameter(property = "compatibility.targetLimits")
     private List<Integer> targetLimits;
 
     @ParameterParsing
