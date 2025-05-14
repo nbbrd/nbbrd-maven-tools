@@ -1,11 +1,11 @@
 package tests.compatibility;
 
+import internal.compatibility.Files2;
+
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -35,7 +35,7 @@ public final class Examples {
         logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "config", "--local", "user.email", "test@example.com"));
         for (String version : getVersions(resources)) {
             Path workingDir = resources.resolve(version);
-            copyFolder(workingDir, createDirectories(project), REPLACE_EXISTING);
+            Files2.copyRecursively(workingDir, createDirectories(project), REPLACE_EXISTING);
             logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "add", "*"));
             logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "commit", "-am", version));
             logger.accept(readToString(UTF_8, "git", "-C", project.toString(), "tag", version));
@@ -51,29 +51,6 @@ public final class Examples {
                     .sorted()
                     .collect(Collectors.toList());
         }
-    }
-
-    public static void copyFolder(Path source, Path target, CopyOption... options) throws IOException {
-        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                createDirectories(map(dir));
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                try (InputStream in = Files.newInputStream(file)) {
-                    Files.copy(in, map(file), options);
-                }
-                // do not use Files#copy(Path, Path) because it copies file times too
-                return FileVisitResult.CONTINUE;
-            }
-
-            private Path map(Path dir) {
-                return target.resolve(source.relativize(dir).toString());
-            }
-        });
     }
 
     public static Path resolveResource(String name) throws IOException {

@@ -18,8 +18,6 @@ public class SourceContext implements ProjectContext {
     @NonNull
     Path directory;
 
-    boolean deleteOnExit;
-
     @lombok.Singular
     List<RefVersion> versions;
 

@@ -3,6 +3,7 @@ package internal.compatibility;
 import lombok.NonNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.StreamSupport;
 
+import static java.nio.file.Files.createDirectories;
 import static java.util.stream.Collectors.toList;
 
 public final class Files2 {
@@ -46,4 +48,26 @@ public final class Files2 {
         }
     }
 
+    public static void copyRecursively(@NonNull Path source, @NonNull Path target, @NonNull CopyOption... options) throws IOException {
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                createDirectories(map(dir));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                try (InputStream in = Files.newInputStream(file)) {
+                    Files.copy(in, map(file), options);
+                }
+                // do not use Files#copy(Path, Path) because it copies file times too
+                return FileVisitResult.CONTINUE;
+            }
+
+            private Path map(Path dir) {
+                return target.resolve(source.relativize(dir).toString());
+            }
+        });
+    }
 }

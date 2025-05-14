@@ -17,8 +17,6 @@ public class TargetContext implements ProjectContext {
     @NonNull
     Path directory;
 
-    boolean deleteOnExit;
-
     @lombok.Singular
     List<RefVersion> versions;
 

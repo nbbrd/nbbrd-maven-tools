@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix concurrent access to local project
+
 ## [1.0.1] - 2025-05-13
 
 ### Fixed

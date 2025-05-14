@@ -7,11 +7,14 @@ import nbbrd.compatibility.RefVersion;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.compatibility.spi.Builder;
+import nbbrd.io.text.TextFormatter;
+import nbbrd.io.text.TextParser;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.semver4j.Semver;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static nbbrd.compatibility.RefVersion.remoteOf;
@@ -70,14 +75,6 @@ public class MockedBuilder implements Builder {
         private final Map<String, MockedProject> projects;
         private final Map<String, MockedStatus> stuff = new HashMap<>();
 
-        private static String toProjectId(Path project) throws IOException {
-            String result = project.getFileName().toString();
-            if (result.isEmpty()) {
-                throw new IOException("Invalid project name");
-            }
-            return result;
-        }
-
         private static MockedStatus checkAvailability(MockedStatus status) throws IOException {
             if (status == null) {
                 throw new IOException("Status not available");
@@ -99,12 +96,12 @@ public class MockedBuilder implements Builder {
 
         @Override
         public void restore(@NonNull Path project) throws IOException {
-            checkAvailability(stuff.remove(toProjectId(project)));
+            checkAvailability(stuff.remove(loadProjectId(project)));
         }
 
         @Override
         public int verify(@NonNull Path project) throws IOException {
-            MockedStatus status = checkAvailability(stuff.get(toProjectId(project)));
+            MockedStatus status = checkAvailability(stuff.get(loadProjectId(project)));
             Semver original = new Semver(status.getOriginal().getValue());
             Semver modified = new Semver(status.getModified().getValue());
             if (original.isGreaterThan(modified) || !original.isApiCompatible(modified)) {
@@ -114,18 +111,18 @@ public class MockedBuilder implements Builder {
         }
 
         private void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {
-            String id = toProjectId(project);
+            String id = loadProjectId(project);
             stuff.put(id, stuff.computeIfAbsent(id, this::initStatus).withProperty(propertyName, propertyValue));
         }
 
         private String getProperty(@NonNull Path project, @NonNull String propertyName) throws IOException {
-            String id = toProjectId(project);
+            String id = loadProjectId(project);
             return stuff.computeIfAbsent(id, this::initStatus).getProperty(propertyName);
         }
 
         @Override
         public @NonNull Version getProjectVersion(@NonNull Path project) throws IOException {
-            String id = toProjectId(project);
+            String id = loadProjectId(project);
             return stuff.computeIfAbsent(id, this::initStatus).getModified().getVersion().getVersion();
         }
 
@@ -142,13 +139,13 @@ public class MockedBuilder implements Builder {
 
         @Override
         public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
-            String id = toProjectId(project);
+            String id = loadProjectId(project);
             stuff.put(id, MockedStatus.of(projects.get(id).getByTag(ref)));
         }
 
         @Override
         public @NonNull List<Ref> getTags(@NonNull Path project) throws IOException {
-            String id = toProjectId(project);
+            String id = loadProjectId(project);
             return projects.get(id)
                     .getVersions()
                     .stream()
@@ -162,12 +159,12 @@ public class MockedBuilder implements Builder {
             if (!"mocked".equals(from.getScheme())) {
                 throw new IOException("Unsupported URI scheme: " + from.getScheme());
             }
-            if (projects.containsKey(toProjectId(to))) {
+            if (projects.containsKey(loadProjectId(to))) {
                 throw new IOException("Project " + to + " already exists");
             }
             Files.createDirectories(to.resolve("sub-dir"));
             MockedProject mockedProject = projects.get(from.toString().substring(7));
-            projects.put(toProjectId(to), mockedProject);
+            projects.put(loadProjectId(to), mockedProject);
         }
 
         @Override
@@ -197,12 +194,30 @@ public class MockedBuilder implements Builder {
         }
     }
 
-    public static URI localURI(Path tmp, String name) {
-        return tmp.resolve(name).toUri();
+    public static URI localURI(Path tmp, String name) throws IOException {
+        Path dir = tmp.resolve(name);
+        Files.createDirectory(dir);
+        storeProjectId(name, dir);
+        return dir.toUri();
     }
 
     public static URI remoteURI(String name) {
         return URI.create("mocked:" + name);
+    }
+
+    private static String loadProjectId(Path project) throws IOException {
+        Path idFile = project.resolve("id.txt");
+        if (Files.exists(idFile)) return TextParser.onParsingLines(Collectors.joining()).parsePath(idFile, UTF_8);
+        String result = project.getFileName().toString();
+        if (result.isEmpty()) {
+            throw new IOException("Invalid project name");
+        }
+        return result;
+    }
+
+    private static void storeProjectId(String id, Path project) throws IOException {
+        Path idFile = project.resolve("id.txt");
+        TextFormatter.onFormattingWriter((String id1, Writer writer) -> writer.write(id1)).formatPath(id, idFile, UTF_8);
     }
 
     public static final MockedBuilder EXAMPLE = MockedBuilder

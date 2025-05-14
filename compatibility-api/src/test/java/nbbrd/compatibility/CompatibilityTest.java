@@ -7,6 +7,7 @@ import tests.compatibility.MockedBuilder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static java.util.Arrays.asList;
@@ -58,7 +59,8 @@ class CompatibilityTest {
 
     @Test
     void checkDownstream(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility(tmp);
+        Path workingDir = Files.createDirectory(tmp.resolve("working-dir"));
+        Compatibility x = mockedCompatibility(workingDir);
 
         URI localSource = localURI(tmp, "source-project");
         URI remoteTarget = remoteURI("target-project");
@@ -84,12 +86,13 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(VERIFIED).source(localSource, localOf("3.0.0")).target(remoteTarget, remoteOf("1.0.2")).build()
                 );
 
-        assertThat(tmp).isEmptyDirectory();
+        assertThat(workingDir).isEmptyDirectory();
     }
 
     @Test
     void checkUpstream(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility(tmp);
+        Path workingDir = Files.createDirectory(tmp.resolve("working-dir"));
+        Compatibility x = mockedCompatibility(workingDir);
 
         URI remoteSource = remoteURI("source-project");
         URI localTarget = localURI(tmp, "target-project");
@@ -115,12 +118,13 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("3.0.0")).target(localTarget, localOf("1.0.2")).build()
                 );
 
-        assertThat(tmp).isEmptyDirectory();
+        assertThat(workingDir).isEmptyDirectory();
     }
 
     @Test
     void checkRemoteStreams(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility(tmp);
+        Path workingDir = Files.createDirectory(tmp.resolve("working-dir"));
+        Compatibility x = mockedCompatibility(workingDir);
 
         URI remoteSource = remoteURI("source-project");
         URI remoteTarget = remoteURI("target-project");
@@ -174,12 +178,13 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build()
                 );
 
-        assertThat(tmp).isEmptyDirectory();
+        assertThat(workingDir).isEmptyDirectory();
     }
 
     @Test
     void checkLocalStreams(@TempDir Path tmp) throws IOException {
-        Compatibility x = mockedCompatibility(tmp);
+        Path workingDir = Files.createDirectory(tmp.resolve("working-dir"));
+        Compatibility x = mockedCompatibility(workingDir);
 
         URI localSource = localURI(tmp, "source-project");
         URI localTarget = localURI(tmp, "target-project");
@@ -203,7 +208,7 @@ class CompatibilityTest {
                         ReportItem.builder().exitStatus(VERIFIED).source(localSource, localOf("3.0.0")).target(localTarget, localOf("1.0.2")).build()
                 );
 
-        assertThat(tmp).isEmptyDirectory();
+        assertThat(workingDir).isEmptyDirectory();
     }
 
     @SuppressWarnings("DataFlowIssue")
