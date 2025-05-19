@@ -144,3 +144,11 @@ mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::merge-reports
   -D "compatibility.reports=r1.json,r2.json" \
   -D "compatibility.reportFile=merged.md"
 ```
+
+## Troubleshooting
+
+**Unknow error at runtime**:  
+Run the plugin with `-X` option to enable debug mode.
+
+**Filename too long exception**:  
+Run the plugin with the `compatibility.workindDir` parameter set to a shorter path.

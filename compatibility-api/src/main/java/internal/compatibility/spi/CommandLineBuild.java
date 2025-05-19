@@ -42,6 +42,7 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void clean(@NonNull Path project) throws IOException {
+        // https://maven.apache.org/plugins/maven-clean-plugin/clean-mojo.html
         mvnOf(project)
                 .goal("clean")
                 .build()
@@ -63,6 +64,7 @@ public final class CommandLineBuild implements Build {
     @Override
     public int verify(@NonNull Path project) throws IOException {
         try {
+            // https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
             mvnOf(project)
                     .goal("clean")
                     .goal("verify")
@@ -79,6 +81,7 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public @NonNull Version getProjectVersion(@NonNull Path project) throws IOException {
+        // https://maven.apache.org/plugins/maven-help-plugin/evaluate-mojo.html
         return mvnOf(project)
                 .goal("help:evaluate")
                 .define("expression", "project.version")
@@ -92,7 +95,7 @@ public final class CommandLineBuild implements Build {
     @Override
     public @Nullable Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException {
         try (TempPath list = TempPath.of(Files.createTempFile("list", ".txt"))) {
-
+            // https://maven.apache.org/plugins/maven-dependency-plugin/collect-mojo.html
             MvnCommandBuilder command = mvnOf(project)
                     .goal("dependency:LATEST:collect")
                     .define("includeScope", "compile")
@@ -121,6 +124,7 @@ public final class CommandLineBuild implements Build {
 
     @Override
     public void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException {
+        // https://www.mojohaus.org/versions/versions-maven-plugin/use-dep-version-mojo.html
         mvnOf(project)
                 .goal("versions:use-dep-version")
                 .define("depVersion", version.toString())

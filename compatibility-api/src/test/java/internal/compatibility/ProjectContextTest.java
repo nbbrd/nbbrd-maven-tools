@@ -1,6 +1,7 @@
 package internal.compatibility;
 
 import lombok.NonNull;
+import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Filter;
 import nbbrd.compatibility.RefVersion;
 import nbbrd.compatibility.Source;
@@ -29,47 +30,49 @@ class ProjectContextTest {
 
     @Test
     void testBuilderInit(@TempDir Path tmp) throws IOException {
+        Path workingDir = Files.createDirectory(tmp.resolve("working-dir"));
+
         URI local = MockedBuilder.localURI(tmp, "source-project");
         URI remote = MockedBuilder.remoteURI("source-project");
+
         try (Build build = MockedBuilder.EXAMPLE.getBuild(Builder.IGNORE_EVENT)) {
             MockedProjectContextBuilder x = new MockedProjectContextBuilder();
 
-            assertThat(x.clear().init(Source.builder().uri(remote).build(), false, tmp, build).result)
+            assertThat(x.clear().init(Source.builder().uri(remote).build(), false, workingDir, build).result)
                     .returns(remote, MockedProjectContext::getUri)
-                    .returns(getFirstDir(tmp), MockedProjectContext::getDirectory)
-                    .returns(true, MockedProjectContext::isDeleteOnExit)
+                    .returns(getFirstDir(workingDir), MockedProjectContext::getDirectory)
                     .extracting(MockedProjectContext::getVersions, list(RefVersion.class))
                     .containsExactly(
                             remoteOf("2.3.4"),
                             remoteOf("2.4.0"),
                             remoteOf("3.0.0")
                     );
-            assertThat(tmp).isNotEmptyDirectory();
+            assertThat(workingDir).isNotEmptyDirectory();
             x.result.clean();
-            assertThat(tmp).isEmptyDirectory();
+            assertThat(workingDir).isEmptyDirectory();
 
-            assertThat(x.clear().init(Source.builder().uri(remote).filter(Filter.builder().limit(2).build()).build(), false, tmp, build).result)
+            assertThat(x.clear().init(Source.builder().uri(remote).filter(Filter.builder().limit(2).build()).build(), false, workingDir, build).result)
                     .returns(remote, MockedProjectContext::getUri)
-                    .returns(getFirstDir(tmp), MockedProjectContext::getDirectory)
-                    .returns(true, MockedProjectContext::isDeleteOnExit)
+                    .returns(getFirstDir(workingDir), MockedProjectContext::getDirectory)
                     .extracting(MockedProjectContext::getVersions, list(RefVersion.class))
                     .containsExactly(
                             remoteOf("2.4.0"),
                             remoteOf("3.0.0")
                     );
-            assertThat(tmp).isNotEmptyDirectory();
+            assertThat(workingDir).isNotEmptyDirectory();
             x.result.clean();
-            assertThat(tmp).isEmptyDirectory();
+            assertThat(workingDir).isEmptyDirectory();
 
-            assertThat(x.clear().init(Source.builder().uri(local).build(), true, tmp, build).result)
+            assertThat(x.clear().init(Source.builder().uri(local).build(), true, workingDir, build).result)
                     .returns(local, MockedProjectContext::getUri)
-                    .returns(Paths.get(local), MockedProjectContext::getDirectory)
-                    .returns(false, MockedProjectContext::isDeleteOnExit)
+                    .returns(getFirstDir(workingDir), MockedProjectContext::getDirectory)
                     .extracting(MockedProjectContext::getVersions, list(RefVersion.class))
                     .containsExactly(
                             localOf("3.0.0")
                     );
-            assertThat(tmp).isEmptyDirectory();
+            assertThat(workingDir).isNotEmptyDirectory();
+            x.result.clean();
+            assertThat(workingDir).isEmptyDirectory();
         }
     }
 
@@ -77,7 +80,6 @@ class ProjectContextTest {
     private static class MockedProjectContext implements ProjectContext {
         URI uri;
         Path directory;
-        boolean deleteOnExit;
         List<RefVersion> versions = new ArrayList<>();
     }
 
@@ -94,12 +96,6 @@ class ProjectContextTest {
         @Override
         public MockedProjectContextBuilder directory(@NonNull Path directory) {
             result.setDirectory(directory);
-            return this;
-        }
-
-        @Override
-        public MockedProjectContextBuilder deleteOnExit(boolean deleteOnExit) {
-            result.setDeleteOnExit(deleteOnExit);
             return this;
         }
 

@@ -20,5 +20,13 @@ class ArtifactTest {
                 .returns("", Artifact::getClassifier)
                 .returns("3.1.1", Artifact::getVersion)
                 .hasToString("eu.europa.ec.joinup.sat:jdplus-main-desktop-design:jar::3.1.1");
+
+        assertThat(parse("eu.europa.ec.joinup.sat:jdplus*"))
+                .returns("eu.europa.ec.joinup.sat", Artifact::getGroupId)
+                .returns("jdplus*", Artifact::getArtifactId)
+                .returns("", Artifact::getType)
+                .returns("", Artifact::getClassifier)
+                .returns("", Artifact::getVersion)
+                .hasToString("eu.europa.ec.joinup.sat:jdplus*:::");
     }
 }

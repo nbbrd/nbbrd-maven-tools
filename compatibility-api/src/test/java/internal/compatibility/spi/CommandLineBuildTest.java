@@ -1,5 +1,6 @@
 package internal.compatibility.spi;
 
+import internal.compatibility.Files2;
 import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import tests.compatibility.Examples;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -194,7 +194,7 @@ class CommandLineBuildTest {
 
     private static Path copy(Path tmp, Path project) throws IOException {
         Path target = tmp.resolve("project");
-        Examples.copyFolder(project, target);
+        Files2.copyRecursively(project, target);
         return target;
     }
 
