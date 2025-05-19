@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-05-19
+
 ### Fixed
 
 - Fix concurrent access to local project
@@ -24,6 +26,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/develop...v1.0.0
