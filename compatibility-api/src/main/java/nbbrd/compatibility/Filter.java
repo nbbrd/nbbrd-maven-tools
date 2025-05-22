@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.time.LocalDate;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -55,7 +56,7 @@ public class Filter {
         return result;
     }
 
-    public static @NonNull LocalDate parseLocalDate(@NonNull CharSequence input) {
+    public static @NonNull LocalDate parseLocalDate(@NonNull CharSequence input) throws DateTimeParseException {
         try {
             return Year.parse(input).atDay(1);
         } catch (Exception ex1) {

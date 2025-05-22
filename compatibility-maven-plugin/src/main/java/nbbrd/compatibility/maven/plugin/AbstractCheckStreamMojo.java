@@ -1,6 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
-import internal.compatibility.maven.plugin.ParameterParsing;
+import internal.compatibility.maven.plugin.MojoParameterParsing;
 import lombok.NonNull;
 import nbbrd.compatibility.*;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -28,12 +28,12 @@ abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
     @Parameter(property = "compatibility.reportFile", defaultValue = "${project.build.directory}/report.md")
     private File reportFile;
 
-    @ParameterParsing
+    @MojoParameterParsing
     protected @NonNull Path toJobFile() {
         return Paths.get(fixUnresolvedProperties(jobFile.toURI()));
     }
 
-    @ParameterParsing
+    @MojoParameterParsing
     protected @NonNull Path toReportFile() {
         return Paths.get(fixUnresolvedProperties(reportFile.toURI()));
     }
