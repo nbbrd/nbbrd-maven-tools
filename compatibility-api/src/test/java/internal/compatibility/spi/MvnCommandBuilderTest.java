@@ -14,7 +14,7 @@ class MvnCommandBuilderTest {
     void test() {
         assertThat(new MvnCommandBuilder().build())
                 .extracting(TextCommand::getCommands, list(String.class))
-                .containsExactly(MvnCommandBuilder.getDefaultBinary());
+                .containsExactly(MvnCommandBuilder.getDefaultBinary().toString());
 
         assertThat(new MvnCommandBuilder()
                 .binary(Paths.get("hello"))
