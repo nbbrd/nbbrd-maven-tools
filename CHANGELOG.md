@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix retrieval of artifact version when using wildcards
+
 ## [1.0.2] - 2025-05-19
 
 ### Fixed

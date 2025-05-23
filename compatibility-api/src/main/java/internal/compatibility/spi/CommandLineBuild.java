@@ -96,24 +96,20 @@ public final class CommandLineBuild implements Build {
     public @Nullable Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException {
         try (TempPath list = TempPath.of(Files.createTempFile("list", ".txt"))) {
             // https://maven.apache.org/plugins/maven-dependency-plugin/collect-mojo.html
-            MvnCommandBuilder command = mvnOf(project)
+            mvnOf(project)
                     .goal("dependency:LATEST:collect")
                     .define("includeScope", "compile")
                     .define("mdep.outputScope", "false")
                     .define("excludeTransitive")
                     .define("outputFile", list.toString())
-                    .define("appendOutput");
-            if (!artifact.getGroupId().isEmpty()) command.define("includeGroupIds", artifact.getGroupId());
-            if (!artifact.getArtifactId().isEmpty()) command.define("includeArtifactIds", artifact.getArtifactId());
-            if (!artifact.getClassifier().isEmpty()) command.define("includeClassifiers", artifact.getClassifier());
-            if (!artifact.getType().isEmpty()) command.define("includeTypes", artifact.getType());
-            command
+                    .define("appendOutput")
                     .build()
                     .collect(consuming(), onEvent);
 
             return TextParser.onParsingLines(CommandLineBuild::parseDependencyList)
                     .parsePath(list.getPath(), UTF_8)
                     .stream()
+                    .filter(artifact.toFilter())
                     .map(Artifact::getVersion)
                     .map(Version::parse)
                     .distinct()
