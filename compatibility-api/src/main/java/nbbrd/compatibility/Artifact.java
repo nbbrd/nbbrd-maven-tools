@@ -83,6 +83,7 @@ public class Artifact {
         if (pattern.isEmpty() || pattern.equals("*")) return ignore -> true;
         if (!pattern.contains("*")) return value -> value.equals(pattern);
         String regex = Stream.of(pattern.split(Pattern.quote("*"), -1))
+                .map(Pattern::quote)
                 .collect(joining(".*", "^", "$"));
         return Pattern.compile(regex).asPredicate();
     }
