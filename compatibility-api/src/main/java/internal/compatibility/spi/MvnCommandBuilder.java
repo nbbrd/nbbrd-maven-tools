@@ -5,6 +5,7 @@ import nbbrd.design.VisibleForTesting;
 import nbbrd.io.sys.OS;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,7 +62,7 @@ final class MvnCommandBuilder {
 
     public TextCommand build() {
         TextCommand.Builder result = TextCommand.builder();
-        result.command(binary != null ? binary.toString() : getDefaultBinary());
+        result.command((binary != null ? binary : getDefaultBinary()).toString());
         if (quiet) result.command("-q");
         if (batchMode) result.command("-B");
         if (updateSnapshots) result.command("-U");
@@ -72,7 +73,9 @@ final class MvnCommandBuilder {
     }
 
     @VisibleForTesting
-    static String getDefaultBinary() {
-        return OS.NAME.equals(OS.Name.WINDOWS) ? "mvn.cmd" : "mvn";
+    static Path getDefaultBinary() {
+        String mavenHome = System.getenv("MAVEN_HOME");
+        Path binaryName = Paths.get(OS.NAME.equals(OS.Name.WINDOWS) ? "mvn.cmd" : "mvn");
+        return mavenHome != null ? Paths.get(mavenHome).resolve("bin").resolve(binaryName) : binaryName;
     }
 }

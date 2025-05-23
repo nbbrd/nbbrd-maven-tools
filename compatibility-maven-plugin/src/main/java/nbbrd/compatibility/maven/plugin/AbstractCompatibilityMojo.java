@@ -1,6 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
-import internal.compatibility.maven.plugin.ParameterParsing;
+import internal.compatibility.maven.plugin.MojoParameterParsing;
 import lombok.NonNull;
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
@@ -32,7 +32,7 @@ abstract class AbstractCompatibilityMojo extends AbstractMojo {
     @Parameter(property = "compatibility.workingDir", defaultValue = "${java.io.tmpdir}")
     private File workingDir;
 
-    @ParameterParsing
+    @MojoParameterParsing
     protected @NonNull Compatibility toCompatibility() {
         return Compatibility.ofServiceLoader()
                 .toBuilder()
@@ -42,7 +42,7 @@ abstract class AbstractCompatibilityMojo extends AbstractMojo {
                 .build();
     }
 
-    @ParameterParsing
+    @MojoParameterParsing
     protected @NonNull Path toWorkingDir() {
         return workingDir.toPath();
     }

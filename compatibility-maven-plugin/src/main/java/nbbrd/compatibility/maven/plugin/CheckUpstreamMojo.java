@@ -1,6 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
-import internal.compatibility.maven.plugin.ParameterParsing;
+import internal.compatibility.maven.plugin.MojoParameterParsing;
 import nbbrd.compatibility.Job;
 import nbbrd.compatibility.Source;
 import nbbrd.compatibility.Target;
@@ -56,7 +56,7 @@ public final class CheckUpstreamMojo extends AbstractCheckStreamMojo {
     @Parameter(property = "compatibility.targetLimit", defaultValue = NO_LIMIT)
     private int targetLimit;
 
-    @ParameterParsing
+    @MojoParameterParsing
     private Job toJob() throws MojoExecutionException {
         return Job
                 .builder()
@@ -65,7 +65,7 @@ public final class CheckUpstreamMojo extends AbstractCheckStreamMojo {
                 .build();
     }
 
-    @ParameterParsing
+    @MojoParameterParsing
     private List<Source> toSources() throws MojoExecutionException {
         int size = sources.size();
 
@@ -97,7 +97,7 @@ public final class CheckUpstreamMojo extends AbstractCheckStreamMojo {
         return result;
     }
 
-    @ParameterParsing
+    @MojoParameterParsing
     private Target toTarget() throws MojoExecutionException {
         return Target
                 .builder()

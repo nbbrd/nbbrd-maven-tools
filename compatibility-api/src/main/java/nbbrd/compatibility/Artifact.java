@@ -4,6 +4,12 @@ import lombok.NonNull;
 import nbbrd.design.RepresentableAsString;
 import nbbrd.design.StaticFactoryMethod;
 
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
+
 /**
  * Pattern: groupId:artifactId:type:classifier:version
  */
@@ -57,5 +63,28 @@ public class Artifact {
     @Override
     public String toString() {
         return groupId + ":" + artifactId + ":" + type + ":" + classifier + ":" + version;
+    }
+
+    public Predicate<Artifact> toFilter() {
+        Predicate<String> groupIdFilter = getFilter(groupId);
+        Predicate<String> artifactIdFilter = getFilter(artifactId);
+        Predicate<String> typeFilter = getFilter(type);
+        Predicate<String> classifierFilter = getFilter(classifier);
+        Predicate<String> versionFilter = getFilter(version);
+        return artifact ->
+                groupIdFilter.test(artifact.getGroupId())
+                        && artifactIdFilter.test(artifact.getArtifactId())
+                        && typeFilter.test(artifact.getType())
+                        && classifierFilter.test(artifact.getClassifier())
+                        && versionFilter.test(artifact.getVersion());
+    }
+
+    private static Predicate<String> getFilter(String pattern) {
+        if (pattern.isEmpty() || pattern.equals("*")) return ignore -> true;
+        if (!pattern.contains("*")) return value -> value.equals(pattern);
+        String regex = Stream.of(pattern.split(Pattern.quote("*"), -1))
+                .map(Pattern::quote)
+                .collect(joining(".*", "^", "$"));
+        return Pattern.compile(regex).asPredicate();
     }
 }

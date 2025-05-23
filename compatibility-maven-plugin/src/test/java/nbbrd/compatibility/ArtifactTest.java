@@ -29,4 +29,12 @@ class ArtifactTest {
                 .returns("", Artifact::getVersion)
                 .hasToString("eu.europa.ec.joinup.sat:jdplus*:::");
     }
+
+    @Test
+    void testToFilter() {
+        assertThat(parse("eu.europa.ec.joinup.sat:jdplus*-desktop-*").toFilter())
+                .accepts(parse("eu.europa.ec.joinup.sat:jdplus-desktop-"))
+                .accepts(parse("eu.europa.ec.joinup.sat:jdplus-main-desktop-design"))
+                .rejects(parse("eu.europa.ec.joinup.sat:jdplus-desktop"));
+    }
 }

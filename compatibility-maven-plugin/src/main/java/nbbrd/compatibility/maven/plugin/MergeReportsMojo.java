@@ -1,7 +1,7 @@
 package nbbrd.compatibility.maven.plugin;
 
 import internal.compatibility.Files2;
-import internal.compatibility.maven.plugin.ParameterParsing;
+import internal.compatibility.maven.plugin.MojoParameterParsing;
 import lombok.NonNull;
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Report;
@@ -34,12 +34,12 @@ public final class MergeReportsMojo extends AbstractCompatibilityMojo {
     @Parameter(property = "compatibility.reportFile", defaultValue = "${project.build.directory}/compatibility.md")
     private File reportFile;
 
-    @ParameterParsing
+    @MojoParameterParsing
     private List<Path> toReports() {
         return reports.stream().map(File::toPath).collect(toList());
     }
 
-    @ParameterParsing
+    @MojoParameterParsing
     private @NonNull Path toReportFile() {
         return Paths.get(fixUnresolvedProperties(reportFile.toURI()));
     }

@@ -97,10 +97,23 @@ class CommandLineBuildTest {
         Path project = copy(tmp, targetProject);
         List<String> events = new ArrayList<>();
         try (CommandLineBuild x = getBuild(events::add)) {
+            events.clear();
             assertThat(x.getArtifactVersion(project, Artifact.parse("test:source-project")))
                     .hasToString("3.0.0");
+
+            events.clear();
+            assertThat(x.getArtifactVersion(project, Artifact.parse(":source-project")))
+                    .hasToString("3.0.0");
+
+            events.clear();
+            assertThat(x.getArtifactVersion(project, Artifact.parse("test:source-*")))
+                    .hasToString("3.0.0");
+
+            events.clear();
+            assertThat(x.getArtifactVersion(project, Artifact.parse("test:source-")))
+                    .isNull();
         } catch (IOException ex) {
-            fail(events.stream().map(event -> "[EVENT] " + event).collect(joining(lineSeparator())), ex);
+            fail(getFailureMessage(events), ex);
         }
     }
 
@@ -109,10 +122,27 @@ class CommandLineBuildTest {
         Path project = copy(tmp, targetProject);
         List<String> events = new ArrayList<>();
         try (CommandLineBuild x = getBuild(events::add)) {
+            events.clear();
             assertThat(x.getArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv")))
                     .hasToString("2.5.1");
+
+            events.clear();
+            assertThat(x.getArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv:picocsv")))
+                    .hasToString("2.5.1");
+
+            events.clear();
+            assertThat(x.getArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv:pico*")))
+                    .hasToString("2.5.1");
+
+            events.clear();
+            assertThat(x.getArtifactVersion(project, Artifact.parse(":picocsv")))
+                    .hasToString("2.5.1");
+
+            events.clear();
+            assertThat(x.getArtifactVersion(project, Artifact.parse("com.github.nbbrd.picocsv:pico")))
+                    .isNull();
         } catch (IOException ex) {
-            fail(events.stream().map(event -> "[EVENT] " + event).collect(joining(lineSeparator())), ex);
+            fail(getFailureMessage(events), ex);
         }
     }
 
@@ -203,5 +233,9 @@ class CommandLineBuildTest {
     }
 
     private static void doNothing(Object ignore) {
+    }
+
+    private static String getFailureMessage(List<String> events) {
+        return events.stream().map(event -> "[EVENT] " + event).collect(joining(lineSeparator()));
     }
 }

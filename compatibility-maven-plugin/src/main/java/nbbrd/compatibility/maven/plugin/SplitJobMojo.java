@@ -1,6 +1,6 @@
 package nbbrd.compatibility.maven.plugin;
 
-import internal.compatibility.maven.plugin.ParameterParsing;
+import internal.compatibility.maven.plugin.MojoParameterParsing;
 import nbbrd.compatibility.Compatibility;
 import nbbrd.compatibility.Job;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -23,7 +23,7 @@ public final class SplitJobMojo extends AbstractCompatibilityMojo {
     @Parameter(property = "compatibility.jobFile", defaultValue = "${project.build.directory}/job.json")
     private File jobFile;
 
-    @ParameterParsing
+    @MojoParameterParsing
     private Path toJobFile() {
         return Paths.get(fixUnresolvedProperties(jobFile.toURI()));
     }
