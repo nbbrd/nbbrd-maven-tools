@@ -8,7 +8,6 @@ import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.MightBePromoted;
 import nbbrd.design.VisibleForTesting;
-import nbbrd.io.sys.EndOfProcessException;
 import nbbrd.io.text.TextParser;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -23,6 +22,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static internal.compatibility.spi.MvnCommandBuilder.FailStrategy.FAIL_NEVER;
+import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.*;
 
@@ -62,21 +63,18 @@ public final class CommandLineBuild implements Build {
     }
 
     @Override
-    public int verify(@NonNull Path project) throws IOException {
-        try {
-            // https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
-            mvnOf(project)
-                    .goal("clean")
-                    .goal("verify")
-                    .updateSnapshots()
-                    .define("skipTests")
-                    .define("enforcer.skip")
-                    .build()
-                    .collect(toLast(), onEvent);
-            return 0;
-        } catch (EndOfProcessException ex) {
-            return ex.getExitValue();
-        }
+    public @Nullable String verify(@NonNull Path project) throws IOException {
+        // https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
+        String errorMessage = mvnOf(project)
+                .goal("clean")
+                .goal("verify")
+                .updateSnapshots()
+                .failStrategy(FAIL_NEVER)
+                .define("skipTests")
+                .define("enforcer.skip")
+                .build()
+                .collect(joining(lineSeparator()), onEvent);
+        return !errorMessage.isEmpty() ? errorMessage : null;
     }
 
     @Override

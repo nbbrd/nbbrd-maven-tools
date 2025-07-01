@@ -100,14 +100,11 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
-        public int verify(@NonNull Path project) throws IOException {
+        public @Nullable String verify(@NonNull Path project) throws IOException {
             MockedStatus status = checkAvailability(stuff.get(loadProjectId(project)));
             Semver original = new Semver(status.getOriginal().getValue());
             Semver modified = new Semver(status.getModified().getValue());
-            if (original.isGreaterThan(modified) || !original.isApiCompatible(modified)) {
-                return 1;
-            }
-            return 0;
+            return original.isGreaterThan(modified) || !original.isApiCompatible(modified) ? "boom" : null;
         }
 
         private void setProperty(@NonNull Path project, @NonNull String propertyName, String propertyValue) throws IOException {

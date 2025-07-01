@@ -14,7 +14,7 @@ class MvnCommandBuilderTest {
     void test() {
         assertThat(new MvnCommandBuilder().build())
                 .extracting(TextCommand::getCommands, list(String.class))
-                .containsExactly(MvnCommandBuilder.getDefaultBinary().toString());
+                .containsExactly(MvnCommandBuilder.getDefaultBinary().toString(), "-ff");
 
         assertThat(new MvnCommandBuilder()
                 .binary(Paths.get("hello"))
@@ -27,6 +27,6 @@ class MvnCommandBuilderTest {
                 .define("enforcer.skip")
                 .build())
                 .extracting(TextCommand::getCommands, list(String.class))
-                .containsExactly("hello", "-q", "-U", "-f", "workingDir", "clean", "verify", "-D", "\"skipTests\"", "-D", "\"enforcer.skip\"");
+                .containsExactly("hello", "-q", "-U", "-f", "workingDir", "-ff", "clean", "verify", "-D", "\"skipTests\"", "-D", "\"enforcer.skip\"");
     }
 }

@@ -21,7 +21,7 @@ class TextCommand {
     @lombok.Builder.Default
     Charset charset = StandardCharsets.UTF_8;
 
-    public <X> X collect(@NonNull Collector<String, ?, X> collector, @NonNull Consumer<? super String> consumer) throws IOException {
+    public <X> X collect(@NonNull Collector<? super String, ?, X> collector, @NonNull Consumer<? super String> consumer) throws IOException {
         consumer.accept(String.join(" ", commands));
         return TextParser.onParsingLines(collector).parseProcess(commands, charset);
     }

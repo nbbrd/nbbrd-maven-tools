@@ -151,7 +151,7 @@ public class Compatibility {
         }
         if (!isSkip(source.getVersioning(), source.getBroker().getVersion(build, project), sourceVersion.getVersion())) {
             source.getBroker().setVersion(build, project, sourceVersion.getVersion());
-            result.exitStatus(build.verify(project) == 0 ? ExitStatus.VERIFIED : ExitStatus.BROKEN);
+            result.exitStatus(build.verify(project) == null ? ExitStatus.VERIFIED : ExitStatus.BROKEN);
             build.clean(project);
         } else {
             result.exitStatus(ExitStatus.SKIPPED);

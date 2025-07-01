@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Add parsing of error messages in Maven verify command
+
 ## [1.0.3] - 2025-05-23
 
 ### Fixed

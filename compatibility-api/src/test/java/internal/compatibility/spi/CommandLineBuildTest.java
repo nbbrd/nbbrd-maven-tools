@@ -74,12 +74,10 @@ class CommandLineBuildTest {
     void verify(@TempDir Path tmp) throws IOException {
         Path project = copy(tmp, sourceProject);
         try (CommandLineBuild x = getBuild(IGNORE_EVENT)) {
-            assertThat(x.verify(project))
-                    .isEqualTo(0);
+            assertThat(x.verify(project)).isNull();
 
             Files.delete(project.resolve("pom.xml"));
-            assertThat(x.verify(project))
-                    .isEqualTo(1);
+            assertThat(x.verify(project)).contains("Non-readable POM");
         }
     }
 
