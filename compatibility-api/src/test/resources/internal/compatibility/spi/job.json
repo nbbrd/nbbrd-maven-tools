@@ -14,7 +14,8 @@
       "uri": "hello:target",
       "filter": {
         "limit": -1
-      }
+      },
+      "logErrors": false
     }
   ]
 }

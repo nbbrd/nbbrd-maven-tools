@@ -103,6 +103,7 @@ public final class CheckUpstreamMojo extends AbstractCheckStreamMojo {
                 .builder()
                 .uri(requireNonNull(target, "Target URI must not be null"))
                 .filter(parserFilter(targetRef, targetFrom, targetTo, targetLimit))
+                .logErrors(isLogErrors())
                 .build();
     }
 

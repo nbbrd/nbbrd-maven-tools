@@ -61,6 +61,7 @@ abstract class AbstractCompatibilityMojo extends AbstractMojo {
             log.info("  Target:");
             log.info("           URI: " + target.getUri());
             log.info("        Filter: " + target.getFilter());
+            log.info("        Errors: " + target.isLogErrors());
         });
     }
 

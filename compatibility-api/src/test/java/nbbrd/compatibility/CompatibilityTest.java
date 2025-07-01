@@ -113,9 +113,12 @@ class CompatibilityTest {
 
         assertThat(x.check(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(localTarget, localOf("1.0.2")).build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(localTarget, localOf("1.0.2")).build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("3.0.0")).target(localTarget, localOf("1.0.2")).build()
+                        ReportItem.builder().exitStatus(SKIPPED).exitMessage("Skipping check: source version 3.0.0 is newer than target version 2.3.4")
+                                .source(remoteSource, remoteOf("2.3.4")).target(localTarget, localOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).exitMessage("Skipping check: source version 3.0.0 is newer than target version 2.4.0")
+                                .source(remoteSource, remoteOf("2.4.0")).target(localTarget, localOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED)
+                                .source(remoteSource, remoteOf("3.0.0")).target(localTarget, localOf("1.0.2")).build()
                 );
 
         assertThat(workingDir).isEmptyDirectory();
@@ -145,15 +148,24 @@ class CompatibilityTest {
 
         assertThat(x.check(job).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.0")).build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.1")).build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.2")).build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.0")).build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.1")).build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build(),
-                        ReportItem.builder().exitStatus(BROKEN).source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.0")).build(),
-                        ReportItem.builder().exitStatus(BROKEN).source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.1")).build(),
-                        ReportItem.builder().exitStatus(VERIFIED).source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.2")).build()
+                        ReportItem.builder().exitStatus(VERIFIED)
+                                .source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.0")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).exitMessage("Skipping check: source version 2.4.0 is newer than target version 2.3.4")
+                                .source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.1")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).exitMessage("Skipping check: source version 3.0.0 is newer than target version 2.3.4")
+                                .source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED)
+                                .source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.0")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED)
+                                .source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.1")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).exitMessage("Skipping check: source version 3.0.0 is newer than target version 2.4.0")
+                                .source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(BROKEN)
+                                .source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.0")).build(),
+                        ReportItem.builder().exitStatus(BROKEN)
+                                .source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.1")).build(),
+                        ReportItem.builder().exitStatus(VERIFIED)
+                                .source(remoteSource, remoteOf("3.0.0")).target(remoteTarget, remoteOf("1.0.2")).build()
                 );
 
         Job jobWithFilter = Job
@@ -174,8 +186,10 @@ class CompatibilityTest {
 
         assertThat(x.check(jobWithFilter).getItems())
                 .containsExactly(
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.2")).build(),
-                        ReportItem.builder().exitStatus(SKIPPED).source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build()
+                        ReportItem.builder().exitStatus(SKIPPED).exitMessage("Skipping check: source version 3.0.0 is newer than target version 2.3.4")
+                                .source(remoteSource, remoteOf("2.3.4")).target(remoteTarget, remoteOf("1.0.2")).build(),
+                        ReportItem.builder().exitStatus(SKIPPED).exitMessage("Skipping check: source version 3.0.0 is newer than target version 2.4.0")
+                                .source(remoteSource, remoteOf("2.4.0")).target(remoteTarget, remoteOf("1.0.2")).build()
                 );
 
         assertThat(workingDir).isEmptyDirectory();
