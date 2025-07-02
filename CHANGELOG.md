@@ -12,6 +12,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Add parsing of error messages in Maven verify command
 - Add option to log errors [#34](https://github.com/nbbrd/nbbrd-maven-tools/issues/34)
 
+### Changed
+
+- Migrate OSSRH to Central Portal
+
 ## [1.0.3] - 2025-05-23
 
 ### Fixed
