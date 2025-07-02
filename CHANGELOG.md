@@ -7,6 +7,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-07-02
+
+### Added
+
+- Add parsing of error messages in Maven verify command
+- Add option to log errors [#34](https://github.com/nbbrd/nbbrd-maven-tools/issues/34)
+
+### Changed
+
+- Migrate OSSRH to Central Portal
+
 ## [1.0.3] - 2025-05-23
 
 ### Fixed
@@ -32,7 +43,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.0...v1.0.1

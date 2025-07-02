@@ -1,8 +1,10 @@
 package internal.compatibility.spi;
 
+import lombok.NonNull;
 import nbbrd.design.BuilderPattern;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.sys.OS;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,15 +14,18 @@ import java.util.List;
 @BuilderPattern(TextCommand.class)
 final class MvnCommandBuilder {
 
-    private Path binary = null;
+    public enum FailStrategy {FAIL_AT_END, FAIL_FAST, FAIL_NEVER}
+
+    private @Nullable Path binary = null;
     private boolean quiet = false;
     private boolean batchMode = false;
     private boolean updateSnapshots = false;
-    private Path file = null;
+    private @Nullable Path file = null;
+    private @NonNull FailStrategy failStrategy = FailStrategy.FAIL_FAST;
     private final List<String> goals = new ArrayList<>();
     private final List<String> userProperties = new ArrayList<>();
 
-    public MvnCommandBuilder binary(Path binary) {
+    public MvnCommandBuilder binary(@Nullable Path binary) {
         this.binary = binary;
         return this;
     }
@@ -40,12 +45,17 @@ final class MvnCommandBuilder {
         return this;
     }
 
-    public MvnCommandBuilder file(Path file) {
+    public MvnCommandBuilder file(@Nullable Path file) {
         this.file = file;
         return this;
     }
 
-    public MvnCommandBuilder goal(String goal) {
+    public MvnCommandBuilder failStrategy(@NonNull FailStrategy failStrategy) {
+        this.failStrategy = failStrategy;
+        return this;
+    }
+
+    public MvnCommandBuilder goal(@NonNull String goal) {
         this.goals.add(goal);
         return this;
     }
@@ -67,6 +77,17 @@ final class MvnCommandBuilder {
         if (batchMode) result.command("-B");
         if (updateSnapshots) result.command("-U");
         if (file != null) result.command("-f").command(file.toString());
+        switch (failStrategy) {
+            case FAIL_AT_END:
+                result.command("-fae");
+                break;
+            case FAIL_FAST:
+                result.command("-ff");
+                break;
+            case FAIL_NEVER:
+                result.command("-fn");
+                break;
+        }
         result.commands(goals);
         userProperties.forEach(userProperty -> result.command("-D").command("\"" + userProperty + "\""));
         return result.build();

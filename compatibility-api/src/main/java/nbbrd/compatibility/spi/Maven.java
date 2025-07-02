@@ -12,7 +12,8 @@ public interface Maven {
 
     void clean(@NonNull Path project) throws IOException;
 
-    int verify(@NonNull Path project) throws IOException;
+    @Nullable
+    String verify(@NonNull Path project) throws IOException;
 
     @NonNull
     Version getProjectVersion(@NonNull Path project) throws IOException;

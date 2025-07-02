@@ -12,4 +12,6 @@ public class Target implements Project {
     @lombok.NonNull
     @lombok.Builder.Default
     Filter filter = Filter.DEFAULT;
+
+    boolean logErrors;
 }

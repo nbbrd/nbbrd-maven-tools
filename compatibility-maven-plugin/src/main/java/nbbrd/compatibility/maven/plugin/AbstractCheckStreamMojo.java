@@ -22,11 +22,14 @@ abstract class AbstractCheckStreamMojo extends AbstractCompatibilityMojo {
     @Parameter(property = "compatibility.jobFile", defaultValue = "${project.build.directory}/job.json")
     private File jobFile;
 
-    @Parameter(property = "compatibility.dryRun")
+    @Parameter(property = "compatibility.dryRun", defaultValue = "false")
     private boolean dryRun;
 
     @Parameter(property = "compatibility.reportFile", defaultValue = "${project.build.directory}/report.md")
     private File reportFile;
+
+    @Parameter(property = "compatibility.logErrors", defaultValue = "false")
+    private boolean logErrors;
 
     @MojoParameterParsing
     protected @NonNull Path toJobFile() {

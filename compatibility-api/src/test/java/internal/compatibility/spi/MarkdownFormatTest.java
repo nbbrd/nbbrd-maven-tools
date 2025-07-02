@@ -54,8 +54,8 @@ class MarkdownFormatTest {
                 .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.0")).build())
                 .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.1")).build())
                 .item(ReportItem.builder().exitStatus(SKIPPED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.2")).build())
-                .item(ReportItem.builder().exitStatus(BROKEN).source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.0")).build())
-                .item(ReportItem.builder().exitStatus(BROKEN).source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.1")).build())
+                .item(ReportItem.builder().exitStatus(BROKEN).exitMessage("boom").source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.0")).build())
+                .item(ReportItem.builder().exitStatus(BROKEN).exitMessage("boom").source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.1")).build())
                 .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.2")).build())
                 .build();
 

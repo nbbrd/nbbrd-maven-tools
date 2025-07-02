@@ -20,6 +20,8 @@ public class TargetContext implements ProjectContext {
     @lombok.Singular
     List<RefVersion> versions;
 
+    boolean logErrors;
+
     public static final class Builder implements ProjectContext.Builder<Builder> {
     }
 }

@@ -99,6 +99,7 @@ public final class CheckDownstreamMojo extends AbstractCheckStreamMojo {
                             hasItems(targetFroms) ? targetFroms.get(i) : null,
                             hasItems(targetTos) ? targetTos.get(i) : null,
                             hasItems(targetLimits) ? targetLimits.get(i) : -1))
+                    .logErrors(isLogErrors())
                     .build());
         }
         return result;

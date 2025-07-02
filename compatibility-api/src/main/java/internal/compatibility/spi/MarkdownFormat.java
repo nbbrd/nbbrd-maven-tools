@@ -106,10 +106,27 @@ public final class MarkdownFormat implements Format {
             }
             appendable.append(lineSeparator()).append(Stream.concat(
                     Stream.of(padRight(label, sizes[0]), padRight(versionLabel, sizes[1])),
-                    IntStream.range(0, matrix.body[i].length).mapToObj(j -> padRight(emoji(matrix.body[i][j], important), sizes[j + 2]))
+                    IntStream.range(0, matrix.body[i].length).mapToObj(j -> padRight(emoji(matrix.body[i][j].status, important), sizes[j + 2]))
             ).collect(toRow));
         }
         appendable.append(lineSeparator()).append(lineSeparator());
+        for (int i = 0; i < bound; i++) {
+            for (int j = 0; j < matrix.body[i].length; j++) {
+                String msg = matrix.body[i][j].message;
+                if (msg != null && !msg.isEmpty()) {
+                    appendable.append("<details><summary>")
+                            .append(matrix.rows.get(i).toProjectLabel())
+                            .append(" @ ")
+                            .append(matrix.rows.get(i).toVersionLabel())
+                            .append(" -> ")
+                            .append(matrix.columns.get(j).toVersionLabel())
+                            .append("</summary>")
+                            .append(msg)
+                            .append("</details>")
+                            .append(lineSeparator());
+                }
+            }
+        }
     }
 
     private static String emoji(ExitStatus exitStatus, boolean important) {
@@ -167,6 +184,12 @@ public final class MarkdownFormat implements Format {
     }
 
     @lombok.Value
+    private static class Cell {
+        ExitStatus status;
+        String message;
+    }
+
+    @lombok.Value
     @lombok.Builder
     private static class Matrix {
 
@@ -177,15 +200,15 @@ public final class MarkdownFormat implements Format {
         List<Header> columns;
 
         @NonNull
-        ExitStatus[][] body;
+        Cell[][] body;
 
         public static Matrix of(URI sourceUri, List<ReportItem> items) {
-            Map<URI, Map<RefVersion, Map<RefVersion, ExitStatus>>> plugins = items
+            Map<URI, Map<RefVersion, Map<RefVersion, Cell>>> plugins = items
                     .stream()
                     .collect(
                             groupingBy(ReportItem::getTargetUri, LinkedHashMap::new,
                                     groupingBy(ReportItem::getTargetVersion, LinkedHashMap::new,
-                                            toMap(ReportItem::getSourceVersion, ReportItem::getExitStatus)))
+                                            toMap(ReportItem::getSourceVersion, item -> new Cell(item.getExitStatus(), item.getExitMessage()))))
                     );
 
             Set<RefVersion> versions = items
@@ -202,8 +225,8 @@ public final class MarkdownFormat implements Format {
                             .map(version -> new Header(sourceUri, version))
                             .collect(toList()))
                     .body(plugins.values().stream()
-                            .flatMap(reports -> reports.values().stream().map(z -> versions.stream().map(z::get).map(value -> value != null ? value : ExitStatus.SKIPPED).toArray(ExitStatus[]::new)))
-                            .toArray(ExitStatus[][]::new))
+                            .flatMap(reports -> reports.values().stream().map(z -> versions.stream().map(z::get).map(value -> value != null ? value : new Cell(ExitStatus.SKIPPED, null)).toArray(Cell[]::new)))
+                            .toArray(Cell[][]::new))
                     .build();
         }
     }

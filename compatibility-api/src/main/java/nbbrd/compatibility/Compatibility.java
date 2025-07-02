@@ -25,6 +25,7 @@ import static java.lang.String.format;
 import static java.util.Locale.ROOT;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import static nbbrd.compatibility.ExitStatus.*;
 
 @lombok.Value
 @lombok.Builder(toBuilder = true)
@@ -109,6 +110,7 @@ public class Compatibility {
         return TargetContext
                 .builder()
                 .init(target, local, workingDir, build)
+                .logErrors(target.isLogErrors())
                 .build();
     }
 
@@ -149,12 +151,19 @@ public class Compatibility {
         if (targetVersion.requiresCheckout()) {
             build.checkoutTag(project, targetVersion.getRef());
         }
-        if (!isSkip(source.getVersioning(), source.getBroker().getVersion(build, project), sourceVersion.getVersion())) {
-            source.getBroker().setVersion(build, project, sourceVersion.getVersion());
-            result.exitStatus(build.verify(project) == 0 ? ExitStatus.VERIFIED : ExitStatus.BROKEN);
+        Version from = source.getBroker().getVersion(build, project);
+        Version to = sourceVersion.getVersion();
+        if (!isSkip(source.getVersioning(), from, to)) {
+            source.getBroker().setVersion(build, project, to);
+            String errorMessage = build.verify(project);
+            if (errorMessage == null) {
+                result.exitStatus(VERIFIED);
+            } else {
+                result.exitStatus(BROKEN).exitMessage(target.isLogErrors() ? errorMessage : null);
+            }
             build.clean(project);
         } else {
-            result.exitStatus(ExitStatus.SKIPPED);
+            result.exitStatus(SKIPPED).exitMessage(format(ROOT, "Skipping check: source version %s is newer than target version %s", from, to));
         }
         if (targetVersion.requiresCheckout()) {
             build.restore(project);

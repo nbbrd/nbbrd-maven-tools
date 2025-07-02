@@ -44,10 +44,14 @@ class AbstractCompatibilityMojoTest {
         assertThat(json).hasSameTextualContentAs(resolveResource(AbstractCompatibilityMojoTest.class, "r1.json"));
     }
 
-    static final ReportItem SDMX_320 = ReportItem.builder().exitStatus(VERIFIED).source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("3.2.0")).build();
-    static final ReportItem SDMX_330 = ReportItem.builder().exitStatus(VERIFIED).source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("3.3.0")).build();
-    static final ReportItem NOWCASTING_102 = ReportItem.builder().exitStatus(VERIFIED).source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/jdemetra/jdplus-nowcasting"), remoteOf("1.0.2")).build();
-    static final ReportItem NOWCASTING_200 = ReportItem.builder().exitStatus(VERIFIED).source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/jdemetra/jdplus-nowcasting"), remoteOf("2.0.0")).build();
+    static final ReportItem SDMX_320 = ReportItem.builder().exitStatus(VERIFIED)
+            .source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("3.2.0")).build();
+    static final ReportItem SDMX_330 = ReportItem.builder().exitStatus(VERIFIED)
+            .source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/nbbrd/jdplus-sdmx"), remoteOf("3.3.0")).build();
+    static final ReportItem NOWCASTING_102 = ReportItem.builder().exitStatus(VERIFIED)
+            .source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/jdemetra/jdplus-nowcasting"), remoteOf("1.0.2")).build();
+    static final ReportItem NOWCASTING_200 = ReportItem.builder().exitStatus(VERIFIED)
+            .source(URI.create("https://github.com/jdemetra/jdplus-main"), remoteOf("3.4.0")).target(URI.create("https://github.com/jdemetra/jdplus-nowcasting"), remoteOf("2.0.0")).build();
 
     static Path resolveResource(Class<?> anchor, String name) throws IOException {
         URL resource = anchor.getResource(name);

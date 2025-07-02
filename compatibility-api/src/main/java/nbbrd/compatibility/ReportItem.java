@@ -1,6 +1,7 @@
 package nbbrd.compatibility;
 
 import lombok.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.URI;
 
@@ -10,6 +11,9 @@ public class ReportItem {
 
     @lombok.NonNull
     ExitStatus exitStatus;
+
+    @Nullable
+    String exitMessage;
 
     @lombok.NonNull
     URI sourceUri;
