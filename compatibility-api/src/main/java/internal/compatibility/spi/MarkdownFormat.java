@@ -121,7 +121,10 @@ public final class MarkdownFormat implements Format {
                             .append(" -> ")
                             .append(matrix.columns.get(j).toVersionLabel())
                             .append("</summary>")
+                            .append(lineSeparator())
+                            .append(lineSeparator()).append("```").append(lineSeparator())
                             .append(msg)
+                            .append(lineSeparator()).append("```").append(lineSeparator())
                             .append("</details>")
                             .append(lineSeparator());
                 }

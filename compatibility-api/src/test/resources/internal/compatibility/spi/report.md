@@ -6,5 +6,15 @@ Compatibility matrix for **src**
 |     | v1.0.1     |        | ✅      | ❌      |
 |     | **v1.0.2** |        |        | ✅      |
 
-<details><summary>trg @ v1.0.0 -> v3.0.0</summary>boom</details>
-<details><summary>trg @ v1.0.1 -> v3.0.0</summary>boom</details>
+<details><summary>trg @ v1.0.0 -> v3.0.0</summary>
+
+```
+boom
+```
+</details>
+<details><summary>trg @ v1.0.1 -> v3.0.0</summary>
+
+```
+boom
+```
+</details>

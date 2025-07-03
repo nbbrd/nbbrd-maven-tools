@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix formatting of errors in markdown
+
 ## [1.1.0] - 2025-07-02
 
 ### Added
