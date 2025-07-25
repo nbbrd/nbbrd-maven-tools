@@ -9,7 +9,7 @@ import nbbrd.compatibility.spi.Build;
 import nbbrd.design.MightBePromoted;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.text.TextParser;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.URI;

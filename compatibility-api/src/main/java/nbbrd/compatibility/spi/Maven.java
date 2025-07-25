@@ -3,7 +3,7 @@ package nbbrd.compatibility.spi;
 import lombok.NonNull;
 import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Version;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Path;

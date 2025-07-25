@@ -4,7 +4,7 @@ import lombok.NonNull;
 import nbbrd.design.BuilderPattern;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.sys.OS;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

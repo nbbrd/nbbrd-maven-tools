@@ -9,7 +9,7 @@ import nbbrd.compatibility.spi.Build;
 import nbbrd.compatibility.spi.Builder;
 import nbbrd.io.text.TextFormatter;
 import nbbrd.io.text.TextParser;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.semver4j.Semver;
 
 import java.io.IOException;
