@@ -47,7 +47,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.0.0] - 2025-05-12
 
-Initial release.
+### Added
+
+- Initial release
 
 [Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.1...HEAD
 [1.1.1]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.0...v1.1.1
