@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.*;
 import static tests.compatibility.Examples.generateProject;
 import static tests.compatibility.Examples.resolveResource;
 
-@EnabledForJreRange(min = JRE.JAVA_17, disabledReason = "Use Java 17 in example projects")
+//@EnabledForJreRange(min = JRE.JAVA_17, disabledReason = "Use Java 17 in example projects")
 @Execution(ExecutionMode.CONCURRENT)
 class CommandLineBuildTest {
 
