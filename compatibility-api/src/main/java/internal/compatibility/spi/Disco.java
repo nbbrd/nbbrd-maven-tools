@@ -36,7 +36,10 @@ class Disco {
     private static Path getUnpackedJdkPath(Path workingDir) throws IOException {
         Path outputDir = workingDir.resolve("target").resolve("jdks").resolve("jdk");
         try (Stream<Path> files = Files.list(outputDir)) {
-            return files.findFirst().orElseThrow(() -> new IOException("Could not find any JDK files in " + outputDir));
+            return files
+                    .filter(Files::isDirectory)
+                    .findFirst()
+                    .orElseThrow(() -> new IOException("Could not find any JDK files in " + outputDir));
         }
     }
 
