@@ -1,5 +1,6 @@
 package internal.compatibility.spi;
 
+import internal.compatibility.Collectors2;
 import internal.compatibility.Files2;
 import lombok.NonNull;
 import nbbrd.compatibility.*;
@@ -162,7 +163,7 @@ public final class MarkdownFormat implements Format {
             if (path != null) {
                 return Stream.of(path.split("/", -1))
                         .filter(item -> !item.isEmpty())
-                        .collect(CommandLineBuild.toLast())
+                        .collect(Collectors2.toLast())
                         .orElse(path);
             }
             return uri.toString();
