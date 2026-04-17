@@ -76,10 +76,11 @@ With a pom file:
             </goals>
             <configuration>
                 <source>https://github.com/jdemetra/jdplus-main</source>
-                <sourceBinding>eu.europa.ec.joinup.sat</sourceBinding>
+                <sourceBinding>eu.europa.ec.joinup.sat:jdplus*</sourceBinding>
                 <sourceRef>v3.4.0</sourceRef>
                 <targets>https://github.com/nbbrd/jdplus-sdmx,https://github.com/jdemetra/jdplus-nowcasting</targets>
                 <targetLimits>1,1</targetLimits>
+                <logErrors>true</logErrors>
             </configuration>
         </execution>
     </executions>
@@ -91,10 +92,11 @@ Without a pom file (standalone mode):
 ```bash
 mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::check-downstream \
   -D "compatibility.source=https://github.com/jdemetra/jdplus-main" \
-  -D "compatibility.sourceBinding=eu.europa.ec.joinup.sat" \
+  -D "compatibility.sourceBinding=eu.europa.ec.joinup.sat:jdplus*" \
   -D "compatibility.sourceRef=v3.4.0" \
   -D "compatibility.targets=https://github.com/nbbrd/jdplus-sdmx,https://github.com/jdemetra/jdplus-nowcasting" \
-  -D "compatibility.targetLimits=1,1"
+  -D "compatibility.targetLimits=1,1" \
+  -D "compatibility.logErrors=true"
 ```
 
 ### check-upstream
