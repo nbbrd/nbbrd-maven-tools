@@ -8,6 +8,27 @@ on the other side.
 
 The main purpose of this plugin is to automate the compatibility check as much as possible to catch problems as early as possible.
 
+## Setup
+
+Add the plugin to your `pom.xml`:
+
+```xml
+<plugin>
+    <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
+    <artifactId>compatibility-maven-plugin</artifactId>
+    <version><!-- latest version --></version>
+</plugin>
+```
+
+## Goals
+
+| Goal                                    | Description                                                                                            |
+|-----------------------------------------|--------------------------------------------------------------------------------------------------------|
+| [`check-downstream`](#check-downstream) | Checks that downstream projects (targets) are still compatible with the current project (source).      |
+| [`check-upstream`](#check-upstream)     | Checks that the current project (target) is still compatible with its upstream dependencies (sources). |
+| [`split-job`](#split-job)               | Splits a job file into individual job files for parallel execution.                                    |
+| [`merge-reports`](#merge-reports)       | Merges multiple compatibility reports into a single report.                                            |
+
 ## Usage
 
 Dependency graph of the examples used in this document:
@@ -147,8 +168,8 @@ mvn com.github.nbbrd.nbbrd-maven-tools:compatibility-maven-plugin::merge-reports
 
 ## Troubleshooting
 
-**Unknow error at runtime**:  
-Run the plugin with `-X` option to enable debug mode.
+**Unknown error at runtime**:  
+Run the plugin with the `-X` option to enable debug mode.
 
 **Filename too long exception**:  
-Run the plugin with the `compatibility.workindDir` parameter set to a shorter path.
+Run the plugin with the `compatibility.workingDir` parameter set to a shorter path.
