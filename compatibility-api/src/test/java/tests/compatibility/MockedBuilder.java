@@ -135,6 +135,11 @@ public class MockedBuilder implements Builder {
         }
 
         @Override
+        public @Nullable Version getArtifactLatestRelease(@NonNull Artifact artifact) throws IOException {
+            return null;
+        }
+
+        @Override
         public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
             String id = loadProjectId(project);
             stuff.put(id, MockedStatus.of(projects.get(id).getByTag(ref)));

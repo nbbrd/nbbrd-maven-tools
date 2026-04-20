@@ -15,7 +15,7 @@ import static java.util.stream.Collectors.joining;
  */
 @RepresentableAsString
 @lombok.Value
-@lombok.Builder
+@lombok.Builder(toBuilder = true)
 public class Artifact {
 
     @NonNull

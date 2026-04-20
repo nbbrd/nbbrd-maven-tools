@@ -7,11 +7,10 @@ import nbbrd.compatibility.Version;
 import nbbrd.io.text.TextParser;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.semver4j.Semver;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,9 +23,11 @@ import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.createDirectory;
 import static java.nio.file.StandardOpenOption.APPEND;
+import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.joining;
 import static nbbrd.compatibility.spi.Builder.IGNORE_EVENT;
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.InstanceOfAssertFactories.comparable;
 import static tests.compatibility.Examples.generateProject;
 import static tests.compatibility.Examples.resolveResource;
 
@@ -163,6 +164,21 @@ class CommandLineBuildTest {
                     .doesNotThrowAnyException();
             assertThat(project.resolve("pom.xml"))
                     .hasSameTextualContentAs(resolveResource(CommandLineBuildTest.class, "target-pom-by-property.xml"));
+        }
+    }
+
+    @Test
+    void testGetArtifactLatestRelease() {
+        List<String> events = new ArrayList<>();
+        try (CommandLineBuild x = getBuild(events::add)) {
+            events.clear();
+            Artifact lombok = Artifact.parse("org.projectlombok:lombok:::1.0.0");
+            assertThatObject(x.getArtifactLatestRelease(lombok))
+                    .isNotNull()
+                    .extracting(version -> Semver.parse(requireNonNull(version).toString()), comparable(Semver.class))
+                    .isGreaterThan(Semver.parse(lombok.getVersion()));
+        } catch (IOException ex) {
+            fail(getFailureMessage(events), ex);
         }
     }
 

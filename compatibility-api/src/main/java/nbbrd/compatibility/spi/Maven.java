@@ -22,4 +22,7 @@ public interface Maven {
     Version getArtifactVersion(@NonNull Path project, @NonNull Artifact artifact) throws IOException;
 
     void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException;
+
+    @Nullable
+    Version getArtifactLatestRelease(@NonNull Artifact artifact) throws IOException;
 }

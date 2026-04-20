@@ -1,5 +1,6 @@
 package internal.compatibility.spi;
 
+import com.github.mustachejava.DefaultMustacheFactory;
 import internal.compatibility.TempPath;
 import lombok.NonNull;
 import nbbrd.compatibility.Artifact;
@@ -11,6 +12,7 @@ import nbbrd.io.text.TextParser;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,6 +37,9 @@ public final class CommandLineBuild implements Build {
     private final @Nullable Path mvn;
 
     private final @Nullable Path git;
+
+    @lombok.Builder.Default
+    private final @NonNull DefaultMustacheFactory mustacheFactory = new DefaultMustacheFactory("internal/compatibility/spi");
 
     private MvnCommand.Builder mvnOf(Path project) {
         return MvnCommand.builder().binary(mvn).quiet(true).batchMode(true).file(project);
@@ -140,6 +145,38 @@ public final class CommandLineBuild implements Build {
                 .toTextProcessor()
                 .withListener(onEvent)
                 .process();
+    }
+
+    @Override
+    public @Nullable Version getArtifactLatestRelease(@NonNull Artifact artifact) throws IOException {
+        try (TempPath tmp = TempPath.of(Files.createTempFile("pom", ".xml"))) {
+            Artifact fixedArtifact = artifact
+                    .toBuilder()
+                    .type(artifact.getType().isEmpty() ? "jar" : artifact.getType())
+                    .build();
+
+            try (Writer writer = Files.newBufferedWriter(tmp.getPath(), UTF_8)) {
+                mustacheFactory
+                        .compile("latestRelease.xml")
+                        .execute(writer, fixedArtifact);
+            }
+
+            String result = mvnOf(tmp.getPath())
+                    .quiet(false)
+                    .goal("versions:use-latest-releases")
+                    .property("generateBackupPoms", "false")
+                    .build()
+                    .toTextProcessor()
+                    .withListener(onEvent)
+                    .processToString();
+
+            int start = result.indexOf("to version ");
+            int end = result.indexOf(" in ");
+
+            return start != -1 && end != -1 && start < end
+                    ? Version.parse(result.substring(start + "to version ".length(), end))
+                    : null;
+        }
     }
 
     @Override
