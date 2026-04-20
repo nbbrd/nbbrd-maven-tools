@@ -30,7 +30,7 @@ class TextProcessor {
 
     public <X> X process(@NonNull Collector<? super String, ?, X> collector) throws IOException {
         listener.accept(String.join(" ", commands));
-        return TextParser.onParsingLines(collector).parseProcess(commands, charset);
+        return TextParser.onParsingLines(collector).parseProcess(fixProcess(), charset);
     }
 
     public void process() throws IOException {
@@ -39,6 +39,12 @@ class TextProcessor {
 
     public String processToString() throws IOException {
         return process(joining(lineSeparator()));
+    }
+
+    private Process fixProcess() throws IOException {
+        return new ProcessBuilder(commands)
+                .redirectErrorStream(true)
+                .start();
     }
 
     private static void ignore(Object ignore) {
