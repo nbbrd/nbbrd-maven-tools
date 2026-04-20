@@ -40,6 +40,8 @@
                                     <name>jdk</name>
                                     <platform>${os.detected.classifier}</platform>
                                     <version>${jdkVersion}</version>
+                                    <distribution>${jdkDistribution}</distribution>
+                                    <archiveType>${jdkArchiveType}</archiveType>
                                 </pkg>
                             </pkgs>
                         </configuration>

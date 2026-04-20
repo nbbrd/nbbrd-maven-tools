@@ -3,6 +3,7 @@ package internal.compatibility.spi;
 import nbbrd.io.Resource;
 import nbbrd.io.sys.EndOfProcessException;
 import nbbrd.io.sys.OS;
+import nbbrd.io.sys.SystemProperties;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,6 +50,8 @@ class Disco {
                 .binary(null).batchMode(true).file(setupDisco)
                 .goal("clean").goal("package")
                 .property("jdkVersion", jdkVersion)
+                .property("jdkDistribution", "zulu")
+                .property("jdkArchiveType", isArmArch() ? "tar.gz" : "zip")
                 .build();
 
         Watcher watcher = new Watcher();
@@ -83,6 +86,10 @@ class Disco {
 
             throw new IOException("Execution failed with the following errors: " + lineSeparator() + join(lineSeparator(), watcher.getErrors()), ex);
         }
+    }
+
+    private static boolean isArmArch() {
+        return "aarch64".equals(SystemProperties.DEFAULT.getOsArch());
     }
 
     private static final class Watcher {
