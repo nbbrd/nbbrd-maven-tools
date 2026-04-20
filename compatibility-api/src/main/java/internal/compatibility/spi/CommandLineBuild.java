@@ -9,9 +9,11 @@ import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.text.TextParser;
+import nbbrd.io.text.TextResource;
 import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Files;
@@ -37,9 +39,6 @@ public final class CommandLineBuild implements Build {
     private final @Nullable Path mvn;
 
     private final @Nullable Path git;
-
-    @lombok.Builder.Default
-    private final @NonNull DefaultMustacheFactory mustacheFactory = new DefaultMustacheFactory("internal/compatibility/spi");
 
     private MvnCommand.Builder mvnOf(Path project) {
         return MvnCommand.builder().binary(mvn).quiet(true).batchMode(true).file(project);
@@ -155,10 +154,12 @@ public final class CommandLineBuild implements Build {
                     .type(artifact.getType().isEmpty() ? "jar" : artifact.getType())
                     .build();
 
-            try (Writer writer = Files.newBufferedWriter(tmp.getPath(), UTF_8)) {
-                mustacheFactory
-                        .compile("latestRelease.xml")
-                        .execute(writer, fixedArtifact);
+            try (Reader reader = TextResource.newBufferedReader(CommandLineBuild.class, "latestRelease.xml", UTF_8)) {
+                try (Writer writer = Files.newBufferedWriter(tmp.getPath(), UTF_8)) {
+                    new DefaultMustacheFactory()
+                            .compile(reader, "latestRelease.xml")
+                            .execute(writer, fixedArtifact);
+                }
             }
 
             String result = mvnOf(tmp.getPath())
