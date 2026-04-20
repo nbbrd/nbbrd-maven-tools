@@ -49,9 +49,10 @@ class Disco {
                 .builder()
                 .binary(null).batchMode(true).file(setupDisco)
                 .goal("clean").goal("package")
+                .property("jdkPlatform", getJdkPlatform())
                 .property("jdkVersion", jdkVersion)
-                .property("jdkDistribution", "zulu")
-                .property("jdkArchiveType", isArmArch() ? "tar.gz" : "zip")
+                .property("jdkDistribution", "temurin")
+                .property("jdkArchiveType", OS.NAME != OS.Name.WINDOWS ? "tar.gz" : "zip")
                 .build();
 
         Watcher watcher = new Watcher();
@@ -85,6 +86,19 @@ class Disco {
             }
 
             throw new IOException("Execution failed with the following errors: " + lineSeparator() + join(lineSeparator(), watcher.getErrors()), ex);
+        }
+    }
+
+    private static String getJdkPlatform() {
+        switch (OS.NAME) {
+            case WINDOWS:
+                return isArmArch() ? "windows-aarch64" : "windows-x86_64";
+            case LINUX:
+                return isArmArch() ? "linux-aarch64" : "linux-x86_64";
+            case MACOS:
+                return isArmArch() ? "osx-aarch64" : "osx-x86_64";
+            default:
+                throw new RuntimeException("Cannot determine JDK platform");
         }
     }
 
