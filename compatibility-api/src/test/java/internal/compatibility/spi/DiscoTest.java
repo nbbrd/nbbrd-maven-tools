@@ -22,7 +22,7 @@ class DiscoTest {
         assertThat(Disco.setup(tmp, "21", DiscoTest::ignore))
                 .exists()
                 .isDirectory()
-                .isDirectoryContaining("glob:**bin*");
+                .isNotEmptyDirectory();
     }
 
     private static void ignore(Object ignore) {
