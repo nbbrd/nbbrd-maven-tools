@@ -1,31 +1,34 @@
 package internal.compatibility.spi;
 
+import com.github.mustachejava.DefaultMustacheFactory;
 import internal.compatibility.TempPath;
 import lombok.NonNull;
 import nbbrd.compatibility.Artifact;
 import nbbrd.compatibility.Ref;
 import nbbrd.compatibility.Version;
 import nbbrd.compatibility.spi.Build;
-import nbbrd.design.MightBePromoted;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.io.text.TextParser;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import nbbrd.io.text.TextResource;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static internal.compatibility.spi.MvnCommandBuilder.FailStrategy.FAIL_NEVER;
-import static java.lang.System.lineSeparator;
+import static internal.compatibility.Collectors2.toFirst;
+import static internal.compatibility.Collectors2.toSingle;
+import static internal.compatibility.spi.MvnCommand.FailStrategy.FAIL_NEVER;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 
 @lombok.Builder
 public final class CommandLineBuild implements Build {
@@ -37,8 +40,8 @@ public final class CommandLineBuild implements Build {
 
     private final @Nullable Path git;
 
-    private MvnCommandBuilder mvnOf(Path project) {
-        return new MvnCommandBuilder().binary(mvn).quiet().batchMode().file(project);
+    private MvnCommand.Builder mvnOf(Path project) {
+        return MvnCommand.builder().binary(mvn).quiet(true).batchMode(true).file(project);
     }
 
     @Override
@@ -47,19 +50,24 @@ public final class CommandLineBuild implements Build {
         mvnOf(project)
                 .goal("clean")
                 .build()
-                .collect(consuming(), onEvent);
+                .toTextProcessor()
+                .withListener(onEvent)
+                .process();
     }
 
     @Override
     public void restore(@NonNull Path project) throws IOException {
-        new GitCommandBuilder()
+        GitCommand
+                .builder()
                 .binary(git)
-                .quiet()
+                .quiet(true)
                 .workingDir(project)
                 .command("restore")
                 .parameter(".")
                 .build()
-                .collect(consuming(), onEvent);
+                .toTextProcessor()
+                .withListener(onEvent)
+                .process();
     }
 
     @Override
@@ -68,12 +76,14 @@ public final class CommandLineBuild implements Build {
         String errorMessage = mvnOf(project)
                 .goal("clean")
                 .goal("verify")
-                .updateSnapshots()
+                .updateSnapshots(true)
                 .failStrategy(FAIL_NEVER)
-                .define("skipTests")
-                .define("enforcer.skip")
+                .property("skipTests", null)
+                .property("enforcer.skip", null)
                 .build()
-                .collect(joining(lineSeparator()), onEvent);
+                .toTextProcessor()
+                .withListener(onEvent)
+                .processToString();
         return !errorMessage.isEmpty() ? errorMessage : null;
     }
 
@@ -82,10 +92,12 @@ public final class CommandLineBuild implements Build {
         // https://maven.apache.org/plugins/maven-help-plugin/evaluate-mojo.html
         return mvnOf(project)
                 .goal("help:evaluate")
-                .define("expression", "project.version")
-                .define("forceStdout")
+                .property("expression", "project.version")
+                .property("forceStdout", null)
                 .build()
-                .collect(toFirst(), onEvent)
+                .toTextProcessor()
+                .withListener(onEvent)
+                .process(toFirst())
                 .map(Version::parse)
                 .orElseThrow(() -> new IOException("Failed to get version"));
     }
@@ -96,13 +108,15 @@ public final class CommandLineBuild implements Build {
             // https://maven.apache.org/plugins/maven-dependency-plugin/collect-mojo.html
             mvnOf(project)
                     .goal("dependency:LATEST:collect")
-                    .define("includeScope", "compile")
-                    .define("mdep.outputScope", "false")
-                    .define("excludeTransitive")
-                    .define("outputFile", list.toString())
-                    .define("appendOutput")
+                    .property("includeScope", "compile")
+                    .property("mdep.outputScope", "false")
+                    .property("excludeTransitive", null)
+                    .property("outputFile", list.toString())
+                    .property("appendOutput", null)
                     .build()
-                    .collect(consuming(), onEvent);
+                    .toTextProcessor()
+                    .withListener(onEvent)
+                    .process();
 
             return TextParser.onParsingLines(CommandLineBuild::parseDependencyList)
                     .parsePath(list.getPath(), UTF_8)
@@ -121,73 +135,99 @@ public final class CommandLineBuild implements Build {
         // https://www.mojohaus.org/versions/versions-maven-plugin/use-dep-version-mojo.html
         mvnOf(project)
                 .goal("versions:use-dep-version")
-                .define("depVersion", version.toString())
-                .define("includes", artifact.toString())
-                .define("processProperties")
-                .define("generateBackupPoms", "false")
-                .define("forceVersion")
+                .property("depVersion", version.toString())
+                .property("includes", artifact.toString())
+                .property("processProperties", null)
+                .property("generateBackupPoms", "false")
+                .property("forceVersion", null)
                 .build()
-                .collect(consuming(), onEvent);
+                .toTextProcessor()
+                .withListener(onEvent)
+                .process();
+    }
+
+    @Override
+    public @Nullable Version getArtifactLatestRelease(@NonNull Artifact artifact) throws IOException {
+        try (TempPath tmp = TempPath.of(Files.createTempFile("pom", ".xml"))) {
+            Artifact fixedArtifact = artifact
+                    .toBuilder()
+                    .type(artifact.getType().isEmpty() ? "jar" : artifact.getType())
+                    .build();
+
+            try (Reader reader = TextResource.newBufferedReader(CommandLineBuild.class, "latestRelease.xml", UTF_8)) {
+                try (Writer writer = Files.newBufferedWriter(tmp.getPath(), UTF_8)) {
+                    new DefaultMustacheFactory()
+                            .compile(reader, "latestRelease.xml")
+                            .execute(writer, fixedArtifact);
+                }
+            }
+
+            String result = mvnOf(tmp.getPath())
+                    .quiet(false)
+                    .goal("versions:use-latest-releases")
+                    .property("generateBackupPoms", "false")
+                    .build()
+                    .toTextProcessor()
+                    .withListener(onEvent)
+                    .processToString();
+
+            int start = result.indexOf("to version ");
+            int end = result.indexOf(" in ");
+
+            return start != -1 && end != -1 && start < end
+                    ? Version.parse(result.substring(start + "to version ".length(), end))
+                    : null;
+        }
     }
 
     @Override
     public void checkoutTag(@NonNull Path project, @NonNull Ref ref) throws IOException {
-        new GitCommandBuilder()
+        GitCommand
+                .builder()
                 .binary(git)
-                .quiet()
+                .quiet(true)
                 .workingDir(project)
                 .command("checkout")
                 .parameter(ref.getName())
                 .build()
-                .collect(consuming(), onEvent);
+                .toTextProcessor()
+                .withListener(onEvent)
+                .process();
     }
 
     @Override
     public @NonNull List<Ref> getTags(@NonNull Path project) throws IOException {
-        return new GitCommandBuilder()
+        return GitCommand
+                .builder()
                 .binary(git)
                 .workingDir(project)
                 .command("tag")
                 .option("--sort", "creatordate")
                 .option("--format", "%(creatordate:short)/%(refname:strip=2)")
                 .build()
-                .collect(mapping(Ref::parse, toList()), onEvent);
+                .toTextProcessor()
+                .withListener(onEvent)
+                .process(mapping(Ref::parse, toList()));
     }
 
     @Override
     public void clone(@NonNull URI from, @NonNull Path to) throws IOException {
-        new GitCommandBuilder()
+        GitCommand
+                .builder()
                 .binary(git)
-                .quiet()
+                .quiet(true)
                 .command("clone")
                 .parameter(from.toString())
                 .parameter(to.toString())
                 .build()
-                .collect(consuming(), onEvent);
+                .toTextProcessor()
+                .withListener(onEvent)
+                .process();
         fixReadOnlyFiles(to);
     }
 
     @Override
     public void close() {
-    }
-
-    @MightBePromoted
-    private static <X> Collector<X, ?, Optional<X>> toFirst() {
-        return reducing((first, ignore) -> first);
-    }
-
-    @MightBePromoted
-    static <X> Collector<X, ?, Optional<X>> toLast() {
-        return reducing((ignore, second) -> second);
-    }
-
-    @MightBePromoted
-    private static <X> Collector<X, ?, Optional<X>> toSingle() {
-        return collectingAndThen(toList(), list -> list.size() == 1 ? Optional.of(list.get(0)) : Optional.empty());
-    }
-
-    private static <X> Collector<X, ?, String> consuming() {
-        return reducing("", ignore -> "", (ignoreFirst, ignoreSecond) -> "");
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
         <artifactId>nbbrd-maven-tools</artifactId>
-        <version>1.1.1</version>
+        <version>1.2.0</version>
     </parent>
 
     <artifactId>compatibility-api</artifactId>
@@ -20,8 +20,8 @@
     <dependencies>
         <!-- compile only -->
         <dependency>
-            <groupId>org.checkerframework</groupId>
-            <artifactId>checker-qual</artifactId>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -48,18 +48,23 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.13.1</version>
+            <version>2.13.2</version>
         </dependency>
         <dependency>
             <groupId>org.semver4j</groupId>
             <artifactId>semver4j</artifactId>
-            <version>5.7.1</version>
+            <version>5.8.0</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.jetbrains</groupId>
                     <artifactId>annotations</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.github.spullara.mustache.java</groupId>
+            <artifactId>compiler</artifactId>
+            <version>0.9.14</version>
         </dependency>
 
         <!-- test only -->

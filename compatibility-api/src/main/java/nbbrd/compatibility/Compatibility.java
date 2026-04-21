@@ -10,6 +10,7 @@ import nbbrd.compatibility.spi.*;
 import nbbrd.design.MightBePromoted;
 import nbbrd.design.StaticFactoryMethod;
 import nbbrd.io.sys.SystemProperties;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.URI;
@@ -38,6 +39,7 @@ public class Compatibility {
                 .builder(BuilderLoader.load().orElse(NoOpBuilder.INSTANCE))
                 .formats(FormatLoader.load())
                 .versionings(VersioningLoader.load())
+                .interceptors(InterceptorLoader.load())
                 .build();
     }
 
@@ -64,6 +66,9 @@ public class Compatibility {
     @lombok.Builder.Default
     Path workingDir = requireNonNull(SystemProperties.DEFAULT.getJavaIoTmpdir());
 
+    @lombok.Singular
+    List<Interceptor> interceptors;
+
     public @NonNull Report check(@NonNull Job job) throws IOException {
         if (job.getSources().isEmpty()) {
             onEvent.accept("No source provided");
@@ -75,7 +80,7 @@ public class Compatibility {
         }
         onEvent.accept("Using builder " + builder.getBuilderId());
         try (Build build = builder.getBuild(onDebug)) {
-            Report result = check(
+            Report result = checkAll(
                     build,
                     collectWithIO(job.getSources(), mappingWithIO(source -> initSource(source, build), toList())),
                     collectWithIO(job.getTargets(), mappingWithIO(target -> initTarget(target, build), toList()))
@@ -120,7 +125,7 @@ public class Compatibility {
         throw new IOException("Cannot resolve broker");
     }
 
-    private Report check(Build build, List<SourceContext> sources, List<TargetContext> targets) throws IOException {
+    private Report checkAll(Build build, List<SourceContext> sources, List<TargetContext> targets) throws IOException {
         long count = sources.stream().mapToLong(o -> o.getVersions().size()).sum()
                 * targets.stream().mapToLong(o -> o.getVersions().size()).sum();
         int index = 0;
@@ -130,7 +135,7 @@ public class Compatibility {
                 for (TargetContext target : targets) {
                     for (RefVersion targetVersion : target.getVersions()) {
                         onEvent.accept("Checking " + ++index + "/" + count + " " + ReportItem.toLabel(source.getUri(), sourceVersion) + " -> " + ReportItem.toLabel(target.getUri(), targetVersion));
-                        result.item(check(build, source, sourceVersion, target, targetVersion));
+                        result.item(checkItem(build, source, sourceVersion, target, targetVersion));
                     }
                 }
             }
@@ -140,22 +145,25 @@ public class Compatibility {
         return result.build();
     }
 
-    private ReportItem check(Build build, SourceContext source, RefVersion sourceVersion, TargetContext target, RefVersion targetVersion) throws IOException {
+    private ReportItem checkItem(Build build, SourceContext source, RefVersion sourceVersion, TargetContext target, RefVersion targetVersion) throws IOException {
         ReportItem.Builder result = ReportItem
                 .builder()
                 .sourceUri(source.getUri())
                 .sourceVersion(sourceVersion)
                 .targetUri(target.getUri())
                 .targetVersion(targetVersion);
+
         Path project = target.getDirectory();
+
         if (targetVersion.requiresCheckout()) {
             build.checkoutTag(project, targetVersion.getRef());
         }
+
         Version from = source.getBroker().getVersion(build, project);
         Version to = sourceVersion.getVersion();
         if (!isSkip(source.getVersioning(), from, to)) {
             source.getBroker().setVersion(build, project, to);
-            String errorMessage = build.verify(project);
+            String errorMessage = verifyProject(build, project);
             if (errorMessage == null) {
                 result.exitStatus(VERIFIED);
             } else {
@@ -165,10 +173,24 @@ public class Compatibility {
         } else {
             result.exitStatus(SKIPPED).exitMessage(format(ROOT, "Skipping check: source version %s is newer than target version %s", from, to));
         }
+
         if (targetVersion.requiresCheckout()) {
             build.restore(project);
         }
+
         return result.build();
+    }
+
+    private @Nullable String verifyProject(Maven maven, Path project) throws IOException {
+        String errorMessage = maven.verify(project);
+        if (errorMessage != null) {
+            for (Interceptor interceptor : interceptors) {
+                if (interceptor.onErrorMessage(maven, project, errorMessage, getOnEvent(), getOnDebug()) == null) {
+                    return null;
+                }
+            }
+        }
+        return errorMessage;
     }
 
     private static boolean isSkip(Versioning versioning, Version from, Version to) {

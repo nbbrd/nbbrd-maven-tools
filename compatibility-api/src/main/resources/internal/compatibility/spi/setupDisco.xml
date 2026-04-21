@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
+    <artifactId>setup-disco</artifactId>
+    <version>ignore</version>
+    <packaging>pom</packaging>
+	
+	<properties>
+        <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
+		<jdks-maven-plugin.version>1.23.0</jdks-maven-plugin.version>
+	</properties>
+
+    <build>
+        <defaultGoal>clean package</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.jreleaser</groupId>
+                <artifactId>jdks-maven-plugin</artifactId>
+                <version>${jdks-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>download-jre</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>setup-disco</goal>
+                        </goals>
+                        <configuration>
+                            <pkgs>
+                                <pkg>
+                                    <name>jdk</name>
+                                    <platform>${jdkPlatform}</platform>
+                                    <version>${jdkVersion}</version>
+                                    <distribution>${jdkDistribution}</distribution>
+                                    <archiveType>${jdkArchiveType}</archiveType>
+                                </pkg>
+                            </pkgs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

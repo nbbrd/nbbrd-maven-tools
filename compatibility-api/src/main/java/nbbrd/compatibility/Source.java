@@ -1,6 +1,6 @@
 package nbbrd.compatibility;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
 

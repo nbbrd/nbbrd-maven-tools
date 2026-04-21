@@ -7,6 +7,17 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-21
+
+### Added
+
+- Add ability to retrieve artifact latest version [#126](https://github.com/nbbrd/nbbrd-maven-tools/issues/126)
+- Add Lombok recovery code [#124](https://github.com/nbbrd/nbbrd-maven-tools/issues/124)
+
+### Fixed
+
+- Fix process deadlock [#125](https://github.com/nbbrd/nbbrd-maven-tools/issues/125)
+
 ## [1.1.1] - 2025-07-03
 
 ### Fixed
@@ -47,9 +58,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.0.0] - 2025-05-12
 
-Initial release.
+### Added
 
-[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.1...HEAD
+- Initial release
+
+[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.2...v1.0.3

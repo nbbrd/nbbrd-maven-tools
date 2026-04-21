@@ -9,7 +9,7 @@ import nbbrd.compatibility.spi.Build;
 import nbbrd.compatibility.spi.Builder;
 import nbbrd.io.text.TextFormatter;
 import nbbrd.io.text.TextParser;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.semver4j.Semver;
 
 import java.io.IOException;
@@ -132,6 +132,11 @@ public class MockedBuilder implements Builder {
         @Override
         public void setArtifactVersion(@NonNull Path project, @NonNull Artifact artifact, @NonNull Version version) throws IOException {
             setProperty(project, artifact.getGroupId(), version.toString());
+        }
+
+        @Override
+        public @Nullable Version getArtifactLatestRelease(@NonNull Artifact artifact) throws IOException {
+            return null;
         }
 
         @Override
