@@ -7,6 +7,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-21
+
 ### Added
 
 - Add ability to retrieve artifact latest version [#126](https://github.com/nbbrd/nbbrd-maven-tools/issues/126)
@@ -60,7 +62,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release
 
-[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.3...v1.1.0
 [1.0.3]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.0.2...v1.0.3
