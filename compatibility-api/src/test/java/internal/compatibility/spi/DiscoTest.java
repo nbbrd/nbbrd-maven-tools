@@ -1,5 +1,6 @@
 package internal.compatibility.spi;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -17,6 +18,7 @@ class DiscoTest {
         System.out.println("Unpacked JDK to " + unpackedJdk);
     }
 
+    @Disabled("Have some read timeouts. Needs next version of JReleaser to set the timeout.")
     @Test
     void testSetup(@TempDir Path tmp) throws IOException {
         assertThat(Disco.setup(tmp, "21", DiscoTest::ignore))
