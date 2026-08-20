@@ -9,6 +9,7 @@ import nbbrd.compatibility.spi.Format;
 import nbbrd.design.DirectImpl;
 import nbbrd.design.VisibleForTesting;
 import nbbrd.service.ServiceProvider;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,7 +17,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -64,11 +64,13 @@ public final class MarkdownFormat implements Format {
     }
 
     private void formatReport(@NonNull Appendable appendable, @NonNull Report report) throws IOException {
-        forEachWithIO(groupBySourceUri(report), (k, v) -> formatReport(appendable, k, v));
+        LinkRegistry links = new LinkRegistry();
+        forEachWithIO(groupBySourceUri(report), (k, v) -> formatReport(appendable, k, v, links));
+        printLinkDefinitions(appendable, links);
     }
 
-    private void formatReport(Appendable appendable, URI sourceUri, List<ReportItem> items) throws IOException {
-        printMarkdown(appendable, Matrix.of(sourceUri, items));
+    private void formatReport(Appendable appendable, URI sourceUri, List<ReportItem> items, LinkRegistry links) throws IOException {
+        printMarkdown(appendable, Matrix.of(sourceUri, items), links);
     }
 
     @Override
@@ -76,38 +78,53 @@ public final class MarkdownFormat implements Format {
         return file -> (!Files.exists(file) || Files.isRegularFile(file)) && Files2.hasExtension(file, ".md");
     }
 
-    private static void printMarkdown(Appendable appendable, Matrix matrix) throws IOException {
-        int col0 = matrix.rows.stream().map(Header::toProjectLabel).mapToInt(String::length).max().orElse(0);
-        int col1 = matrix.rows.stream().map(Header::toVersionLabel).mapToInt(s -> s.length() + 4).max().orElse(0);
+    private static void printMarkdown(Appendable appendable, Matrix matrix, LinkRegistry links) throws IOException {
+        Map<URI, Optional<RefVersion>> max = matrix.rows.stream().collect(groupingBy(Header::getUri, mapping(Header::getVersion, reducing((l, r) -> r))));
+
+        // Build the display texts in document order so that reference-style links are numbered consistently
+        Header source = matrix.columns.get(0);
+        String title = projectLink(links, source.getUri(), source.toProjectLabel());
+
+        List<String> columnTexts = matrix.columns.stream()
+                .map(header -> versionLink(links, header.getUri(), header.getVersion(), header.toVersionLabel()))
+                .collect(toList());
+
+        int bound = matrix.rows.size();
+        String[] rowProjectTexts = new String[bound];
+        String[] rowVersionTexts = new String[bound];
+        boolean[] important = new boolean[bound];
+        String previous = "";
+        for (int i = 0; i < bound; i++) {
+            Header row = matrix.rows.get(i);
+            String projectLabel = row.toProjectLabel();
+            String shownLabel = previous.equals(projectLabel) ? "" : projectLabel;
+            previous = projectLabel;
+            rowProjectTexts[i] = projectLink(links, row.getUri(), shownLabel);
+
+            String versionLabel = row.toVersionLabel();
+            important[i] = max.get(row.getUri())
+                    .map(RefVersion::getVersion)
+                    .orElse(Version.parse(""))
+                    .equals(Version.parse(versionLabel.substring(1)));
+            String versionText = versionLink(links, row.getUri(), row.getVersion(), versionLabel);
+            rowVersionTexts[i] = important[i] ? "**" + versionText + "**" : versionText;
+        }
+
         int[] sizes = IntStream.concat(
-                IntStream.of(col0, col1),
-                matrix.columns.stream().map(Header::toVersionLabel).mapToInt(String::length)
+                IntStream.of(maxLength(rowProjectTexts), maxLength(rowVersionTexts)),
+                columnTexts.stream().mapToInt(String::length)
         ).toArray();
 
         Collector<CharSequence, ?, String> toRow = joining(" | ", "| ", " |");
 
-        Map<URI, Optional<RefVersion>> max = matrix.rows.stream().collect(groupingBy(Header::getUri, mapping(Header::getVersion, reducing((l, r) -> r))));
-
-        appendable.append("Compatibility matrix for **").append(matrix.columns.get(0).toProjectLabel()).append("**").append(lineSeparator());
-        appendable.append(lineSeparator()).append(Stream.concat(Stream.of(repeat(" ", sizes[0]), repeat(" ", sizes[1])), matrix.columns.stream().map(Header::toVersionLabel)).collect(toRow));
+        appendable.append("Compatibility matrix for **").append(title).append("**").append(lineSeparator());
+        appendable.append(lineSeparator()).append(Stream.concat(Stream.of(repeat(" ", sizes[0]), repeat(" ", sizes[1])), columnTexts.stream()).collect(toRow));
         appendable.append(lineSeparator()).append(IntStream.range(0, 2 + matrix.columns.size()).mapToObj(i -> repeat("-", sizes[i])).collect(joining("-|-", "|-", "-|")));
-        AtomicReference<String> previous = new AtomicReference<>("");
-        int bound = matrix.rows.size();
         for (int idx = 0; idx < bound; idx++) {
             int i = idx;
-            String projectLabel = matrix.rows.get(i).toProjectLabel();
-            String label = previous.getAndSet(projectLabel).equals(projectLabel) ? "" : projectLabel;
-            String versionLabel = matrix.rows.get(i).toVersionLabel();
-            boolean important = max.get(matrix.rows.get(i).getUri())
-                    .map(RefVersion::getVersion)
-                    .orElse(Version.parse(""))
-                    .equals(Version.parse(versionLabel.substring(1)));
-            if (important) {
-                versionLabel = "**" + versionLabel + "**";
-            }
             appendable.append(lineSeparator()).append(Stream.concat(
-                    Stream.of(padRight(label, sizes[0]), padRight(versionLabel, sizes[1])),
-                    IntStream.range(0, matrix.body[i].length).mapToObj(j -> padRight(emoji(matrix.body[i][j].status, important), sizes[j + 2]))
+                    Stream.of(padRight(rowProjectTexts[i], sizes[0]), padRight(rowVersionTexts[i], sizes[1])),
+                    IntStream.range(0, matrix.body[i].length).mapToObj(j -> padRight(emoji(matrix.body[i][j].status, important[i]), sizes[j + 2]))
             ).collect(toRow));
         }
         appendable.append(lineSeparator()).append(lineSeparator());
@@ -131,6 +148,62 @@ public final class MarkdownFormat implements Format {
                 }
             }
         }
+    }
+
+    private static void printLinkDefinitions(Appendable appendable, LinkRegistry links) throws IOException {
+        if (links.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<String, Integer> entry : links.entries()) {
+            appendable.append(lineSeparator()).append("[").append(entry.getValue().toString()).append("]: ").append(entry.getKey());
+        }
+        appendable.append(lineSeparator());
+    }
+
+    private static int maxLength(String[] texts) {
+        int result = 0;
+        for (String text : texts) {
+            result = Math.max(result, text.length());
+        }
+        return result;
+    }
+
+    private static boolean isHttp(URI uri) {
+        String scheme = uri.getScheme();
+        return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
+    }
+
+    private static @Nullable String projectUrl(URI uri) {
+        if (!isHttp(uri)) {
+            return null;
+        }
+        String result = uri.normalize().toString();
+        while (result.endsWith("/")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        if (result.endsWith(".git")) {
+            result = result.substring(0, result.length() - ".git".length());
+        }
+        return result;
+    }
+
+    private static @Nullable String versionUrl(URI uri, RefVersion version) {
+        String base = projectUrl(uri);
+        if (base == null) {
+            return null;
+        }
+        Ref ref = version.getRef();
+        return Ref.NO_REF.equals(ref) ? base : base + "/tree/" + ref.getName();
+    }
+
+    private static String projectLink(LinkRegistry links, URI uri, String label) {
+        String url = projectUrl(uri);
+        return url == null || label.isEmpty() ? label : "[" + label + "][" + links.ref(url) + "]";
+    }
+
+    private static String versionLink(LinkRegistry links, URI uri, RefVersion version, String label) {
+        String url = versionUrl(uri, version);
+        return url == null ? label : "[" + label + "][" + links.ref(url) + "]";
     }
 
     private static String emoji(ExitStatus exitStatus, boolean important) {
@@ -191,6 +264,30 @@ public final class MarkdownFormat implements Format {
     private static class Cell {
         ExitStatus status;
         String message;
+    }
+
+    // Collects reference-style link definitions and assigns a stable numeric key per URL
+    private static final class LinkRegistry {
+
+        private final Map<String, Integer> refs = new LinkedHashMap<>();
+
+        int ref(String url) {
+            Integer existing = refs.get(url);
+            if (existing != null) {
+                return existing;
+            }
+            int key = refs.size() + 1;
+            refs.put(url, key);
+            return key;
+        }
+
+        boolean isEmpty() {
+            return refs.isEmpty();
+        }
+
+        Set<Map.Entry<String, Integer>> entries() {
+            return refs.entrySet();
+        }
     }
 
     @lombok.Value
