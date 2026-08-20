@@ -11,6 +11,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Add enforcer rule to ensure that a Javadoc jar is attached for every non-pom artifact [#161](https://github.com/nbbrd/nbbrd-maven-tools/issues/161)
 - Add enforcer rule to ensure that an artifactId matches a pattern for given packagings [#162](https://github.com/nbbrd/nbbrd-maven-tools/issues/162)
+- Add direct links to sources and targets in the Markdown compatibility report [#127](https://github.com/nbbrd/nbbrd-maven-tools/issues/127)
 
 ## [1.2.0] - 2026-04-21
 

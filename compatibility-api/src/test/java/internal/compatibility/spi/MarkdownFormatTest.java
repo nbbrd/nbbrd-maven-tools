@@ -65,6 +65,32 @@ class MarkdownFormatTest {
     }
 
     @Test
+    void testFormatReportWithLinks() throws IOException {
+        MarkdownFormat x = new MarkdownFormat();
+
+        Formatter<Report> formatter = asTextFormatter(x, Report.class).asFormatter();
+
+        URI src = URI.create("https://github.com/nbbrd/sdmx-dl");
+        URI trg = URI.create("https://github.com/nbbrd/jdplus-sdmx");
+        Report value = Report
+                .builder()
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.3.4")).target(trg, remoteOf("1.0.0")).build())
+                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, remoteOf("2.3.4")).target(trg, remoteOf("1.0.1")).build())
+                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, remoteOf("2.3.4")).target(trg, remoteOf("1.0.2")).build())
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.0")).build())
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.1")).build())
+                .item(ReportItem.builder().exitStatus(SKIPPED).source(src, remoteOf("2.4.0")).target(trg, remoteOf("1.0.2")).build())
+                .item(ReportItem.builder().exitStatus(BROKEN).exitMessage("boom").source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.0")).build())
+                .item(ReportItem.builder().exitStatus(BROKEN).exitMessage("boom").source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.1")).build())
+                .item(ReportItem.builder().exitStatus(VERIFIED).source(src, remoteOf("3.0.0")).target(trg, remoteOf("1.0.2")).build())
+                .build();
+
+        assertThat(value)
+                .extracting(formatter::format, STRING)
+                .isEqualToNormalizingNewlines(getContentOf(MarkdownFormatTest.class, "report-links.md"));
+    }
+
+    @Test
     void testGetFormatFileFilter(@TempDir Path tmp) throws IOException {
         DirectoryStream.Filter<? super Path> x = new MarkdownFormat().getFormatFileFilter();
 
