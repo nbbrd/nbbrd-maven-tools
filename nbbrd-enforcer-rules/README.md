@@ -14,6 +14,10 @@ Maven Central requires a `-javadoc.jar` to be published for non-pom artifacts. T
 artifacts of the project and fails when no artifact with the `javadoc` classifier is present. Projects with `pom`
 packaging are always considered valid.
 
+Projects that are not deployed are exempted, since Maven Central only requires a javadoc jar for published artifacts.
+Deployment is considered skipped when the `maven.deploy.skip` property is `true` or when the `maven-deploy-plugin` is
+configured with `<skip>true</skip>`.
+
 Because it checks the *attached* artifacts, this rule should be bound to a phase that runs after the javadoc jar has
 been attached (typically `verify`, once the `maven-javadoc-plugin:jar` goal has run).
 
