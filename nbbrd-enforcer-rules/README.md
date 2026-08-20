@@ -5,8 +5,9 @@ Custom [Maven Enforcer](https://maven.apache.org/enforcer/maven-enforcer-plugin/
 ## Rules
 
 | Rule                                    | Description                                                              |
-|-----------------------------------------|-------------------------------------------------------------------------|
+|-----------------------------------------|--------------------------------------------------------------------------|
 | [`requireJavadocJar`](#requirejavadocjar) | Ensures that a javadoc jar is attached for every non-pom artifact.      |
+| [`requireArtifactIdPattern`](#requireartifactidpattern) | Ensures that the artifactId matches a regex, optionally restricted to given packagings. |
 
 ### requireJavadocJar
 
@@ -20,6 +21,30 @@ configured with `<skip>true</skip>`.
 
 Because it checks the *attached* artifacts, this rule should be bound to a phase that runs after the javadoc jar has
 been attached (typically `verify`, once the `maven-javadoc-plugin:jar` goal has run).
+
+### requireArtifactIdPattern
+
+Ensures that the project `artifactId` fully matches a regular expression. The check can be restricted to specific
+packagings: when `packagings` is omitted (or empty), the rule applies to every packaging; otherwise it only applies
+when the project packaging is one of the listed values (other packagings pass silently).
+
+| Parameter     | Required | Description                                                                       |
+|---------------|----------|-----------------------------------------------------------------------------------|
+| `pattern`     | yes      | Regular expression the `artifactId` must fully match.                             |
+| `packagings`  | no       | Packagings the rule applies to. When empty, the rule applies to every packaging. |
+| `message`     | no       | Custom failure message. A default message is generated otherwise.                |
+
+For example, to enforce that every `nbm` artifact follows the `*-desktop-plugin` naming convention:
+
+```xml
+<requireArtifactIdPattern>
+    <packagings>
+        <packaging>nbm</packaging>
+    </packagings>
+    <pattern>^.+-desktop-plugin$</pattern>
+    <message>nbm artifacts must follow the "*-desktop-plugin" naming convention</message>
+</requireArtifactIdPattern>
+```
 
 ## Setup
 
