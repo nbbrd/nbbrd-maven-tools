@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Add enforcer rule to ensure that a Javadoc jar is attached for every non-pom artifact [#161](https://github.com/nbbrd/nbbrd-maven-tools/issues/161)
+
 ## [1.2.0] - 2026-04-21
 
 ### Added

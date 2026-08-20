@@ -30,6 +30,7 @@
     <modules>
         <module>compatibility-api</module>
         <module>compatibility-maven-plugin</module>
+        <module>nbbrd-enforcer-rules</module>
         <module>nbbrd-maven-bom</module>
     </modules>
 
@@ -197,6 +198,11 @@
                     <groupId>org.jreleaser</groupId>
                     <artifactId>jreleaser-maven-plugin</artifactId>
                     <version>1.25.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.eclipse.sisu</groupId>
+                    <artifactId>sisu-maven-plugin</artifactId>
+                    <version>1.1.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
