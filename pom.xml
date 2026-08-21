@@ -143,6 +143,23 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>3.6.3</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.kordamp.maven</groupId>
+                            <artifactId>pomchecker-enforcer-rules</artifactId>
+                            <version>1.15.0</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>extra-enforcer-rules</artifactId>
+                            <version>1.12.0</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>com.github.nbbrd.heylogs</groupId>
+                            <artifactId>heylogs-enforcer-rules</artifactId>
+                            <version>${heylogs.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.gaul</groupId>
@@ -440,23 +457,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.kordamp.maven</groupId>
-                                <artifactId>pomchecker-enforcer-rules</artifactId>
-                                <version>1.15.0</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.codehaus.mojo</groupId>
-                                <artifactId>extra-enforcer-rules</artifactId>
-                                <version>1.12.0</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>com.github.nbbrd.heylogs</groupId>
-                                <artifactId>heylogs-enforcer-rules</artifactId>
-                                <version>${heylogs.version}</version>
-                            </dependency>
-                        </dependencies>
                         <executions>
                             <execution>
                                 <id>enforce-root-on-validate</id>
