@@ -14,11 +14,22 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.util.Arrays;
+import java.util.Collections;
+
 class RequireJavadocJarTest {
 
     @Test
     void testPomPackagingIsAlwaysValid() {
         MavenProject project = newProject("pom");
+
+        assertThatCode(() -> new RequireJavadocJar(project).execute())
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void testMavenArchetypePackagingIsValidWithoutJavadoc() {
+        MavenProject project = newProject("maven-archetype");
 
         assertThatCode(() -> new RequireJavadocJar(project).execute())
                 .doesNotThrowAnyException();
@@ -48,6 +59,7 @@ class RequireJavadocJarTest {
         MavenProject project = newProject("jar");
         project.getProperties().setProperty("maven.deploy.skip", "true");
 
+
         assertThatCode(() -> new RequireJavadocJar(project).execute())
                 .doesNotThrowAnyException();
     }
@@ -59,6 +71,27 @@ class RequireJavadocJarTest {
 
         assertThatCode(() -> new RequireJavadocJar(project).execute())
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    void testCustomExemptedPackagingsExemptsMatchingPackaging() {
+        MavenProject project = newProject("jar");
+        RequireJavadocJar rule = new RequireJavadocJar(project);
+        rule.setExemptedPackagings(Arrays.asList("pom", "jar"));
+
+        assertThatCode(rule::execute)
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void testCustomExemptedPackagingsFailsWhenMavenArchetypeNotListed() {
+        MavenProject project = newProject("maven-archetype");
+        RequireJavadocJar rule = new RequireJavadocJar(project);
+        rule.setExemptedPackagings(Collections.singletonList("pom"));
+
+        assertThatExceptionOfType(EnforcerRuleException.class)
+                .isThrownBy(rule::execute)
+                .withMessageContaining("Missing javadoc jar");
     }
 
     private static MavenProject newProject(String packaging) {

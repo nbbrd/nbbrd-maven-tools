@@ -7,9 +7,12 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.jspecify.annotations.Nullable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Ensures that a javadoc jar is attached for every non-pom artifact.
@@ -17,6 +20,10 @@ import javax.inject.Named;
  * Maven Central requires a {@code -javadoc.jar} to be published for non-pom
  * artifacts. This rule inspects the attached artifacts of the project and fails
  * when no artifact with the {@code javadoc} classifier is present.
+ * <p>
+ * Some packagings never produce a javadoc jar and are therefore exempted by
+ * default ({@code pom} and {@code maven-archetype}). The list of exempted
+ * packagings can be overridden through the {@code exemptedPackagings} parameter.
  * <p>
  * Projects that are not deployed are exempted, since Maven Central only requires
  * a javadoc jar for published artifacts. Deployment is considered skipped when
@@ -26,12 +33,18 @@ import javax.inject.Named;
 @Named("requireJavadocJar")
 public final class RequireJavadocJar extends AbstractEnforcerRule {
 
-    private static final String POM_PACKAGING = "pom";
     private static final String JAVADOC_CLASSIFIER = "javadoc";
     private static final String DEPLOY_SKIP_PROPERTY = "maven.deploy.skip";
     private static final String DEPLOY_PLUGIN_KEY = "org.apache.maven.plugins:maven-deploy-plugin";
+    private static final List<String> DEFAULT_EXEMPTED_PACKAGINGS = Arrays.asList("pom", "maven-archetype");
 
     private final MavenProject project;
+
+    /**
+     * The list of packagings that are exempted from requiring a javadoc jar.
+     * Defaults to {@code pom} and {@code maven-archetype} when not set.
+     */
+    private @Nullable List<String> exemptedPackagings;
 
     @Inject
     public RequireJavadocJar(@NonNull MavenProject project) {
@@ -40,7 +53,7 @@ public final class RequireJavadocJar extends AbstractEnforcerRule {
 
     @Override
     public void execute() throws EnforcerRuleException {
-        if (POM_PACKAGING.equals(project.getPackaging())) {
+        if (getExemptedPackagings().contains(project.getPackaging())) {
             return;
         }
         if (isDeploymentSkipped()) {
@@ -50,6 +63,14 @@ public final class RequireJavadocJar extends AbstractEnforcerRule {
             throw new EnforcerRuleException("Missing javadoc jar for " + project.getArtifactId()
                     + "; Maven Central requires a -javadoc.jar for non-pom artifacts.");
         }
+    }
+
+    private List<String> getExemptedPackagings() {
+        return exemptedPackagings != null ? exemptedPackagings : DEFAULT_EXEMPTED_PACKAGINGS;
+    }
+
+    void setExemptedPackagings(@Nullable List<String> exemptedPackagings) {
+        this.exemptedPackagings = exemptedPackagings;
     }
 
     private boolean hasAttachedJavadocJar() {
@@ -81,7 +102,7 @@ public final class RequireJavadocJar extends AbstractEnforcerRule {
 
     @Override
     public String toString() {
-        return "RequireJavadocJar[]";
+        return "RequireJavadocJar[exemptedPackagings=" + getExemptedPackagings() + "]";
     }
 }
 

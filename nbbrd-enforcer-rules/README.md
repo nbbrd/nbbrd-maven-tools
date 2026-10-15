@@ -6,14 +6,16 @@ Custom [Maven Enforcer](https://maven.apache.org/enforcer/maven-enforcer-plugin/
 
 | Rule                                    | Description                                                              |
 |-----------------------------------------|--------------------------------------------------------------------------|
-| [`requireJavadocJar`](#requirejavadocjar) | Ensures that a javadoc jar is attached for every non-pom artifact.      |
+| [`requireJavadocJar`](#requirejavadocjar) | Ensures that a javadoc jar is attached for every artifact that requires one. |
 | [`requireArtifactIdPattern`](#requireartifactidpattern) | Ensures that the artifactId matches a regex, optionally restricted to given packagings. |
 
 ### requireJavadocJar
 
 Maven Central requires a `-javadoc.jar` to be published for non-pom artifacts. This rule inspects the attached
-artifacts of the project and fails when no artifact with the `javadoc` classifier is present. Projects with `pom`
-packaging are always considered valid.
+artifacts of the project and fails when no artifact with the `javadoc` classifier is present.
+
+Some packagings never produce a javadoc jar and are therefore exempted by default (`pom` and `maven-archetype`). This
+list can be overridden through the `exemptedPackagings` parameter to handle other cases.
 
 Projects that are not deployed are exempted, since Maven Central only requires a javadoc jar for published artifacts.
 Deployment is considered skipped when the `maven.deploy.skip` property is `true` or when the `maven-deploy-plugin` is
@@ -21,6 +23,23 @@ configured with `<skip>true</skip>`.
 
 Because it checks the *attached* artifacts, this rule should be bound to a phase that runs after the javadoc jar has
 been attached (typically `verify`, once the `maven-javadoc-plugin:jar` goal has run).
+
+| Parameter            | Required | Description                                                                                     |
+|----------------------|----------|-------------------------------------------------------------------------------------------------|
+| `exemptedPackagings` | no       | Packagings that do not require a javadoc jar. Defaults to `pom` and `maven-archetype` when unset. |
+
+For example, to also exempt the `nbm` packaging:
+
+```xml
+<requireJavadocJar>
+    <exemptedPackagings>
+        <exemptedPackaging>pom</exemptedPackaging>
+        <exemptedPackaging>maven-archetype</exemptedPackaging>
+        <exemptedPackaging>nbm</exemptedPackaging>
+    </exemptedPackagings>
+</requireJavadocJar>
+```
+
 
 ### requireArtifactIdPattern
 
