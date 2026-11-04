@@ -1,0 +1,12 @@
+Apache NetBeans
+
+Binaries in this ZIP are...
+Build by GitHub Actions Workflow: NetBeans Native Launcher
+
+Build from:
+   Git repo       : https://github.com/apache/netbeans
+   Git commit SHA : 8e2bc77e581e04ab1b52575b16d61fc3ff95bcfe
+   Git ref        : refs/heads/master
+
+Build time UTC : 2025-10-19 07:52:11+00:00
+

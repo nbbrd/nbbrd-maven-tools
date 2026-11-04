@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Add plugin to change the icons of Windows executables [#200](https://github.com/nbbrd/nbbrd-maven-tools/issues/200)
+
 ## [1.3.1] - 2026-10-15
 
 ### Fixed

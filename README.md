@@ -10,11 +10,15 @@ NBBRD Maven tools is a collection of Maven plugins and utilities to support the 
 | Module | Description |
 |--------|-------------|
 | [compatibility-maven-plugin](compatibility-maven-plugin/README.md) | Maven plugin that checks the compatibility between projects, ensuring that libraries/applications and their external extensions/plugins remain compatible across versions. |
+| [exe-icon-maven-plugin](exe-icon-maven-plugin/README.md) | Replaces Windows executable icons on any supported build host, without a system-wide Node.js installation. |
 
 ## Developing
 
 This project is written in Java and uses [Apache Maven](https://maven.apache.org/) as a build tool.  
-It requires [Java 8 as minimum version](https://whichjdk.com/) and all its dependencies are hosted on [Maven Central](https://search.maven.org/).
+Building the complete reactor requires [JDK 21 or later](https://whichjdk.com/).
+Existing artifacts retain their Java 8 target; `exe-icon-maven-plugin` requires Java 21.
+Java dependencies are hosted on [Maven Central](https://search.maven.org/).
+The icon plugin build also downloads pinned Node/npm distributions and npm dependencies into local build directories; no global installation is needed.
 
 The code can be build using any IDE or by just type-in the following commands in a terminal:
 

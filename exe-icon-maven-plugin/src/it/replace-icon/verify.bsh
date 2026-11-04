@@ -1,0 +1,8 @@
+File output = new File(basedir, "target/branded.exe");
+if (!output.isFile() || output.length() < 100000) {
+    throw new IllegalStateException("Missing generated launcher: " + output);
+}
+if (new File(basedir, "node").exists() || new File(basedir, "node_modules").exists()) {
+    throw new IllegalStateException("Consumer must not install JavaScript tooling");
+}
+return true;
