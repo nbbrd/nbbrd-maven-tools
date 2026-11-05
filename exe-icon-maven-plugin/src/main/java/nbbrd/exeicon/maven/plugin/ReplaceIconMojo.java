@@ -15,7 +15,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.graalvm.polyglot.PolyglotException;
 
 /**
- * Replaces an existing Windows executable icon group without requiring Windows or Node.js.
+ * Cross-platform Windows executable icon replacement.
  */
 @Mojo(name = "replace-icon", threadSafe = true)
 public final class ReplaceIconMojo extends AbstractMojo {

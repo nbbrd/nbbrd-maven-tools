@@ -10,7 +10,7 @@ NBBRD Maven tools is a collection of Maven plugins and utilities to support the 
 | Module | Description |
 |--------|-------------|
 | [compatibility-maven-plugin](compatibility-maven-plugin/README.md) | Maven plugin that checks the compatibility between projects, ensuring that libraries/applications and their external extensions/plugins remain compatible across versions. |
-| [exe-icon-maven-plugin](exe-icon-maven-plugin/README.md) | Replaces Windows executable icons on any supported build host, without a system-wide Node.js installation. |
+| [exe-icon-maven-plugin](exe-icon-maven-plugin/README.md) | Cross-platform Windows executable icon replacement. |
 
 ## Developing
 
