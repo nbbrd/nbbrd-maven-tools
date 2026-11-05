@@ -16,7 +16,7 @@
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
-        <graaljs.version>24.1.2</graaljs.version>
+        <graaljs.version>25.4.4.1.1</graaljs.version>
         <node.version>v24.13.0</node.version>
         <npm.version>11.6.2</npm.version>
         <js.build.directory>${project.build.directory}/js-build</js.build.directory>
