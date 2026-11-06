@@ -169,6 +169,10 @@ dependency metadata and licenses.
 Tests cover NetBeans PE32/PE32+ launchers, growing PNG-based icons,
 multi-resolution bitmap ICOs, language variants, shared icon resources, signed
 input rejection, invalid inputs, deterministic output and input preservation.
+A round-trip test extracts the original icon from each launcher, replaces it and
+restores it repeatedly, checking icon resources, other resources and non-resource
+sections. It also checks that repeated rewrites stabilize for these fixtures;
+byte-for-byte restoration of the original executable is not guaranteed.
 A separate Maven consumer invokes the packaged plugin without provisioning Node.
 Structural resource checks do not replace starting a complete branded NetBeans
 application on Windows with its platform modules, configuration and JDK.

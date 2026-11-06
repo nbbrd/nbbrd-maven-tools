@@ -54,6 +54,53 @@ class ReplaceIconMojoTest {
         assertThat(IconEditor.replaceIcon(original, icon, 100)).isEqualTo(result);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"app.exe", "app64.exe"})
+    void restoresOriginalIconResourcesAfterRepeatedReplacement(String launcher) throws Exception {
+        byte[] original = fixture(launcher);
+        Map<PeResources.Key, byte[]> before = PeResources.read(original);
+        var groups = before.keySet().stream()
+                .filter(key -> key.type() == 14 && key.id() == 100)
+                .toList();
+        assertThat(groups).hasSize(1);
+        PeResources.Key group = groups.get(0);
+        byte[] originalIcon = extractIcon(before, group);
+        byte[] replacementIcon = largeIcon();
+        byte[] changed = IconEditor.replaceIcon(original, replacementIcon, 100);
+        byte[] restored = IconEditor.replaceIcon(changed, originalIcon, 100);
+        Map<PeResources.Key, byte[]> after = PeResources.read(restored);
+
+        assertGroupImagesEqual(before, after, group);
+        before.forEach((key, value) -> {
+            if (key.type() != 3 && key.type() != 14) {
+                assertThat(after.get(key)).as("resource %s", key).isEqualTo(value);
+            }
+        });
+        assertThat(after.keySet().stream()
+                        .filter(key -> key.type() != 3 && key.type() != 14)
+                        .toList())
+                .containsExactlyInAnyOrderElementsOf(before.keySet().stream()
+                        .filter(key -> key.type() != 3 && key.type() != 14)
+                        .toList());
+        Map<String, byte[]> sections = PeResources.sections(restored);
+        Map<String, byte[]> originalSections = PeResources.sections(original);
+        assertThat(sections.keySet()).containsExactlyInAnyOrderElementsOf(originalSections.keySet());
+        originalSections.forEach((name, data) ->
+                assertThat(sections.get(name)).as("section %s", name).isEqualTo(data));
+
+        byte[] repeated = IconEditor.replaceIcon(restored, originalIcon, 100);
+        assertThat(repeated).as("repeated replacement with the same icon").isEqualTo(restored);
+        for (int cycle = 0; cycle < 3; cycle++) {
+            byte[] nextChanged = IconEditor.replaceIcon(repeated, replacementIcon, 100);
+            assertIcon(PeResources.read(nextChanged), replacementIcon);
+            byte[] nextRestored = IconEditor.replaceIcon(nextChanged, originalIcon, 100);
+            assertThat(nextRestored)
+                    .as("restored executable after cycle %s", cycle + 1)
+                    .isEqualTo(restored);
+            repeated = nextRestored;
+        }
+    }
+
     @Test
     void writesSeparateOutputAndLeavesInputsUntouched() throws Exception {
         ReplaceIconMojo mojo = configured();
@@ -288,6 +335,53 @@ class ReplaceIconMojoTest {
             int iconId = Short.toUnsignedInt(group.getShort(18));
             assertThat(entries.get(new PeResources.Key(3, iconId, entry.getKey().language())))
                     .isEqualTo(Arrays.copyOfRange(ico, 22, ico.length));
+        }
+    }
+
+    private static byte[] extractIcon(Map<PeResources.Key, byte[]> entries, PeResources.Key key) {
+        byte[] groupBytes = entries.get(key);
+        assertThat(groupBytes).as("original icon group %s", key).isNotNull();
+        ByteBuffer group = ByteBuffer.wrap(groupBytes).order(ByteOrder.LITTLE_ENDIAN);
+        int count = Short.toUnsignedInt(group.getShort(4));
+        int total = 6 + count * 16;
+        for (int index = 0; index < count; index++) {
+            total += group.getInt(6 + index * 14 + 8);
+        }
+        ByteBuffer ico = ByteBuffer.allocate(total).order(ByteOrder.LITTLE_ENDIAN);
+        ico.put(groupBytes, 0, 6);
+        int offset = 6 + count * 16;
+        for (int index = 0; index < count; index++) {
+            int position = 6 + index * 14;
+            int id = Short.toUnsignedInt(group.getShort(position + 12));
+            byte[] image = entries.get(new PeResources.Key(3, id, key.language()));
+            assertThat(image).as("original icon image %s", id).isNotNull();
+            assertThat(image.length).isEqualTo(group.getInt(position + 8));
+            ico.put(groupBytes, position, 12).putInt(offset);
+            System.arraycopy(image, 0, ico.array(), offset, image.length);
+            offset += image.length;
+        }
+        return ico.array();
+    }
+
+    private static void assertGroupImagesEqual(
+            Map<PeResources.Key, byte[]> before, Map<PeResources.Key, byte[]> after, PeResources.Key key) {
+        byte[] beforeGroup = before.get(key);
+        byte[] afterGroup = after.get(key);
+        assertThat(afterGroup).as("restored icon group %s", key).isNotNull();
+        ByteBuffer original = ByteBuffer.wrap(beforeGroup).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer restored = ByteBuffer.wrap(afterGroup).order(ByteOrder.LITTLE_ENDIAN);
+        int count = Short.toUnsignedInt(original.getShort(4));
+        assertThat(Arrays.copyOfRange(afterGroup, 0, 6)).isEqualTo(Arrays.copyOfRange(beforeGroup, 0, 6));
+        for (int index = 0; index < count; index++) {
+            int position = 6 + index * 14;
+            assertThat(Arrays.copyOfRange(afterGroup, position, position + 12))
+                    .as("icon metadata %s", index)
+                    .isEqualTo(Arrays.copyOfRange(beforeGroup, position, position + 12));
+            int originalId = Short.toUnsignedInt(original.getShort(position + 12));
+            int restoredId = Short.toUnsignedInt(restored.getShort(position + 12));
+            assertThat(after.get(new PeResources.Key(3, restoredId, key.language())))
+                    .as("icon image %s", index)
+                    .isEqualTo(before.get(new PeResources.Key(3, originalId, key.language())));
         }
     }
 
