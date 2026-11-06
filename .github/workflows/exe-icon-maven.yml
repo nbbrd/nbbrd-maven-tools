@@ -1,0 +1,61 @@
+name: Executable icon Maven plugin
+
+on: [ push, pull_request ]
+
+env:
+  MAVEN_ARGS: "-B -ntp"
+  JAVA_VERSION: 21
+
+jobs:
+  build-and-test-job:
+    if: github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/develop') || startsWith(github.ref, 'refs/tags/v')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-15-intel, macos-latest, windows-latest ]
+
+    name: Icon plugin tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout and Setup Maven
+        uses: s4u/setup-maven-action@v1.22.0
+        with:
+          checkout-submodules: true
+          checkout-fetch-depth: 0
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Build and test icon plugin with Maven
+        run: mvn -pl exe-icon-maven-plugin -am verify
+
+      - name: Check that the build leaves the source tree unchanged
+        shell: pwsh
+        run: |
+          $changes = git status --porcelain
+          if ($changes) { throw "Build modified the source tree: $changes" }
+
+      - name: Upload generated icon editor for reproducibility comparison
+        uses: actions/upload-artifact@v7
+        with:
+          name: exe-icon-bundle-${{ matrix.os }}
+          path: exe-icon-maven-plugin/target/generated-resources/internal/exeicon/
+          if-no-files-found: error
+
+  bundle-reproducibility-job:
+    needs: build-and-test-job
+    runs-on: ubuntu-latest
+    name: Compare icon editor bundles across build hosts
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: exe-icon-bundle-*
+          path: bundles
+      - name: Compare bundle and license bytes
+        shell: pwsh
+        run: |
+          foreach ($name in @("icons.js", "THIRD-PARTY-NOTICES.txt")) {
+            $files = @(Get-ChildItem bundles -Recurse -Filter $name)
+            if ($files.Count -ne 4) { throw "Expected four copies of $name" }
+            $hashes = @($files | Get-FileHash -Algorithm SHA256 | Select-Object -ExpandProperty Hash -Unique)
+            if ($hashes.Count -ne 1) { throw "Non-reproducible output: $name" }
+          }
