@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Add plugin to bundle java runtime inside an application archive [#209](https://github.com/nbbrd/nbbrd-maven-tools/issues/209)
+
 ## [1.4.2] - 2026-11-06
 
 ### Fixed

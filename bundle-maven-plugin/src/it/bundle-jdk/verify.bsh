@@ -1,0 +1,39 @@
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
+import java.nio.charset.StandardCharsets;
+
+void verifyBundle(File output, String prefix, String home, String expectedSelection) {
+ZipInputStream zip = new ZipInputStream(new FileInputStream(output));
+try {
+    boolean runtimeFound = false;
+    boolean launcherFound = false;
+    ZipEntry entry;
+    while ((entry = zip.getNextEntry()) != null) {
+        if (entry.getName().equals(prefix + home + "bin/java")) {
+            runtimeFound = true;
+        }
+        if (entry.getName().equals(prefix + "bin/run")) {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int count;
+            while ((count = zip.read(buffer, 0, buffer.length)) != -1) {
+                bytes.write(buffer, 0, count);
+            }
+            if (!new String(bytes.toByteArray(), StandardCharsets.UTF_8).contains(expectedSelection)) {
+                throw new IllegalStateException("Launcher does not select bundled runtime");
+            }
+            launcherFound = true;
+        }
+    }
+    if (!runtimeFound || !launcherFound) {
+        throw new IllegalStateException("Missing bundled runtime or launcher");
+    }
+} finally {
+    zip.close();
+}
+}
+verifyBundle(new File(basedir, "target/standalone-linux-x86_64.zip"), "app/", "jdk-21/",
+        "JAVA_HOME=\"$BASEDIR/jdk-21\"");
+verifyBundle(new File(basedir, "target/root-standalone-linux-x86_64.zip"), "", "",
+        "JAVA_HOME=\"$BASEDIR\"");
+return true;

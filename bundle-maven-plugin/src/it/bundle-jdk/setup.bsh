@@ -1,0 +1,37 @@
+import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+void writeEntry(ZipOutputStream zip, String name, String content) {
+    zip.putNextEntry(new ZipEntry(name));
+    zip.write(content.getBytes(StandardCharsets.UTF_8));
+    zip.closeEntry();
+}
+
+File fixtures = new File(basedir, "target/test-fixtures");
+if (!fixtures.isDirectory() && !fixtures.mkdirs()) {
+    throw new IOException("Cannot create fixture directory: " + fixtures);
+}
+for (String prefix : new String[] {"app/", ""}) {
+    String name = prefix.isEmpty() ? "root-application.zip" : "application.zip";
+    ZipOutputStream application = new ZipOutputStream(new FileOutputStream(new File(fixtures, name)));
+    try {
+        writeEntry(application, prefix + "bin/run",
+                "#!/bin/sh\nif [ -z \"$JAVACMD\" ] ; then\n  JAVACMD=java\nfi\nexec \"$JAVACMD\" \"$@\"\n");
+        writeEntry(application, prefix + "bin/run.bat",
+                "@echo off\r\nif \"%JAVACMD%\"==\"\" set JAVACMD=java\r\n%JAVACMD% %*\r\n");
+    } finally {
+        application.close();
+    }
+}
+for (String prefix : new String[] {"jdk-21/", ""}) {
+    String name = prefix.isEmpty() ? "root-runtime.zip" : "runtime.zip";
+    ZipOutputStream runtime = new ZipOutputStream(new FileOutputStream(new File(fixtures, name)));
+    try {
+        writeEntry(runtime, prefix + "bin/java", "synthetic runtime");
+        writeEntry(runtime, prefix + "release", "JAVA_VERSION=\"21\"\n");
+    } finally {
+        runtime.close();
+    }
+}
+return true;
