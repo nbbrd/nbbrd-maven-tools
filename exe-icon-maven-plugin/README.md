@@ -58,15 +58,48 @@ file. Atomic replacement is used where the filesystem supports it.
 
 ### NetBeans Platform
 
-The NetBeans launcher source declares icon group 100. Verify the actual launcher
-from your platform release rather than assuming every release has that layout.
-Create the launcher copies, replace their icons, sign if needed, then create the
-ZIP/installer. Use one execution per distributed launcher variant.
+For example, after assembling the NetBeans application, keep copies of its original
+launchers and replace each packaged launcher from those copies:
+
+```xml
+<plugin>
+    <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
+    <artifactId>exe-icon-maven-plugin</artifactId>
+    <version>${exe-icon-maven-plugin.version}</version>
+    <configuration>
+        <iconFile>${project.basedir}/src/main/resources/app.ico</iconFile>
+        <iconGroupId>100</iconGroupId>
+    </configuration>
+    <executions>
+        <execution>
+            <id>brand-launcher</id>
+            <phase>prepare-package</phase>
+            <goals><goal>replace-icon</goal></goals>
+            <configuration>
+                <inputFile>${project.build.directory}/unbranded-launchers/${brandingToken}.exe</inputFile>
+                <outputFile>${project.build.directory}/${brandingToken}/bin/${brandingToken}.exe</outputFile>
+            </configuration>
+        </execution>
+        <execution>
+            <id>brand-launcher64</id>
+            <phase>prepare-package</phase>
+            <goals><goal>replace-icon</goal></goals>
+            <configuration>
+                <inputFile>${project.build.directory}/unbranded-launchers/${brandingToken}64.exe</inputFile>
+                <outputFile>${project.build.directory}/${brandingToken}/bin/${brandingToken}64.exe</outputFile>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+The NetBeans launcher declares icon group 100. Make sure the launcher copies exist
+before these executions, and that packaging uses the branded output. Sign the
+launchers afterward if required.
 
 Never edit a launcher in the shared NetBeans harness or Maven local repository.
-The input and output must be distinct, so configure packaging to consume the
-branded copy. The running Swing application's window/taskbar branding is separate
-from the executable's Explorer icon.
+The running Swing application's window/taskbar branding is separate from the
+executable's Explorer icon.
 
 This plugin is tested against pinned NetBeans PE32 and PE32+ launchers; it does not
 promise arbitrary packed executables, installers or self-extracting archives are
