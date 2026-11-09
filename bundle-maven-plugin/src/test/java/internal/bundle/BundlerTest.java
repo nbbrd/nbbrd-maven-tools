@@ -219,8 +219,11 @@ class BundlerTest {
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> bundle(app, runtime, output, "app", "netbeans", "missing", null, "zip", TIMESTAMP))
                 .withMessageContaining("test-runtime")
-                .withMessageContaining(runtime.toString())
-                .withMessageContaining(output.toString())
+                .withMessageContaining(runtime.toRealPath().toString())
+                .withMessageContaining(output.getParent()
+                        .toRealPath()
+                        .resolve(output.getFileName())
+                        .toString())
                 .withMessageContaining("netbeans")
                 .withMessageContaining("app/etc/missing.conf");
     }
