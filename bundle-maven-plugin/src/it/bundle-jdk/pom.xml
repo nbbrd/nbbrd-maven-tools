@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>test</groupId>
+    <artifactId>bundle-jdk-consumer</artifactId>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>@project.groupId@</groupId>
+                <artifactId>bundle-maven-plugin</artifactId>
+                <version>@project.version@</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>bundle-jdk</goal>
+                        </goals>
+                        <configuration>
+                            <inputFile>${project.build.directory}/test-fixtures/application.zip</inputFile>
+                            <applicationRoot>app</applicationRoot>
+                            <launcherId>appassembler</launcherId>
+                            <appName>run</appName>
+                            <outputTimestamp>2026-01-02T03:04:06Z</outputTimestamp>
+                            <archivePathTemplate>target/runtime-directory</archivePathTemplate>
+                            <outputFileTemplate>target/standalone-{id}.zip</outputFileTemplate>
+                            <runtimes>
+                                <runtime>
+                                    <id>linux-x86_64</id>
+                                    <archivePath>${project.build.directory}/test-fixtures/runtime.zip</archivePath>
+                                </runtime>
+                                <runtime>
+                                    <id>linux-tar</id>
+                                    <outputFile>${project.build.directory}/standalone-linux-tar.tgz</outputFile>
+                                </runtime>
+                            </runtimes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>archive-root</id>
+                        <goals>
+                            <goal>bundle-jdk</goal>
+                        </goals>
+                        <configuration>
+                            <inputFile>${project.build.directory}/test-fixtures/root-application.zip</inputFile>
+                            <launcherId>appassembler</launcherId>
+                            <outputTimestamp>2026-03-08T02:30:07Z</outputTimestamp>
+                            <archivePathTemplate>target/test-fixtures/root-runtime.zip</archivePathTemplate>
+                            <outputFileTemplate>target/root-standalone-{id}.zip</outputFileTemplate>
+                            <runtimeIds> linux-x86_64 </runtimeIds>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
