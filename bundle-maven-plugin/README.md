@@ -70,7 +70,9 @@ mvn package
 ```
 
 The result is `target/myapp-linux-x86_64.tar.gz`. Maven logs application loading,
-each runtime's progress (`[1/1]`), archive writing, and successful completion.
+each runtime's progress (`[1/1]`), and archive writing. Each completed bundle
+reports its output path, size in bytes, and elapsed time. After all bundles
+succeed, a summary reports the total bundle count and elapsed time.
 
 **Build order matters:** the input archives must exist before `bundle-jdk`
 runs. If another plugin creates or downloads them during `package`, declare that
@@ -281,7 +283,9 @@ its launcher.
 | No runtime archive, or several candidates | Set `archivePath` to a specific archive, or leave exactly one supported archive in the selected directory. |
 | Launcher file missing | Check `applicationRoot` and `appName` against the paths inside the application archive. Appassembler requires both scripts. |
 | Launcher template cannot be patched | Use the supported standard template or a custom launcher provider. |
+| No Java installation found | Check that the runtime archive contains `bin/java` or `bin/java.exe` and the JDK/JRE metadata file named `release` in the same installation directory. |
 | Multiple Java homes found | Set the runtime's `javaHome` to an archive-relative path. |
+| Invalid `javaHome` | Use a directory inside the runtime archive, not on the build machine. The error identifies missing required files. |
 | Unsupported output format | End `outputFile` with `.zip`, `.tar.gz`, or `.tgz`. |
 | Missing or invalid timestamp | Set `project.build.outputTimestamp` or `outputTimestamp`; check the ZIP date range. |
 | Output collision | Give each runtime its own output path, distinct from every input archive. |

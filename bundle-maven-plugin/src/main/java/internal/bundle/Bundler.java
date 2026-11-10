@@ -28,6 +28,7 @@ public class Bundler {
     }
 
     public void bundle(BundleRequest request, Consumer<String> progress) throws IOException {
+        long started = System.nanoTime();
         BundleRequest validated = validate(request);
         Launcher launcher = Launchers.find(validated.getLauncher());
         List<LauncherFile> files = launcherFiles(launcher, validated.getAppName());
@@ -46,11 +47,18 @@ public class Bundler {
             for (RuntimeBundle runtime : validated.getRuntimes()) {
                 String context = context(validated, runtime);
                 try {
+                    long runtimeStarted = System.nanoTime();
                     progress.accept(
                             "[" + ++index + "/" + validated.getRuntimes().size() + "] Bundling runtime '"
                                     + runtime.getId() + "' from " + runtime.getArchive());
                     bundleRuntime(validated, runtime, application, launcher, files, progress);
-                    progress.accept("Bundled runtime '" + runtime.getId() + "': " + runtime.getOutput());
+                    progress.accept(String.format(
+                            Locale.ROOT,
+                            "Bundled runtime '%s': %s (%,d bytes, %s)",
+                            runtime.getId(),
+                            runtime.getOutput(),
+                            Files.size(runtime.getOutput()),
+                            elapsed(runtimeStarted)));
                 } catch (IllegalArgumentException ex) {
                     throw new IllegalArgumentException(context + ": " + ex.getMessage(), ex);
                 } catch (IOException ex) {
@@ -58,6 +66,12 @@ public class Bundler {
                 }
             }
         }
+        int count = validated.getRuntimes().size();
+        progress.accept("Generated " + count + (count == 1 ? " bundle" : " bundles") + " in " + elapsed(started));
+    }
+
+    private String elapsed(long started) {
+        return String.format(Locale.ROOT, "%.3f s", (System.nanoTime() - started) / 1_000_000_000.0);
     }
 
     private BundleRequest validate(BundleRequest request) throws IOException {
@@ -244,32 +258,70 @@ public class Bundler {
     }
 
     private String javaHome(Archive archive, String override) {
-        Set<String> candidates = new TreeSet<>();
+        if (override != null) {
+            String home = safeLauncherPath(override);
+            requireJavaHome(archive, home);
+            return home;
+        }
+        Set<String> executableHomes = new TreeSet<>();
         for (String name : archive.entries.keySet()) {
             if (name.equals("bin/java")
                     || name.equals("bin/java.exe")
                     || name.endsWith("/bin/java")
                     || name.endsWith("/bin/java.exe")) {
                 String home = Archive.parent(Archive.parent(name));
-                String release = join(home, "release");
-                if (archive.entries.containsKey(release)) {
-                    archive.regular(archive.entries.get(name));
-                    archive.regular(archive.entries.get(release));
-                    candidates.add(home);
-                }
+                executableHomes.add(home.isEmpty() ? "." : home);
             }
         }
-        if (override != null) {
-            String home = safeLauncherPath(override);
-            if (!candidates.contains(home)) {
-                throw new IllegalArgumentException("javaHome does not contain bin/java[.exe] and release: " + override);
+        Set<String> candidates = new TreeSet<>();
+        for (String candidate : executableHomes) {
+            String home = ".".equals(candidate) ? "" : candidate;
+            if (archive.entries.containsKey(join(home, "release"))) {
+                requireJavaHome(archive, home);
+                candidates.add(candidate);
             }
-            return home;
         }
-        if (candidates.size() != 1) {
-            throw new IllegalArgumentException("Expected one Java home in runtime archive, found " + candidates);
+        if (candidates.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "No Java installation found in runtime archive. Expected bin/java or bin/java.exe and a file named "
+                            + "'release' (JDK/JRE metadata) in the same installation directory."
+                            + (executableHomes.isEmpty()
+                                    ? ""
+                                    : " Found Java executable directories: " + executableHomes
+                                            + "; check that they contain the 'release' metadata file."));
+        }
+        if (candidates.size() > 1) {
+            throw new IllegalArgumentException("Multiple Java installations found in runtime archive: " + candidates
+                    + ". Set this runtime's javaHome to one of these archive-relative directories "
+                    + "('.' means the archive root).");
         }
         return safeLauncherPath(candidates.iterator().next());
+    }
+
+    private void requireJavaHome(Archive archive, String home) {
+        Archive.Entry executable = archive.entries.get(join(home, "bin/java"));
+        if (executable == null) {
+            executable = archive.entries.get(join(home, "bin/java.exe"));
+        }
+        Archive.Entry release = archive.entries.get(join(home, "release"));
+        List<String> missing = new ArrayList<>();
+        if (executable == null) {
+            missing.add("'bin/java' or 'bin/java.exe'");
+        }
+        if (release == null) {
+            missing.add("the 'release' metadata file");
+        }
+        String context = "Invalid javaHome '" + (home.isEmpty() ? "." : home) + "': ";
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException(context + "missing " + String.join(" and ", missing)
+                    + ". javaHome must name a directory inside the runtime archive, not on the build machine.");
+        }
+        try {
+            archive.regular(executable);
+            archive.regular(release);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(context + ex.getMessage(), ex);
+        }
     }
 
     private void patch(Archive archive, String base, LauncherFile file, Launcher launcher, String javaHome)

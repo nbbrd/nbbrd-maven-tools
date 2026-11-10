@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarConstants;
@@ -70,19 +71,29 @@ class BundlerTest {
         if (failSecond) {
             assertThatIllegalArgumentException()
                     .isThrownBy(() -> Bundler.bundle(request, progress))
-                    .withMessageContaining("second");
+                    .withMessageContaining("second")
+                    .withMessageContaining("Invalid javaHome 'missing'")
+                    .withMessageContaining("'bin/java' or 'bin/java.exe'")
+                    .withMessageContaining("'release' metadata file");
         } else {
             Bundler.bundle(request, progress);
         }
-        assertThat(messages).hasSize(failSecond ? 5 : 7);
+        assertThat(messages).hasSize(failSecond ? 5 : 8);
         assertThat(messages.get(0)).startsWith("Reading application archive: ");
         assertThat(messages.get(1)).startsWith("[1/2] Bundling runtime 'first' from ");
         assertThat(messages.get(2)).startsWith("Writing bundle for runtime 'first': ");
-        assertThat(messages.get(3)).startsWith("Bundled runtime 'first': ");
+        assertThat(messages.get(3))
+                .startsWith("Bundled runtime 'first': ")
+                .contains(String.format(Locale.ROOT, "(%,d bytes, ", Files.size(first)))
+                .matches(".*\\d+\\.\\d{3} s\\)$");
         assertThat(messages.get(4)).startsWith("[2/2] Bundling runtime 'second' from ");
         if (!failSecond) {
             assertThat(messages.get(5)).startsWith("Writing bundle for runtime 'second': ");
-            assertThat(messages.get(6)).startsWith("Bundled runtime 'second': ");
+            assertThat(messages.get(6))
+                    .startsWith("Bundled runtime 'second': ")
+                    .contains(String.format(Locale.ROOT, "(%,d bytes, ", Files.size(second)))
+                    .matches(".*\\d+\\.\\d{3} s\\)$");
+            assertThat(messages.get(7)).matches("Generated 2 bundles in \\d+\\.\\d{3} s");
         }
     }
 
@@ -351,26 +362,77 @@ class BundlerTest {
                 .withMessageContaining("Missing regular launcher");
     }
 
-    @Test
-    void rejectsAmbiguousRuntimeUnlessHomeIsExplicit() throws IOException {
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void rejectsAmbiguousRuntimeUnlessHomeIsExplicit(boolean rootHome) throws IOException {
         Path app = application(temp, "zip", false);
         Path runtime = temp.resolve("two.zip");
         try (Archive archive = new Archive(temp)) {
-            for (String root : Arrays.asList("jdk1", "jdk2")) {
-                file(archive, root + "/bin/java", "binary", 0755);
-                file(archive, root + "/release", "version", 0644);
+            for (String prefix : Arrays.asList(rootHome ? "" : "jdk1/", "jdk2/")) {
+                file(archive, prefix + "bin/java", "binary", 0755);
+                file(archive, prefix + "release", "version", 0644);
             }
             archive.write(runtime, "zip", TIMESTAMP);
         }
         Path output = temp.resolve("result.zip");
         assertThatIllegalArgumentException()
                 .isThrownBy(() -> bundle(app, runtime, output, "app", "appassembler", "run", null, TIMESTAMP))
-                .withMessageContaining("Expected one Java home");
+                .withMessageContaining("Multiple Java installations found")
+                .withMessageContaining(rootHome ? "[., jdk2]" : "[jdk1, jdk2]")
+                .withMessageContaining("Set this runtime's javaHome")
+                .withMessageContaining("archive-relative");
         bundle(app, runtime, output, "app", "appassembler", "run", "jdk2", TIMESTAMP);
         try (Archive result = new Archive(temp)) {
             result.read(output);
             assertThat(text(result, "app/bin/run")).contains("$BASEDIR/jdk2");
         }
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"empty", "executable-only", "metadata-only"})
+    void explainsMissingJavaInstallation(String layout) throws IOException {
+        Path app = application(temp, "zip", false);
+        Path runtime = temp.resolve("incomplete.zip");
+        try (Archive archive = new Archive(temp)) {
+            if ("executable-only".equals(layout)) {
+                file(archive, "jdk/bin/java", "binary", 0755);
+            } else if ("metadata-only".equals(layout)) {
+                file(archive, "jdk/release", "version", 0644);
+            }
+            archive.write(runtime, "zip", TIMESTAMP);
+        }
+        assertThatIllegalArgumentException()
+                .isThrownBy(() ->
+                        bundle(app, runtime, temp.resolve("result.zip"), "app", "appassembler", "run", null, TIMESTAMP))
+                .withMessageContaining("No Java installation found")
+                .withMessageContaining("bin/java or bin/java.exe")
+                .withMessageContaining("file named 'release' (JDK/JRE metadata)")
+                .satisfies(error -> {
+                    if ("executable-only".equals(layout)) {
+                        assertThat(error).hasMessageContaining("Found Java executable directories: [jdk]");
+                    }
+                });
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"bin/java", "release"})
+    void identifiesMissingFilesInExplicitJavaHome(String missing) throws IOException {
+        Path app = application(temp, "zip", false);
+        Path runtime = temp.resolve("incomplete.zip");
+        try (Archive archive = new Archive(temp)) {
+            for (String name : Arrays.asList("bin/java", "release")) {
+                if (!name.equals(missing)) {
+                    file(archive, "jdk/" + name, "content", 0755);
+                }
+            }
+            archive.write(runtime, "zip", TIMESTAMP);
+        }
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> bundle(
+                        app, runtime, temp.resolve("result.zip"), "app", "appassembler", "run", "jdk", TIMESTAMP))
+                .withMessageContaining("Invalid javaHome 'jdk': missing")
+                .withMessageContaining(missing)
+                .withMessageContaining("inside the runtime archive");
     }
 
     @Test
