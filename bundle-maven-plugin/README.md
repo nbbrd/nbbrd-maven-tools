@@ -176,6 +176,66 @@ appended. Its extension selects the format:
 
 Input and output formats can differ. There is no separate `format` setting.
 
+### Avoid repeated paths with templates
+
+When your platforms follow the same naming convention, set optional defaults
+outside `<runtimes>`:
+
+```xml
+<archivePathTemplate>${project.build.directory}/jdks/{id}</archivePathTemplate>
+<outputFileTemplate>${project.build.directory}/myapp-{id}.tar.gz</outputFileTemplate>
+<runtimes>
+    <runtime>
+        <id>linux-x64</id>
+    </runtime>
+    <runtime>
+        <id>macos-aarch64</id>
+    </runtime>
+    <runtime>
+        <id>windows-x64</id>
+        <outputFile>${project.build.directory}/myapp-windows-x64.zip</outputFile>
+    </runtime>
+</runtimes>
+```
+
+Here, `jdks/linux-x64`, `jdks/macos-aarch64`, and `jdks/windows-x64` each contain
+one runtime archive. The Windows output overrides the default TAR.GZ filename.
+
+Each explicit runtime `archivePath` or `outputFile` takes precedence over its
+corresponding template, independently. If neither a path nor its template is
+configured, the build fails. Templates have no defaults.
+
+Only `{id}` substitution is supported, not Mustache or expressions. Maven
+expands its own `${...}` properties first; the plugin then replaces `{id}`.
+Unknown or malformed brace placeholders in a used template fail explicitly.
+Relative runtime paths, including template results, resolve against the Maven
+project directory. All resolved paths use the usual archive selection, format,
+and collision checks.
+
+### Comma-separated runtime ids
+
+For uniform configurations with no per-runtime exceptions, replace `<runtimes>`
+with `runtimeIds` and supply both templates:
+
+```xml
+<archivePathTemplate>${project.build.directory}/jdks/{id}</archivePathTemplate>
+<outputFileTemplate>${project.build.directory}/myapp-{id}.zip</outputFileTemplate>
+<runtimeIds>linux-x64,macos-aarch64,windows-x64</runtimeIds>
+```
+
+Or, with the templates configured in the POM:
+
+```shell
+mvn package -Dbundle.runtimeIds=linux-x64,windows-x64
+```
+
+Ids are processed in the listed order; surrounding whitespace is ignored.
+Empty, invalid, or duplicate ids fail the build. `runtimeIds` and `<runtimes>`
+are mutually exclusive: they do not merge or filter each other. Use `<runtimes>`
+instead when you need individual paths, output formats, or `javaHome` settings.
+Do not pass `bundle.runtimeIds` to an execution that already configures
+`<runtimes>`.
+
 ## Choose a launcher
 
 `appName` is a filename stem, not a display name. It defaults to
@@ -223,7 +283,10 @@ an archive that silently uses system Java.
 | `applicationRoot` | `.` | Application directory inside the archive. |
 | `launcherId` | Required | `appassembler`, `netbeans`, or a custom provider id. |
 | `appName` | `${project.artifactId}` | Script or configuration filename stem. |
-| `runtimes` | Required | One or more runtime configurations. |
+| `runtimes` | Unset | Detailed runtime configurations; required unless using `runtimeIds`. |
+| `runtimeIds` | Unset | Comma-separated ids; requires both templates and cannot be combined with `runtimes`. |
+| `archivePathTemplate` | Unset | Default runtime archive path, with optional `{id}` substitution. |
+| `outputFileTemplate` | Unset | Default output filename, with optional `{id}` substitution. |
 | `outputTimestamp` | `${project.build.outputTimestamp}`; required | ISO-8601 instant or Unix epoch seconds. |
 | `skip` | `false` | Skip bundling. |
 
@@ -232,8 +295,8 @@ an archive that silently uses system Java.
 | Parameter | Default | Purpose |
 | --- | --- | --- |
 | `id` | Required | Unique label identifying the runtime in logs and errors. |
-| `archivePath` | Required | Runtime archive, or directory containing exactly one supported archive. |
-| `outputFile` | Required | Destination archive, including its format-selecting extension. |
+| `archivePath` | From `archivePathTemplate`; otherwise required | Runtime archive, or directory containing exactly one supported archive. |
+| `outputFile` | From `outputFileTemplate`; otherwise required | Destination archive, including its format-selecting extension. |
 | `javaHome` | Auto-detected | Directory containing Java's `bin` directory, relative to the runtime archive; `.` selects the archive root. |
 
 ### Command-line overrides
@@ -245,11 +308,13 @@ mvn package -Dbundle.appName=myapp
 mvn package -Dbundle.skip=true
 ```
 
-Skipping avoids reading the archives, but Maven still requires `inputFile`,
-`launcherId`, `runtimes`, and `outputTimestamp` to be configured.
+Skipping avoids reading the archives or resolving runtime configuration, but
+Maven still requires `inputFile`, `launcherId`, and `outputTimestamp` to be
+configured.
 
 Runtime settings belong in the POM. To override their values from the command
-line, reference your own Maven properties in `archivePath` or `outputFile`.
+line, reference your own Maven properties in `archivePath` or `outputFile`,
+or set `bundle.archivePathTemplate` and `bundle.outputFileTemplate`.
 
 ## Permissions, reproducibility, and disk space
 

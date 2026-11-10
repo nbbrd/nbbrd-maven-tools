@@ -14,17 +14,21 @@ import lombok.Data;
 public final class Runtime {
 
     private String id;
-    /** Runtime archive file or directory containing exactly one supported runtime archive. */
+    /** Runtime archive file or directory, overriding archivePathTemplate; a directory must contain exactly one supported archive. */
     private File archivePath;
     /** Java home relative to the runtime archive, not the build machine; dot selects the archive root. */
     private String javaHome;
-    /** Required destination archive; .zip, .tar.gz or .tgz determines the format. */
+    /** Destination archive, overriding outputFileTemplate; .zip, .tar.gz or .tgz determines the format. */
     private File outputFile;
 
-    public Path resolveArchive() throws IOException {
+    void validateId() {
         if (id == null || !id.matches("[A-Za-z0-9][A-Za-z0-9._-]*")) {
             throw new IllegalArgumentException("Runtime id must be a non-empty filename component");
         }
+    }
+
+    public Path resolveArchive() throws IOException {
+        validateId();
         if (archivePath == null) {
             throw new IllegalArgumentException("Runtime " + id + " requires archivePath");
         }

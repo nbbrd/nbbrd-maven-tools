@@ -5,9 +5,14 @@ import internal.bundle.Bundler;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.DateTimeException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -35,9 +40,25 @@ public final class BundleJdkMojo extends AbstractMojo {
     @Parameter(property = "bundle.appName", defaultValue = "${project.artifactId}")
     String appName;
 
-    /** Runtime archives, one per output platform. */
-    @Parameter(required = true)
+    /** Runtime archives, one per output platform; mutually exclusive with runtimeIds. */
+    @Parameter
     List<Runtime> runtimes;
+
+    /** Comma-separated runtime ids; requires both path templates and excludes runtimes. */
+    @Parameter(property = "bundle.runtimeIds")
+    String runtimeIds;
+
+    /** Default runtime archive path; {id} is replaced with the runtime id. */
+    @Parameter(property = "bundle.archivePathTemplate")
+    String archivePathTemplate;
+
+    /** Default output archive path; {id} is replaced with the runtime id. */
+    @Parameter(property = "bundle.outputFileTemplate")
+    String outputFileTemplate;
+
+    /** Base directory for relative runtime paths. */
+    @Parameter(defaultValue = "${project.basedir}", readonly = true, required = true)
+    File projectDirectory;
 
     /** Reproducible timestamp, ISO-8601 or seconds since the Unix epoch. */
     @Parameter(property = "bundle.outputTimestamp", defaultValue = "${project.build.outputTimestamp}", required = true)
@@ -54,9 +75,10 @@ public final class BundleJdkMojo extends AbstractMojo {
             return;
         }
         try {
-            if (inputFile == null || runtimes == null || runtimes.isEmpty()) {
-                throw new IllegalArgumentException("inputFile and at least one runtime are required");
+            if (inputFile == null) {
+                throw new IllegalArgumentException("inputFile is required");
             }
+            List<Runtime> selectedRuntimes = selectRuntimes();
             if (outputTimestamp == null || outputTimestamp.trim().isEmpty()) {
                 throw new IllegalArgumentException("outputTimestamp is required for reproducible bundles");
             }
@@ -67,19 +89,23 @@ public final class BundleJdkMojo extends AbstractMojo {
                     .launcher(launcherId)
                     .appName(appName)
                     .timestamp(timestamp);
-            for (Runtime runtime : runtimes) {
+            for (Runtime runtime : selectedRuntimes) {
                 if (runtime == null) {
                     throw new IllegalArgumentException("Runtime must not be null");
                 }
                 try {
-                    Path archive = runtime.resolveArchive();
-                    if (runtime.getOutputFile() == null) {
-                        throw new IllegalArgumentException("outputFile is required");
-                    }
+                    runtime.validateId();
+                    Runtime source = new Runtime();
+                    source.setId(runtime.getId());
+                    source.setArchivePath(
+                            resolvePath(runtime.getArchivePath(), archivePathTemplate, "archivePath", runtime.getId()));
+                    Path archive = source.resolveArchive();
+                    File output =
+                            resolvePath(runtime.getOutputFile(), outputFileTemplate, "outputFile", runtime.getId());
                     builder.runtime(BundleRequest.RuntimeBundle.builder()
                             .id(runtime.getId())
                             .archive(archive)
-                            .output(runtime.getOutputFile().toPath())
+                            .output(output.toPath())
                             .javaHome(runtime.getJavaHome())
                             .build());
                 } catch (IllegalArgumentException ex) {
@@ -95,6 +121,59 @@ public final class BundleJdkMojo extends AbstractMojo {
         } catch (IOException ex) {
             throw new MojoExecutionException("Cannot bundle Java runtime: " + ex.getMessage(), ex);
         }
+    }
+
+    List<Runtime> selectRuntimes() {
+        if (runtimeIds == null) {
+            if (runtimes == null || runtimes.isEmpty()) {
+                throw new IllegalArgumentException("Configure either runtimeIds or at least one entry in runtimes");
+            }
+            return runtimes;
+        }
+        if (runtimes != null && !runtimes.isEmpty()) {
+            throw new IllegalArgumentException("runtimeIds and runtimes are mutually exclusive; configure only one");
+        }
+        List<Runtime> selected = new ArrayList<>();
+        Set<String> ids = new HashSet<>();
+        for (String value : runtimeIds.split(",", -1)) {
+            String id = value.trim();
+            if (id.isEmpty()) {
+                throw new IllegalArgumentException("runtimeIds must contain non-empty comma-separated ids");
+            }
+            Runtime runtime = new Runtime();
+            runtime.setId(id);
+            runtime.validateId();
+            if (!ids.add(id.toLowerCase(Locale.ROOT))) {
+                throw new IllegalArgumentException("Duplicate runtime id in runtimeIds: " + id);
+            }
+            selected.add(runtime);
+        }
+        if (archivePathTemplate == null
+                || archivePathTemplate.trim().isEmpty()
+                || outputFileTemplate == null
+                || outputFileTemplate.trim().isEmpty()) {
+            throw new IllegalArgumentException("runtimeIds requires both archivePathTemplate and outputFileTemplate");
+        }
+        return selected;
+    }
+
+    File resolvePath(File explicit, String template, String parameter, String id) {
+        File path = explicit;
+        if (path == null) {
+            if (template == null || template.trim().isEmpty()) {
+                throw new IllegalArgumentException(
+                        parameter + " is required when " + parameter + "Template is not set");
+            }
+            String expanded = template.replace("{id}", id);
+            if (expanded.contains("{") || expanded.contains("}")) {
+                throw new IllegalArgumentException(
+                        parameter + "Template supports only the {id} placeholder: " + template);
+            }
+            path = Paths.get(expanded).toFile();
+        }
+        return path.isAbsolute()
+                ? path
+                : projectDirectory.toPath().resolve(path.toPath()).toFile();
     }
 
     private static Instant parseTimestamp(String value) {
