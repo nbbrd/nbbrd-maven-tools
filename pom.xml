@@ -4,7 +4,7 @@
 
     <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
     <artifactId>nbbrd-maven-tools</artifactId>
-    <version>1.4.3-SNAPSHOT</version>
+    <version>1.5.0</version>
     <packaging>pom</packaging>
 
     <name>nbbrd-maven-tools</name>
@@ -45,7 +45,7 @@
     <properties>
         <!-- Java 8+ config -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.build.outputTimestamp>2026-11-06T08:24:11Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-11-10T14:15:31Z</project.build.outputTimestamp>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
         <requiredMavenVersion>3.9.11</requiredMavenVersion>
