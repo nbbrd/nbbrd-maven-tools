@@ -18,15 +18,20 @@
                         </goals>
                         <configuration>
                             <inputFile>${project.build.directory}/test-fixtures/application.zip</inputFile>
-                            <finalName>standalone</finalName>
-                            <baseDirectory>app</baseDirectory>
-                            <launcher>appassembler</launcher>
+                            <applicationRoot>app</applicationRoot>
+                            <launcherId>appassembler</launcherId>
                             <appName>run</appName>
                             <outputTimestamp>2026-01-02T03:04:06Z</outputTimestamp>
                             <runtimes>
                                 <runtime>
                                     <id>linux-x86_64</id>
-                                    <archive>${project.build.directory}/test-fixtures/runtime.zip</archive>
+                                    <archivePath>${project.build.directory}/test-fixtures/runtime.zip</archivePath>
+                                    <outputFile>${project.build.directory}/standalone-linux-x86_64.zip</outputFile>
+                                </runtime>
+                                <runtime>
+                                    <id>linux-tar</id>
+                                    <archivePath>${project.build.directory}/runtime-directory</archivePath>
+                                    <outputFile>${project.build.directory}/standalone-linux-tar.tgz</outputFile>
                                 </runtime>
                             </runtimes>
                         </configuration>
@@ -38,14 +43,13 @@
                         </goals>
                         <configuration>
                             <inputFile>${project.build.directory}/test-fixtures/root-application.zip</inputFile>
-                            <finalName>root-standalone</finalName>
-                            <launcher>appassembler</launcher>
-                            <appName>run</appName>
+                            <launcherId>appassembler</launcherId>
                             <outputTimestamp>2026-03-08T02:30:07Z</outputTimestamp>
                             <runtimes>
                                 <runtime>
                                     <id>linux-x86_64</id>
-                                    <archive>${project.build.directory}/test-fixtures/root-runtime.zip</archive>
+                                    <archivePath>${project.build.directory}/test-fixtures/root-runtime.zip</archivePath>
+                                    <outputFile>${project.build.directory}/root-standalone-linux-x86_64.zip</outputFile>
                                 </runtime>
                             </runtimes>
                         </configuration>

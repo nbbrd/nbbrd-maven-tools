@@ -1,16 +1,37 @@
 # Bundle Maven Plugin
 
-Bundle an existing application archive with locally downloaded JDK/JRE archives.
-Applications using Appassembler or NetBeans launchers are supported.
-The plugin does not download Java, run `jlink`, execute the bundled runtime, or
-attach the resulting archives as Maven artifacts.
+Ship your application with its own Java runtime, so users do not need to install
+Java separately. This plugin combines an existing application archive with a
+local JDK/JRE archive and updates its Appassembler or NetBeans launcher.
 
-## Appassembler
+You can generate Windows, Linux, and macOS bundles on the same build machine,
+including on Windows without symlink privileges. Runtime permissions and
+symbolic links are kept as archive metadata, not recreated on the build machine.
 
-Supply runtime archives using a separate download step, such as
-`jdks-maven-plugin`, or files already available locally. Each runtime directory
-must contain exactly one `.zip`, `.tar.gz`, or `.tgz` file; checksum files are
-ignored. Ensure both the application archive and runtimes exist before bundling.
+The plugin **only bundles**: it does not download Java, run `jlink`, test the
+bundled runtime, or attach the outputs as Maven artifacts.
+
+## Quick start
+
+Before you begin, you need:
+
+- An application archive with Appassembler or NetBeans launchers.
+- A JDK/JRE archive for each platform you want to ship. Download these separately,
+  for example with `jdks-maven-plugin`.
+
+This example creates one Linux bundle using Appassembler. It assumes
+`target/myapp.zip` contains `myapp/bin/myapp` and `myapp/bin/myapp.bat`,
+and that the runtime archive is available at `target/jdks/linux.tar.gz`.
+
+Set a fixed timestamp in your project's POM for reproducible outputs:
+
+```xml
+<properties>
+    <project.build.outputTimestamp>2026-01-01T00:00:00Z</project.build.outputTimestamp>
+</properties>
+```
+
+Add the plugin to `<build><plugins>`:
 
 ```xml
 <plugin>
@@ -25,23 +46,15 @@ ignored. Ensure both the application archive and runtimes exist before bundling.
                 <goal>bundle-jdk</goal>
             </goals>
             <configuration>
-                <inputFile>${project.build.directory}/${project.build.finalName}.zip</inputFile>
-                <finalName>${project.build.finalName}-standalone</finalName>
-                <baseDirectory>${project.build.finalName}</baseDirectory>
-                <launcher>appassembler</launcher>
+                <inputFile>${project.build.directory}/myapp.zip</inputFile>
+                <applicationRoot>myapp</applicationRoot>
+                <launcherId>appassembler</launcherId>
                 <appName>myapp</appName>
                 <runtimes>
                     <runtime>
-                        <id>windows-x86_64</id>
-                        <directory>${project.build.directory}/jdks/jdk-windows-x86_64</directory>
-                    </runtime>
-                    <runtime>
                         <id>linux-x86_64</id>
-                        <directory>${project.build.directory}/jdks/jdk-linux-x86_64</directory>
-                    </runtime>
-                    <runtime>
-                        <id>osx-aarch_64</id>
-                        <directory>${project.build.directory}/jdks/jdk-osx-aarch_64</directory>
+                        <archivePath>${project.build.directory}/jdks/linux.tar.gz</archivePath>
+                        <outputFile>${project.build.directory}/myapp-linux-x86_64.tar.gz</outputFile>
                     </runtime>
                 </runtimes>
             </configuration>
@@ -50,114 +63,253 @@ ignored. Ensure both the application archive and runtimes exist before bundling.
 </plugin>
 ```
 
-The default goal phase is `package`. If another plugin produces the application
-archive in that phase, declare it before this plugin. Use `prepare-package` only
-when the input archives are already available by then. The example assumes an
-application root named `${project.build.finalName}` containing `bin/myapp` and
-`bin/myapp.bat`; adjust these settings to match your archive.
+Run:
 
-Outputs are named `${finalName}-${runtime.id}.zip` in
-`${project.build.directory}`. Add or remove platform entries as needed; ids
-are labels, not host-platform filters. All configured platforms are bundled.
-Each runtime may use `<archive>path/to/runtime.tar.gz</archive>` instead of
-`directory`. Do not specify both.
+```shell
+mvn package
+```
 
-## NetBeans
+The result is `target/myapp-linux-x86_64.tar.gz`. Maven logs application loading,
+each runtime's progress (`[1/1]`), archive writing, and successful completion.
 
-For a NetBeans application, use these application-specific settings in place of
-the Appassembler settings above, with your own runtime list:
+**Build order matters:** the input archives must exist before `bundle-jdk`
+runs. If another plugin creates or downloads them during `package`, declare that
+plugin before this one. `package` is also the goal's default phase.
+
+## Understand the archive layout
+
+`applicationRoot` is a directory **inside the application archive**, not a
+directory on your build machine. The plugin places the runtime there without
+stripping or renaming its original root.
+
+For example:
+
+```text
+Application: myapp.zip       Runtime: linux.tar.gz       Result: myapp-linux-x86_64.tar.gz
+myapp/                      jdk-21/                     myapp/
+  bin/                        bin/java                    bin/
+    myapp                     release                       myapp       (patched)
+    myapp.bat                                               myapp.bat   (patched)
+  lib/                                                    lib/
+                                                          jdk-21/
+                                                            bin/java
+                                                            release
+```
+
+Use `<applicationRoot>.</applicationRoot>` (the default) if `bin` or `etc` is
+directly at the application archive root.
+
+### Which directory is `javaHome`?
+
+`javaHome` means the directory **inside the runtime archive that contains
+Java's `bin` directory**. Usually you can omit it: the plugin finds this
+directory automatically.
+
+For example, if the archive contains `jdk-21/bin/java`, the Java home is
+`jdk-21`, not `jdk-21/bin` or `jdk-21/bin/java`.
+
+| Path to Java inside the runtime archive | `javaHome` |
+| --- | --- |
+| `jdk-21/bin/java` | `jdk-21` |
+| `jdk-21/bin/java.exe` | `jdk-21` |
+| `jdk-21.jre/Contents/Home/bin/java` | `jdk-21.jre/Contents/Home` |
+| `bin/java` | `.` (the archive root) |
+
+For automatic detection, the plugin looks for both the Java executable
+(`bin/java` or `bin/java.exe`) and a **file literally named `release`** in the
+same Java home directory. This is a metadata file supplied with the JDK/JRE,
+containing information such as its Java version. It is not a directory,
+an application release, or a value you need to configure.
+
+If the archive contains several Java installations, choose one explicitly
+inside its `<runtime>`, for example:
 
 ```xml
-<inputFile>${project.build.directory}/${project.build.finalName}.zip</inputFile>
-<finalName>${project.build.finalName}-standalone</finalName>
-<baseDirectory>myapp</baseDirectory>
-<launcher>netbeans</launcher>
+<javaHome>jdk-21.jre/Contents/Home</javaHome>
+```
+
+The path is relative to the runtime archive, **not** the application archive
+or the build machine's `JAVA_HOME`. Setting it selects an existing directory;
+it does not rename or move the runtime.
+
+## Bundle several platforms
+
+Replace the quick-start runtime list with as many entries as you need:
+
+```xml
+<runtimes>
+    <runtime>
+        <id>windows-x86_64</id>
+        <archivePath>${project.build.directory}/jdks/windows.zip</archivePath>
+        <outputFile>${project.build.directory}/myapp-windows-x86_64.zip</outputFile>
+    </runtime>
+    <runtime>
+        <id>linux-x86_64</id>
+        <archivePath>${project.build.directory}/jdks/linux.tar.gz</archivePath>
+        <outputFile>${project.build.directory}/myapp-linux-x86_64.tar.gz</outputFile>
+    </runtime>
+    <runtime>
+        <id>macos-aarch64</id>
+        <archivePath>${project.build.directory}/jdks/macos</archivePath>
+        <outputFile>${project.build.directory}/myapp-macos-aarch64.tgz</outputFile>
+    </runtime>
+</runtimes>
+```
+
+`archivePath` accepts either an archive file or a directory containing exactly
+one `.zip`, `.tar.gz`, or `.tgz` file. Other files, such as checksums, are ignored
+when selecting an archive from a directory.
+
+**Every configured runtime is bundled**, regardless of the build machine's OS.
+The `id` is a unique diagnostic label, not a platform filter. Choose the correct
+runtime archives for your users' operating systems and architectures.
+
+The output filename is used exactly as configured; no id or extension is
+appended. Its extension selects the format:
+
+| `outputFile` extension | Output format |
+| --- | --- |
+| `.zip` | ZIP |
+| `.tar.gz` or `.tgz` | GZIP-compressed TAR |
+
+Input and output formats can differ. There is no separate `format` setting.
+
+## Choose a launcher
+
+`appName` is a filename stem, not a display name. It defaults to
+`${project.artifactId}`.
+
+| `launcherId` | Files expected under `applicationRoot` |
+| --- | --- |
+| `appassembler` | `bin/${appName}` and `bin/${appName}.bat` |
+| `netbeans` | `etc/${appName}.conf` |
+
+### Appassembler
+
+Support targets the standard scripts generated by Appassembler 2.1.0.
+Both Unix and Windows scripts must be present. The plugin patches them to force
+the bundled Java, even if the caller sets `JAVA_HOME` or `JAVACMD`. Paths
+containing spaces are quoted.
+
+### NetBeans
+
+Keep the runtime list and use these application settings:
+
+```xml
+<inputFile>${project.build.directory}/myapp.zip</inputFile>
+<applicationRoot>myapp</applicationRoot>
+<launcherId>netbeans</launcherId>
 <appName>myapp</appName>
 ```
 
-`baseDirectory` is the application root *inside* the input archive, not the
-input filename. The NetBeans configuration is
-`${baseDirectory}/etc/${appName}.conf`. The shared `appName` parameter
-identifies the script basename for Appassembler or configuration basename for
-NetBeans.
-
-## Archive layout and launcher support
-
-Runtime entries are inserted under `baseDirectory` without stripping or renaming
-their original root. `baseDirectory` defaults to `.` for applications whose
-`bin` or `etc` directory is directly at the archive root; an empty value has the
-same meaning. Java home is detected from a directory containing both
-`release` and `bin/java` or `bin/java.exe`, including macOS `Contents/Home`.
-When multiple Java homes exist, select one with a runtime's
-`<javaHome>jdk-21.jre/Contents/Home</javaHome>`, relative to the runtime archive.
-Runtimes with `bin/java` and `release` directly at the archive root are also
-supported; use `<javaHome>.</javaHome>` to select that home explicitly.
-
-Appassembler support targets the standard scripts generated by version 2.1.0.
-Both `bin/${appName}` and `bin/${appName}.bat` must be present. The Unix
-script's Java-selection block and the batch script's default `JAVACMD=java`
-assignment are patched to force the bundled Java, even when the caller provides
-`JAVA_HOME` or `JAVACMD`. Paths containing spaces are quoted.
-
-NetBeans support replaces the standard commented setting
+The plugin replaces the standard commented setting
 `#jdkhome="/path/to/jdk"` with the bundled home. Explicit NetBeans command-line
 overrides remain governed by the NetBeans launcher.
 
+For both providers, customized templates may require a custom launcher provider.
 Launcher files must be UTF-8. Line endings and unrelated content are preserved.
 Missing, ambiguous, or customized templates fail the build rather than producing
 an archive that silently uses system Java.
 
-### Launcher providers
+## Configuration reference
 
-Launchers implement `nbbrd.bundle.spi.Launcher`, a `@ServiceDefinition` with
-multiple providers. Appassembler and NetBeans are built-in `@ServiceProvider`
-implementations discovered by the generated `LauncherLoader`.
+### Goal parameters
 
-A provider supplies a unique launcher id and a non-empty list of `LauncherFile`
-descriptors through `getFiles(appName)`. Each descriptor has a non-empty, unique
-path relative to the application root, an explicit provider-specific role, and
-an executable-permission flag. `patch(file, content, javaHome)` receives that
-descriptor and a Java-home path relative to the application root (empty means
-the root). Roles distinguish Unix scripts, Windows scripts, and configuration
-files without relying on filename extensions. Additional providers can be added as plugin dependencies and
-registered through `@ServiceProvider` (with the service annotation processor)
-or standard `META-INF/services` registration. Set `launcher` to the provider id.
+| Parameter | Default | Purpose |
+| --- | --- | --- |
+| `inputFile` | Required | Original application ZIP or TAR.GZ archive. |
+| `applicationRoot` | `.` | Application directory inside the archive. |
+| `launcherId` | Required | `appassembler`, `netbeans`, or a custom provider id. |
+| `appName` | `${project.artifactId}` | Script or configuration filename stem. |
+| `runtimes` | Required | One or more runtime configurations. |
+| `outputTimestamp` | `${project.build.outputTimestamp}`; required | ISO-8601 instant or Unix epoch seconds. |
+| `skip` | `false` | Skip bundling. |
+
+### Each `<runtime>`
+
+| Parameter | Default | Purpose |
+| --- | --- | --- |
+| `id` | Required | Unique label identifying the runtime in logs and errors. |
+| `archivePath` | Required | Runtime archive, or directory containing exactly one supported archive. |
+| `outputFile` | Required | Destination archive, including its format-selecting extension. |
+| `javaHome` | Auto-detected | Directory containing Java's `bin` directory, relative to the runtime archive; `.` selects the archive root. |
+
+### Command-line overrides
+
+Goal parameters other than `runtimes` support `bundle.<parameter>` properties:
+
+```shell
+mvn package -Dbundle.appName=myapp
+mvn package -Dbundle.skip=true
+```
+
+Skipping avoids reading the archives, but Maven still requires `inputFile`,
+`launcherId`, `runtimes`, and `outputTimestamp` to be configured.
+
+Runtime settings belong in the POM. To override their values from the command
+line, reference your own Maven properties in `archivePath` or `outputFile`.
+
+## Permissions, reproducibility, and disk space
+
+**Linux and macOS runtimes:** Unix permission bits and symbolic links are
+preserved even when building on Windows. The user's extractor must also support
+them. Prefer TAR.GZ if you cannot guarantee that their ZIP extractor preserves
+Unix modes and symlinks. TAR hard links stay hard links in TAR.GZ outputs and
+become regular files in ZIP outputs.
+
+**Reproducible outputs:** use the same inputs and a fixed `outputTimestamp`.
+Entries are ordered deterministically; timestamps, ownership, and compression
+metadata are normalized. ZIP timestamps use UTC calendar fields regardless of
+the build machine's timezone, must fall between 1980 and 2107, and have
+two-second precision. TAR hard-link targets are written before their links.
+
+**Temporary disk space:** allow room beside the outputs for the uncompressed
+application, the runtime being processed, and the new output archive. Contents
+are staged as private temporary files, never extracted using archive entry
+paths. The application is staged once, and runtimes are processed sequentially.
+Inputs are never modified.
+
+The plugin does not verify that a bundled runtime runs on its target platform.
+For release validation, extract the finished bundle on that platform and run
+its launcher.
+
+## Troubleshooting
+
+| Problem | What to check |
+| --- | --- |
+| Application archive not found | Ensure the packaging plugin runs before `bundle-jdk`. |
+| No runtime archive, or several candidates | Set `archivePath` to a specific archive, or leave exactly one supported archive in the selected directory. |
+| Launcher file missing | Check `applicationRoot` and `appName` against the paths inside the application archive. Appassembler requires both scripts. |
+| Launcher template cannot be patched | Use the supported standard template or a custom launcher provider. |
+| Multiple Java homes found | Set the runtime's `javaHome` to an archive-relative path. |
+| Unsupported output format | End `outputFile` with `.zip`, `.tar.gz`, or `.tgz`. |
+| Missing or invalid timestamp | Set `project.build.outputTimestamp` or `outputTimestamp`; check the ZIP date range. |
+| Output collision | Give each runtime its own output path, distinct from every input archive. |
+
+Errors include runtime and archive context; entry-level failures identify the
+affected entry. Unsafe paths or links, duplicate files, and unsupported archive
+entry types fail explicitly.
+
+A failed bundle leaves its existing output unchanged and removes temporary
+files. If a later runtime fails, earlier completed bundles remain available.
+
+## Custom launcher providers
+
+For launchers beyond the built-in templates, implement
+`nbbrd.bundle.spi.Launcher` and add the provider as a plugin dependency.
+Register it with `@ServiceProvider` and the service annotation processor, or
+standard `META-INF/services` registration. Select it with `launcherId`.
 Unknown ids and duplicate providers for the selected id fail explicitly.
 
-## Formats, reproducibility, and failures
+The SPI is a `@ServiceDefinition` with multiple providers, discovered through
+the generated `LauncherLoader`. A provider supplies:
 
-Both application and runtime inputs support ZIP and TAR.GZ (`.tgz` also works).
-Set `<format>tar.gz</format>` to produce TAR.GZ instead of ZIP; the default is
-ZIP. The output format applies to every runtime in that execution. Separate
-executions can produce different formats.
+- A unique launcher id.
+- A non-empty list from `getFiles(appName)` of `LauncherFile` descriptors, each
+  with a unique, non-empty application-relative path, a provider-specific role,
+  and an executable-permission flag.
+- `patch(file, content, javaHome)`, which returns patched UTF-8 text. Java home
+  is relative to the application root; an empty path means that root.
 
-`outputDirectory` defaults to `${project.build.directory}` and `finalName` to
-`${project.build.finalName}-standalone`.
-`outputTimestamp` defaults to `${project.build.outputTimestamp}` and is required.
-It accepts an ISO-8601 instant or Unix epoch seconds. ZIP timestamps must be
-between 1980 and 2107 and have DOS two-second precision. ZIP timestamps are
-encoded as UTC calendar fields independently of the JVM timezone, including DST
-transitions; no JVM timezone option is needed. Entries have deterministic
-ordering, ownership and compression metadata are normalized, and timestamps are
-reset. TAR hard-link targets are emitted before their links, even when that
-requires departing from alphabetical order.
-
-Unix permission bits and symbolic links are preserved. TAR hard links are
-preserved in TAR.GZ output and materialized as regular files in ZIP output.
-Windows builds do not need permission to create filesystem symlinks. ZIP
-extractors must support Unix modes and symlinks for Linux/macOS runtimes; prefer
-TAR.GZ when those extraction semantics cannot be guaranteed.
-
-Archive contents are staged in private temporary files beside the output, not
-extracted using archive entry names. Allow disk space for the uncompressed
-application and runtime plus the new output archive. Inputs are never modified.
-The application is read and staged once per execution, with isolated launcher
-patches for each runtime. Archive paths, output collisions, and launcher-file
-descriptors are validated before output processing begins.
-Duplicate files, unsafe paths/links, unsupported entry types, and ambiguous
-runtime selections fail explicitly. A failed bundle leaves any existing output
-unchanged and cleans up its temporary files. Platforms run sequentially;
-independent Maven executions can use reactor parallelism.
-Errors identify the runtime id, source archive, destination, and launcher;
-entry-level failures include the affected entry. If a later runtime fails,
-successfully completed bundles from earlier runtimes remain available.
+Roles distinguish Unix scripts, Windows scripts, and configuration files
+without relying on filename extensions.

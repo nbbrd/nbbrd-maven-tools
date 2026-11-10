@@ -14,11 +14,12 @@ if (!fixtures.isDirectory() && !fixtures.mkdirs()) {
 }
 for (String prefix : new String[] {"app/", ""}) {
     String name = prefix.isEmpty() ? "root-application.zip" : "application.zip";
+    String appName = prefix.isEmpty() ? "bundle-jdk-consumer" : "run";
     ZipOutputStream application = new ZipOutputStream(new FileOutputStream(new File(fixtures, name)));
     try {
-        writeEntry(application, prefix + "bin/run",
+        writeEntry(application, prefix + "bin/" + appName,
                 "#!/bin/sh\nif [ -z \"$JAVACMD\" ] ; then\n  JAVACMD=java\nfi\nexec \"$JAVACMD\" \"$@\"\n");
-        writeEntry(application, prefix + "bin/run.bat",
+        writeEntry(application, prefix + "bin/" + appName + ".bat",
                 "@echo off\r\nif \"%JAVACMD%\"==\"\" set JAVACMD=java\r\n%JAVACMD% %*\r\n");
     } finally {
         application.close();
@@ -34,4 +35,11 @@ for (String prefix : new String[] {"jdk-21/", ""}) {
         runtime.close();
     }
 }
+File runtimeDirectory = new File(basedir, "target/runtime-directory");
+if (!runtimeDirectory.isDirectory() && !runtimeDirectory.mkdirs()) {
+    throw new IOException("Cannot create runtime directory: " + runtimeDirectory);
+}
+java.nio.file.Files.copy(new File(fixtures, "runtime.zip").toPath(),
+        new File(runtimeDirectory, "runtime.zip").toPath(),
+        new java.nio.file.CopyOption[] {java.nio.file.StandardCopyOption.REPLACE_EXISTING});
 return true;

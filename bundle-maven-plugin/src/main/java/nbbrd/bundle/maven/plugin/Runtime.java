@@ -14,27 +14,38 @@ import lombok.Data;
 public final class Runtime {
 
     private String id;
-    private File archive;
-    private File directory;
+    /** Runtime archive file or directory containing exactly one supported runtime archive. */
+    private File archivePath;
+    /** Java home relative to the runtime archive, not the build machine; dot selects the archive root. */
     private String javaHome;
+    /** Required destination archive; .zip, .tar.gz or .tgz determines the format. */
+    private File outputFile;
 
     public Path resolveArchive() throws IOException {
         if (id == null || !id.matches("[A-Za-z0-9][A-Za-z0-9._-]*")) {
             throw new IllegalArgumentException("Runtime id must be a non-empty filename component");
         }
-        if ((archive == null) == (directory == null)) {
-            throw new IllegalArgumentException("Runtime " + id + " requires exactly one of archive or directory");
+        if (archivePath == null) {
+            throw new IllegalArgumentException("Runtime " + id + " requires archivePath");
         }
-        if (archive != null) {
-            return archive.toPath();
+        Path path = archivePath.toPath();
+        if (Files.isRegularFile(path)) {
+            if (!isArchive(path.getFileName().toString())) {
+                throw new IllegalArgumentException("Runtime " + id + " has an unsupported archivePath: " + archivePath);
+            }
+            return path;
         }
-        try (Stream<Path> files = Files.list(directory.toPath())) {
+        if (!Files.isDirectory(path)) {
+            throw new IllegalArgumentException(
+                    "Runtime " + id + " archivePath is not a regular file or directory: " + archivePath);
+        }
+        try (Stream<Path> files = Files.list(path)) {
             List<Path> matches = files.filter(Files::isRegularFile)
-                    .filter(path -> isArchive(path.getFileName().toString()))
+                    .filter(file -> isArchive(file.getFileName().toString()))
                     .collect(Collectors.toList());
             if (matches.size() != 1) {
                 throw new IllegalArgumentException(
-                        "Runtime " + id + " requires exactly one supported archive in " + directory + ": " + matches);
+                        "Runtime " + id + " requires exactly one supported archive in " + archivePath + ": " + matches);
             }
             return matches.get(0);
         }

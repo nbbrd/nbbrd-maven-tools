@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import lombok.experimental.UtilityClass;
 import nbbrd.bundle.spi.Launcher;
 import nbbrd.bundle.spi.LauncherFile;
@@ -23,12 +24,17 @@ import nbbrd.bundle.spi.LauncherFile;
 public class Bundler {
 
     public void bundle(BundleRequest request) throws IOException {
+        bundle(request, message -> {});
+    }
+
+    public void bundle(BundleRequest request, Consumer<String> progress) throws IOException {
         BundleRequest validated = validate(request);
         Launcher launcher = Launchers.find(validated.getLauncher());
         List<LauncherFile> files = launcherFiles(launcher, validated.getAppName());
         Path stagingParent = validated.getRuntimes().get(0).getOutput().getParent();
         Files.createDirectories(stagingParent);
         try (Archive application = new Archive(stagingParent)) {
+            progress.accept("Reading application archive: " + validated.getApplication());
             read(application, validated.getApplication());
             String base = validated.getBaseDirectory();
             if (!base.isEmpty()
@@ -36,10 +42,15 @@ public class Bundler {
                 throw new IllegalArgumentException(
                         "Application root '" + base + "' not found in " + validated.getApplication());
             }
+            int index = 0;
             for (RuntimeBundle runtime : validated.getRuntimes()) {
                 String context = context(validated, runtime);
                 try {
-                    bundleRuntime(validated, runtime, application, launcher, files);
+                    progress.accept(
+                            "[" + ++index + "/" + validated.getRuntimes().size() + "] Bundling runtime '"
+                                    + runtime.getId() + "' from " + runtime.getArchive());
+                    bundleRuntime(validated, runtime, application, launcher, files, progress);
+                    progress.accept("Bundled runtime '" + runtime.getId() + "': " + runtime.getOutput());
                 } catch (IllegalArgumentException ex) {
                     throw new IllegalArgumentException(context + ": " + ex.getMessage(), ex);
                 } catch (IOException ex) {
@@ -50,12 +61,6 @@ public class Bundler {
     }
 
     private BundleRequest validate(BundleRequest request) throws IOException {
-        if (!"zip".equals(request.getFormat()) && !"tar.gz".equals(request.getFormat())) {
-            throw new IllegalArgumentException("format must be zip or tar.gz");
-        }
-        if ("zip".equals(request.getFormat())) {
-            ZipTimestamps.validate(request.getTimestamp());
-        }
         String base = safeLauncherPath(request.getBaseDirectory());
         if (request.getRuntimes().isEmpty()) {
             throw new IllegalArgumentException("At least one runtime is required");
@@ -67,6 +72,10 @@ public class Bundler {
         Set<String> ids = new HashSet<>();
         for (RuntimeBundle runtime : request.getRuntimes()) {
             try {
+                String format = outputFormat(runtime.getOutput());
+                if ("zip".equals(format)) {
+                    ZipTimestamps.validate(request.getTimestamp());
+                }
                 String id = Launchers.component(runtime.getId(), "Runtime id");
                 if (!ids.add(id.toLowerCase(Locale.ROOT))) {
                     throw new IllegalArgumentException("Duplicate runtime id: " + id);
@@ -76,6 +85,7 @@ public class Bundler {
                 runtimes.add(runtime.toBuilder()
                         .archive(archive)
                         .output(resolveDestination(runtime.getOutput()))
+                        .format(format)
                         .javaHome(runtime.getJavaHome() == null ? null : safeLauncherPath(runtime.getJavaHome()))
                         .build());
             } catch (IllegalArgumentException ex) {
@@ -137,7 +147,8 @@ public class Bundler {
             RuntimeBundle runtime,
             Archive application,
             Launcher launcher,
-            List<LauncherFile> files)
+            List<LauncherFile> files,
+            Consumer<String> progress)
             throws IOException {
         Path destination = runtime.getOutput();
         Files.createDirectories(destination.getParent());
@@ -159,7 +170,8 @@ public class Bundler {
                             entry.content,
                             entry.type == EntryType.HARDLINK ? join(base, Archive.linkTarget(entry)) : entry.link));
                 }
-                app.write(temporary, request.getFormat(), request.getTimestamp());
+                progress.accept("Writing bundle for runtime '" + runtime.getId() + "': " + destination);
+                app.write(temporary, runtime.getFormat(), request.getTimestamp());
             }
             try {
                 Files.move(temporary, destination, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
@@ -174,6 +186,17 @@ public class Bundler {
     private String context(BundleRequest request, RuntimeBundle runtime) {
         return "Runtime '" + runtime.getId() + "' [archive=" + runtime.getArchive() + ", output=" + runtime.getOutput()
                 + ", launcher=" + request.getLauncher() + "]";
+    }
+
+    private String outputFormat(Path output) {
+        String name = output.getFileName().toString();
+        if (name.endsWith(".zip")) {
+            return "zip";
+        }
+        if (name.endsWith(".tar.gz") || name.endsWith(".tgz")) {
+            return "tar.gz";
+        }
+        throw new IllegalArgumentException("outputFile must end in .zip, .tar.gz or .tgz: " + output);
     }
 
     private Path requireArchive(Path input) throws IOException {

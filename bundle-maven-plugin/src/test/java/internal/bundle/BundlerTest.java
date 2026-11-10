@@ -9,7 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarConstants;
@@ -33,12 +35,64 @@ class BundlerTest {
     Path temp;
 
     @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void reportsProgressAndOnlyCompletedOutputs(boolean failSecond) throws IOException {
+        Path app = application(temp, "zip", false);
+        Path runtime = runtime(temp, "zip", "jdk", false);
+        Path first = temp.resolve("first.zip");
+        Path second = temp.resolve("second.zip");
+        BundleRequest request = BundleRequest.builder()
+                .application(app)
+                .baseDirectory("app")
+                .launcher("appassembler")
+                .appName("run")
+                .timestamp(TIMESTAMP)
+                .runtime(BundleRequest.RuntimeBundle.builder()
+                        .id("first")
+                        .archive(runtime)
+                        .output(first)
+                        .build())
+                .runtime(BundleRequest.RuntimeBundle.builder()
+                        .id("second")
+                        .archive(runtime)
+                        .output(second)
+                        .javaHome(failSecond ? "missing" : null)
+                        .build())
+                .build();
+        List<String> messages = new ArrayList<>();
+        java.util.function.Consumer<String> progress = message -> {
+            if (message.startsWith("Bundled runtime")) {
+                assertThat(Files.isRegularFile(message.contains("'first'") ? first : second))
+                        .isTrue();
+            }
+            messages.add(message);
+        };
+        if (failSecond) {
+            assertThatIllegalArgumentException()
+                    .isThrownBy(() -> Bundler.bundle(request, progress))
+                    .withMessageContaining("second");
+        } else {
+            Bundler.bundle(request, progress);
+        }
+        assertThat(messages).hasSize(failSecond ? 5 : 7);
+        assertThat(messages.get(0)).startsWith("Reading application archive: ");
+        assertThat(messages.get(1)).startsWith("[1/2] Bundling runtime 'first' from ");
+        assertThat(messages.get(2)).startsWith("Writing bundle for runtime 'first': ");
+        assertThat(messages.get(3)).startsWith("Bundled runtime 'first': ");
+        assertThat(messages.get(4)).startsWith("[2/2] Bundling runtime 'second' from ");
+        if (!failSecond) {
+            assertThat(messages.get(5)).startsWith("Writing bundle for runtime 'second': ");
+            assertThat(messages.get(6)).startsWith("Bundled runtime 'second': ");
+        }
+    }
+
+    @ParameterizedTest
     @CsvSource({"zip,zip", "zip,tar.gz", "tar.gz,zip", "tar.gz,tar.gz"})
     void bundlesAppassemblerAndPreservesRuntimeMetadata(String inputFormat, String outputFormat) throws IOException {
         Path app = application(temp, inputFormat, false);
         Path runtime = runtime(temp, inputFormat, "jdk-21", true);
         Path output = temp.resolve("standalone." + outputFormat);
-        bundle(app, runtime, output, "app", "appassembler", "run", null, outputFormat, TIMESTAMP);
+        bundle(app, runtime, output, "app", "appassembler", "run", null, TIMESTAMP);
         try (Archive result = new Archive(temp)) {
             result.read(output);
             assertThat(text(result, "app/bin/run"))
@@ -66,7 +120,7 @@ class BundlerTest {
         Path app = application(temp, inputFormat, true);
         Path runtime = runtime(temp, inputFormat, "jdk-21.jre/Contents/Home", false);
         Path output = temp.resolve("mac." + outputFormat);
-        bundle(app, runtime, output, "app", "netbeans", "brand", null, outputFormat, TIMESTAMP);
+        bundle(app, runtime, output, "app", "netbeans", "brand", null, TIMESTAMP);
         try (Archive result = new Archive(temp)) {
             result.read(output);
             assertThat(text(result, "app/etc/brand.conf"))
@@ -84,7 +138,6 @@ class BundlerTest {
                 .baseDirectory("app")
                 .launcher("appassembler")
                 .appName("run")
-                .format("zip")
                 .timestamp(TIMESTAMP)
                 .runtime(BundleRequest.RuntimeBundle.builder()
                         .id("first")
@@ -111,8 +164,7 @@ class BundlerTest {
         Path runtime = runtime(temp, "zip", "jdk", false);
         Path output = temp.resolve("not-created/result.zip");
         assertThatIllegalArgumentException()
-                .isThrownBy(
-                        () -> bundle(app, runtime, output, "app", "test-launcher", appName, null, "zip", TIMESTAMP));
+                .isThrownBy(() -> bundle(app, runtime, output, "app", "test-launcher", appName, null, TIMESTAMP));
         assertThat(Files.exists(output.getParent())).isFalse();
     }
 
@@ -132,7 +184,7 @@ class BundlerTest {
             archive.write(runtime, "zip", TIMESTAMP);
         }
         Path output = temp.resolve("root-result.zip");
-        bundle(app, runtime, output, ".", "appassembler", "run", ".", "zip", TIMESTAMP);
+        bundle(app, runtime, output, ".", "appassembler", "run", ".", TIMESTAMP);
         try (Archive result = new Archive(temp)) {
             result.read(output);
             assertThat(text(result, "bin/run")).contains("JAVA_HOME=\"$BASEDIR\"\n");
@@ -140,7 +192,7 @@ class BundlerTest {
             assertThat(result.entries.get("bin/java-link").type).isEqualTo(EntryType.SYMLINK);
         }
         // The same layout also works when Java home is detected rather than explicitly selected.
-        bundle(app, runtime, output, "", "appassembler", "run", null, "zip", TIMESTAMP);
+        bundle(app, runtime, output, "", "appassembler", "run", null, TIMESTAMP);
     }
 
     @Test
@@ -157,7 +209,6 @@ class BundlerTest {
                 .baseDirectory("app")
                 .launcher("appassembler")
                 .appName("run")
-                .format("zip")
                 .timestamp(TIMESTAMP)
                 .runtime(BundleRequest.RuntimeBundle.builder()
                         .id("first")
@@ -217,7 +268,7 @@ class BundlerTest {
         Path runtime = runtime(temp, "zip", "jdk", false);
         Path output = temp.resolve("failed.zip");
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> bundle(app, runtime, output, "app", "netbeans", "missing", null, "zip", TIMESTAMP))
+                .isThrownBy(() -> bundle(app, runtime, output, "app", "netbeans", "missing", null, TIMESTAMP))
                 .withMessageContaining("test-runtime")
                 .withMessageContaining(runtime.toRealPath().toString())
                 .withMessageContaining(output.getParent()
@@ -233,7 +284,7 @@ class BundlerTest {
         Path app = application(temp, "zip", false);
         Path runtime = runtime(temp, "zip", "jdk", false);
         Path output = temp.resolve("custom.zip");
-        bundle(app, runtime, output, "app", "test-launcher", null, null, "zip", TIMESTAMP);
+        bundle(app, runtime, output, "app", "test-launcher", null, null, TIMESTAMP);
         try (Archive result = new Archive(temp)) {
             result.read(output);
             assertThat(text(result, "app/data.txt")).isEqualTo("jdk");
@@ -251,7 +302,7 @@ class BundlerTest {
             file(archive, "jdk/release", "JAVA_VERSION=\"21\"", 0644);
             archive.write(runtime, "zip", TIMESTAMP);
         }
-        bundle(app, runtime, temp.resolve("result.zip"), "app", "appassembler", "run", null, "zip", TIMESTAMP);
+        bundle(app, runtime, temp.resolve("result.zip"), "app", "appassembler", "run", null, TIMESTAMP);
         assertThat(Files.isRegularFile(temp.resolve("result.zip"))).isTrue();
     }
 
@@ -262,8 +313,8 @@ class BundlerTest {
         Path runtime = runtime(temp, format, "jdk", true);
         Path first = temp.resolve("first." + format);
         Path second = temp.resolve("second." + format);
-        bundle(app, runtime, first, "app", "appassembler", "run", null, format, TIMESTAMP);
-        bundle(app, runtime, second, "app", "appassembler", "run", null, format, TIMESTAMP);
+        bundle(app, runtime, first, "app", "appassembler", "run", null, TIMESTAMP);
+        bundle(app, runtime, second, "app", "appassembler", "run", null, TIMESTAMP);
         assertThat(Files.readAllBytes(first)).isEqualTo(Files.readAllBytes(second));
     }
 
@@ -279,7 +330,7 @@ class BundlerTest {
         Path output = temp.resolve("existing.zip");
         Files.write(output, new byte[] {1, 2, 3});
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> bundle(app, runtime, output, "app", "appassembler", "run", null, "zip", TIMESTAMP))
+                .isThrownBy(() -> bundle(app, runtime, output, "app", "appassembler", "run", null, TIMESTAMP))
                 .withMessageContaining("Unrecognized");
         assertThat(Files.readAllBytes(output)).containsExactly(1, 2, 3);
         try (java.util.stream.Stream<Path> files = Files.list(temp)) {
@@ -292,11 +343,11 @@ class BundlerTest {
         Path app = application(temp, "zip", false);
         Path runtime = runtime(temp, "zip", "jdk", false);
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> bundle(app, runtime, app, "app", "appassembler", "run", null, "zip", TIMESTAMP))
+                .isThrownBy(() -> bundle(app, runtime, app, "app", "appassembler", "run", null, TIMESTAMP))
                 .withMessageContaining("distinct");
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> bundle(
-                        app, runtime, temp.resolve("result.zip"), "app", "netbeans", "missing", null, "zip", TIMESTAMP))
+                .isThrownBy(() ->
+                        bundle(app, runtime, temp.resolve("result.zip"), "app", "netbeans", "missing", null, TIMESTAMP))
                 .withMessageContaining("Missing regular launcher");
     }
 
@@ -313,9 +364,9 @@ class BundlerTest {
         }
         Path output = temp.resolve("result.zip");
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> bundle(app, runtime, output, "app", "appassembler", "run", null, "zip", TIMESTAMP))
+                .isThrownBy(() -> bundle(app, runtime, output, "app", "appassembler", "run", null, TIMESTAMP))
                 .withMessageContaining("Expected one Java home");
-        bundle(app, runtime, output, "app", "appassembler", "run", "jdk2", "zip", TIMESTAMP);
+        bundle(app, runtime, output, "app", "appassembler", "run", "jdk2", TIMESTAMP);
         try (Archive result = new Archive(temp)) {
             result.read(output);
             assertThat(text(result, "app/bin/run")).contains("$BASEDIR/jdk2");
@@ -376,8 +427,8 @@ class BundlerTest {
         }
         Path runtime = runtime(temp, "zip", "jdk", false);
         assertThatIllegalArgumentException()
-                .isThrownBy(() -> bundle(
-                        app, runtime, temp.resolve("result.zip"), "app", "appassembler", "run", null, "zip", TIMESTAMP))
+                .isThrownBy(() ->
+                        bundle(app, runtime, temp.resolve("result.zip"), "app", "appassembler", "run", null, TIMESTAMP))
                 .withMessageContaining("Conflicting");
     }
 
@@ -441,7 +492,6 @@ class BundlerTest {
             String launcher,
             String appName,
             String javaHome,
-            String format,
             Instant timestamp)
             throws IOException {
         Bundler.bundle(BundleRequest.builder()
@@ -449,7 +499,6 @@ class BundlerTest {
                 .baseDirectory(base)
                 .launcher(launcher)
                 .appName(appName)
-                .format(format)
                 .timestamp(timestamp)
                 .runtime(BundleRequest.RuntimeBundle.builder()
                         .id("test-runtime")

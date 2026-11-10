@@ -2,7 +2,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;
 import java.nio.charset.StandardCharsets;
 
-void verifyBundle(File output, String prefix, String home, String expectedSelection) {
+void verifyBundle(File output, String prefix, String home, String appName, String expectedSelection) {
 ZipInputStream zip = new ZipInputStream(new FileInputStream(output));
 try {
     boolean runtimeFound = false;
@@ -12,7 +12,7 @@ try {
         if (entry.getName().equals(prefix + home + "bin/java")) {
             runtimeFound = true;
         }
-        if (entry.getName().equals(prefix + "bin/run")) {
+        if (entry.getName().equals(prefix + "bin/" + appName)) {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
             int count;
@@ -32,8 +32,24 @@ try {
     zip.close();
 }
 }
-verifyBundle(new File(basedir, "target/standalone-linux-x86_64.zip"), "app/", "jdk-21/",
+verifyBundle(new File(basedir, "target/standalone-linux-x86_64.zip"), "app/", "jdk-21/", "run",
         "JAVA_HOME=\"$BASEDIR/jdk-21\"");
-verifyBundle(new File(basedir, "target/root-standalone-linux-x86_64.zip"), "", "",
+verifyBundle(new File(basedir, "target/root-standalone-linux-x86_64.zip"), "", "", "bundle-jdk-consumer",
         "JAVA_HOME=\"$BASEDIR\"");
+InputStream tar = new java.util.zip.GZIPInputStream(
+        new FileInputStream(new File(basedir, "target/standalone-linux-tar.tgz")));
+try {
+    byte[] buffer = new byte[8192];
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    int count;
+    while ((count = tar.read(buffer, 0, buffer.length)) != -1) {
+        bytes.write(buffer, 0, count);
+    }
+    String content = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
+    if (!content.contains("app/jdk-21/bin/java") || !content.contains("JAVA_HOME=\"$BASEDIR/jdk-21\"")) {
+        throw new IllegalStateException("Invalid TAR.GZ runtime override output");
+    }
+} finally {
+    tar.close();
+}
 return true;

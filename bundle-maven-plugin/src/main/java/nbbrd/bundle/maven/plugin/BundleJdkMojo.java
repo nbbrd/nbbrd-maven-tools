@@ -2,7 +2,6 @@ package nbbrd.bundle.maven.plugin;
 
 import internal.bundle.BundleRequest;
 import internal.bundle.Bundler;
-import internal.bundle.Launchers;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,67 +23,63 @@ public final class BundleJdkMojo extends AbstractMojo {
     @Parameter(property = "bundle.inputFile", required = true)
     File inputFile;
 
-    /** Destination directory. */
-    @Parameter(defaultValue = "${project.build.directory}", required = true)
-    File outputDirectory;
-
-    /** Output basename, followed by the runtime id and archive extension. */
-    @Parameter(defaultValue = "${project.build.finalName}-standalone", required = true)
-    String finalName;
-
     /** Application root within the input archive; dot denotes the archive root. */
-    @Parameter(defaultValue = ".")
-    String baseDirectory;
+    @Parameter(property = "bundle.applicationRoot", defaultValue = ".")
+    String applicationRoot;
 
     /** Launcher provider id; built-in providers are appassembler and netbeans. */
-    @Parameter(required = true)
-    String launcher;
+    @Parameter(property = "bundle.launcherId", required = true)
+    String launcherId;
 
-    /** Application name: Appassembler script name or NetBeans configuration filename stem. */
-    @Parameter
+    /** Filename stem, not display name: Appassembler script or NetBeans configuration basename. */
+    @Parameter(property = "bundle.appName", defaultValue = "${project.artifactId}")
     String appName;
 
     /** Runtime archives, one per output platform. */
     @Parameter(required = true)
     List<Runtime> runtimes;
 
-    /** Output archive format: zip or tar.gz. */
-    @Parameter(property = "bundle.format", defaultValue = "zip")
-    String format;
-
     /** Reproducible timestamp, ISO-8601 or seconds since the Unix epoch. */
-    @Parameter(defaultValue = "${project.build.outputTimestamp}")
+    @Parameter(property = "bundle.outputTimestamp", defaultValue = "${project.build.outputTimestamp}", required = true)
     String outputTimestamp;
+
+    /** Skip bundling. Required Maven parameters must still be configured. */
+    @Parameter(property = "bundle.skip", defaultValue = "false")
+    boolean skip;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
+        if (skip) {
+            getLog().info("Java runtime bundling has been skipped.");
+            return;
+        }
         try {
-            if (inputFile == null || outputDirectory == null || runtimes == null || runtimes.isEmpty()) {
-                throw new IllegalArgumentException("inputFile, outputDirectory and at least one runtime are required");
+            if (inputFile == null || runtimes == null || runtimes.isEmpty()) {
+                throw new IllegalArgumentException("inputFile and at least one runtime are required");
             }
-            Launchers.component(finalName, "finalName");
             if (outputTimestamp == null || outputTimestamp.trim().isEmpty()) {
                 throw new IllegalArgumentException("outputTimestamp is required for reproducible bundles");
             }
             Instant timestamp = parseTimestamp(outputTimestamp);
             BundleRequest.Builder builder = BundleRequest.builder()
                     .application(inputFile.toPath())
-                    .baseDirectory(baseDirectory)
-                    .launcher(launcher)
+                    .baseDirectory(applicationRoot)
+                    .launcher(launcherId)
                     .appName(appName)
-                    .format(format)
                     .timestamp(timestamp);
             for (Runtime runtime : runtimes) {
                 if (runtime == null) {
                     throw new IllegalArgumentException("Runtime must not be null");
                 }
-                Path output = outputDirectory.toPath().resolve(finalName + "-" + runtime.getId() + "." + format);
                 try {
                     Path archive = runtime.resolveArchive();
+                    if (runtime.getOutputFile() == null) {
+                        throw new IllegalArgumentException("outputFile is required");
+                    }
                     builder.runtime(BundleRequest.RuntimeBundle.builder()
                             .id(runtime.getId())
                             .archive(archive)
-                            .output(output)
+                            .output(runtime.getOutputFile().toPath())
                             .javaHome(runtime.getJavaHome())
                             .build());
                 } catch (IllegalArgumentException ex) {
@@ -94,10 +89,7 @@ public final class BundleJdkMojo extends AbstractMojo {
                 }
             }
             BundleRequest request = builder.build();
-            Bundler.bundle(request);
-            for (BundleRequest.RuntimeBundle runtime : request.getRuntimes()) {
-                getLog().info("Bundled runtime " + runtime.getId() + ": " + runtime.getOutput());
-            }
+            Bundler.bundle(request, message -> getLog().info(message));
         } catch (IllegalArgumentException ex) {
             throw new MojoFailureException(ex.getMessage(), ex);
         } catch (IOException ex) {

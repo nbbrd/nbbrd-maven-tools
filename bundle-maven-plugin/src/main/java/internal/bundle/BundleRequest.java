@@ -19,8 +19,6 @@ public class BundleRequest {
 
     @Nullable String appName;
 
-    @NonNull String format;
-
     @NonNull Instant timestamp;
 
     @Singular
@@ -36,5 +34,7 @@ public class BundleRequest {
         @NonNull Path output;
 
         @Nullable String javaHome;
+
+        @Nullable String format;
     }
 }
