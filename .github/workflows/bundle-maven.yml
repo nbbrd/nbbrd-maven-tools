@@ -1,0 +1,94 @@
+name: Bundle plugin native runtime smoke tests
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bundle-maven.yml'
+      - 'bundle-maven-plugin/**'
+      - 'pom.xml'
+  pull_request:
+    paths:
+      - '.github/workflows/bundle-maven.yml'
+      - 'bundle-maven-plugin/**'
+      - 'pom.xml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  MAVEN_ARGS: "-B -ntp"
+
+jobs:
+  generate:
+    name: Generate Linux and macOS bundles on Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout and Setup Maven
+        uses: s4u/setup-maven-action@v1.22.0
+        with:
+          checkout-fetch-depth: 0
+          java-version: 21
+
+      - name: Install bundle plugin
+        run: mvn -pl bundle-maven-plugin -am install -DskipTests "-Dinvoker.skip=true"
+
+      - name: Download pinned runtimes and record source metadata without extracting
+        shell: pwsh
+        run: .\bundle-maven-plugin\src\e2e\prepare.ps1
+
+      - name: Build Appassembler application and all bundles
+        shell: pwsh
+        run: |
+          [xml] $pom = Get-Content pom.xml
+          $version = $pom.project.version
+          mvn -f bundle-maven-plugin\src\e2e\pom.xml package "-Dbundle-plugin.version=$version"
+          if ($LASTEXITCODE -ne 0) { throw 'Bundle generation failed' }
+
+      - name: Upload finished archives and source metadata
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-generated-runtime-bundles
+          path: bundle-maven-plugin/src/e2e/target/bundles/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+
+  verify:
+    name: Verify ${{ matrix.platform }} (${{ matrix.format }})
+    needs: generate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x64
+            format: zip
+          - os: ubuntu-latest
+            platform: linux-x64
+            format: tar.gz
+          - os: macos-15-intel
+            platform: macos-x64
+            format: zip
+          - os: macos-15-intel
+            platform: macos-x64
+            format: tar.gz
+          - os: macos-latest
+            platform: macos-aarch64
+            format: zip
+          - os: macos-latest
+            platform: macos-aarch64
+            format: tar.gz
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: windows-generated-runtime-bundles
+          path: bundles
+      - name: Extract with native tools, verify metadata, and run Java and launcher
+        shell: pwsh
+        run: |
+          & ./bundle-maven-plugin/src/e2e/verify.ps1 -Platform '${{ matrix.platform }}' -Format '${{ matrix.format }}' -BundleDirectory (Join-Path $PWD 'bundles')

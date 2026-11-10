@@ -313,3 +313,23 @@ the generated `LauncherLoader`. A provider supplies:
 
 Roles distinguish Unix scripts, Windows scripts, and configuration files
 without relying on filename extensions.
+
+### This project's native smoke tests
+
+The [native runtime workflow](../.github/workflows/bundle-maven.yml) builds a
+small Appassembler application on Windows and bundles checksum-pinned Temurin
+JREs for Linux x64, macOS Intel, and macOS ARM64, in both ZIP and TAR.GZ formats.
+Only the finished archives and source metadata are transferred to native runners.
+
+Linux and macOS runners extract with system `unzip` or `tar`, compare runtime
+permissions and symlink targets against the original archives, and run Java and
+the application launcher from a path containing spaces. The application checks
+that it is using the bundled Java, including with conflicting `JAVA_HOME` and
+`JAVACMD` settings. No permissions or links are repaired after extraction.
+The Linux fixture contains real runtime symlinks; the selected macOS fixtures
+contain none.
+
+The workflow runs on relevant pushes and pull requests and can also be started
+manually from GitHub Actions. Its [fixture and scripts](src/e2e) are separate
+from the regular Maven tests; native execution requires the GitHub runners.
+These checks do not replace testing your own application bundles.
