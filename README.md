@@ -1,7 +1,7 @@
 # NBBRD Maven tools
 
-[![Download](https://img.shields.io/github/release/nbbrd/nbbrd-maven-tools.svg)](https://github.com/nbbrd/java-service-util/releases/latest)
-[![Changes](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnbbrd%2Fnbbrd-maven-tools%2Fbadges%2Funreleased-changes.json)](https://github.com/nbbrd/java-service-util/blob/develop/CHANGELOG.md)
+[![Download](https://img.shields.io/github/release/nbbrd/nbbrd-maven-tools.svg)](https://github.com/nbbrd/nbbrd-maven-tools/releases/latest)
+[![Changes](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnbbrd%2Fnbbrd-maven-tools%2Fbadges%2Funreleased-changes.json)](https://github.com/nbbrd/nbbrd-maven-tools/blob/develop/CHANGELOG.md)
 
 ## Overview
 
