@@ -1,0 +1,6 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+int first = log.indexOf("Linting 1 workflow file(s) with actionlint");
+if (first < 0 || log.indexOf("Linting", first + 1) >= 0 || !log.contains("actionlint found no problems")) {
+    throw new IllegalStateException("Workflows were not linted once in the top-level project");
+}
+return true;

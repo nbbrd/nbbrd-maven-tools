@@ -10,6 +10,7 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Add Maven Enforcer rule to enforce version property naming conventions [#215](https://github.com/nbbrd/nbbrd-maven-tools/issues/215)
+- Add Maven plugin to lint GitHub Actions workflows with actionlint [#216](https://github.com/nbbrd/nbbrd-maven-tools/issues/216)
 
 ## [1.5.0] - 2026-11-10
 

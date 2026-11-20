@@ -1,0 +1,5 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!log.contains("Linting 1 workflow file(s) with actionlint") || !log.contains("actionlint found no problems")) {
+    throw new IllegalStateException("Valid workflow was not linted successfully");
+}
+return true;

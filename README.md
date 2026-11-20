@@ -12,6 +12,7 @@ NBBRD Maven tools is a collection of Maven plugins and utilities to support the 
 | [compatibility-maven-plugin](compatibility-maven-plugin/README.md) | Maven plugin that checks the compatibility between projects, ensuring that libraries/applications and their external extensions/plugins remain compatible across versions. |
 | [exe-icon-maven-plugin](exe-icon-maven-plugin/README.md) | Cross-platform Windows executable icon replacement. |
 | [bundle-maven-plugin](bundle-maven-plugin/README.md) | Bundle local JDK/JRE archives with Appassembler or NetBeans applications. |
+| [actionlint-maven-plugin](actionlint-maven-plugin/README.md) | Lint GitHub Actions workflows with actionlint. |
 
 ## Developing
 

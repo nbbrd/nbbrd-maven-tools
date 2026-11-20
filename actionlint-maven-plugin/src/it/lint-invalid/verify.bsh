@@ -1,0 +1,11 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!log.contains(".github/workflows/ci.yml:6:3:") || !log.contains("missing-job") || !log.contains("[job-needs]")) {
+    throw new IllegalStateException("Missing actionlint problem in build log");
+}
+if (!log.contains("actionlint found 1 problem(s)")) {
+    throw new IllegalStateException("Build did not fail because of actionlint problems");
+}
+if (!log.contains("::error file=") || !log.contains(",line=6,col=3,title=actionlint [job-needs]::")) {
+    throw new IllegalStateException("Missing GitHub annotation in build log");
+}
+return true;

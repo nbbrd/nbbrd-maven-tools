@@ -32,6 +32,7 @@
         <module>compatibility-maven-plugin</module>
         <module>exe-icon-maven-plugin</module>
         <module>bundle-maven-plugin</module>
+        <module>actionlint-maven-plugin</module>
         <module>nbbrd-enforcer-rules</module>
         <module>nbbrd-maven-bom</module>
     </modules>
