@@ -1,0 +1,17 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!log.contains("with buf and 2 custom rule(s)")) {
+    throw new IllegalStateException("Custom rule was not disabled");
+}
+if (!log.contains("Unknown custom rule cannot be disabled: UNKNOWN_RULE")) {
+    throw new IllegalStateException("Missing warning on unknown disabled rule");
+}
+if (!log.contains("api.proto:9:7: RPC request type \"GetBarRequest\" should end with \"RequestDto\". [RPC_DTO_SUFFIX]")) {
+    throw new IllegalStateException("Missing remaining problem in build log");
+}
+if (log.contains("[RPC_DTO_ID]") || log.contains("[RPC_RESPONSE_RESULT]")) {
+    throw new IllegalStateException("Ignored or disabled rule was reported");
+}
+if (!log.contains("buf found 1 problem(s)")) {
+    throw new IllegalStateException("Unexpected problem count");
+}
+return true;

@@ -1,0 +1,8 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!log.contains("buf found no problems") || log.contains("userName")) {
+    throw new IllegalStateException("module-a was not linted with the workspace configuration");
+}
+if (!log.contains("address.proto:5:9:") || !log.contains("[MESSAGE_PASCAL_CASE]")) {
+    throw new IllegalStateException("Missing module-b problem in build log");
+}
+return true;

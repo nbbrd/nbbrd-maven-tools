@@ -1,0 +1,3 @@
+demo.rules.RpcDtoSuffixRule
+demo.rules.RpcDtoIdRule
+demo.rules.RpcResponseResultRule

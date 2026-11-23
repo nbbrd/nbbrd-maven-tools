@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
+        <artifactId>nbbrd-maven-tools</artifactId>
+        <version>1.5.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>buf-api</artifactId>
+    <packaging>jar</packaging>
+
+    <name>buf-api</name>
+    <description>Buf API</description>
+    <url>https://github.com/nbbrd/nbbrd-maven-tools</url>
+
+    <dependencies>
+        <!-- compile only -->
+        <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.nbbrd.java-service-util</groupId>
+            <artifactId>java-service-processor</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- compile and runtime -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>4.36.2</version>
+        </dependency>
+    </dependencies>
+</project>
