@@ -4,10 +4,11 @@ Custom [Maven Enforcer](https://maven.apache.org/enforcer/maven-enforcer-plugin/
 
 ## Rules
 
-| Rule                                    | Description                                                              |
-|-----------------------------------------|--------------------------------------------------------------------------|
+| Rule | Description |
+| --- | --- |
 | [`requireJavadocJar`](#requirejavadocjar) | Ensures that a javadoc jar is attached for every artifact that requires one. |
 | [`requireArtifactIdPattern`](#requireartifactidpattern) | Ensures that the artifactId matches a regex, optionally restricted to given packagings. |
+| [`requireVersionPropertyNaming`](#requireversionpropertynaming) | Enforces consistent property names for dependency and Maven plugin versions. |
 
 ### requireJavadocJar
 
@@ -65,35 +66,95 @@ For example, to enforce that every `nbm` artifact follows the `*-desktop-plugin`
 </requireArtifactIdPattern>
 ```
 
-## Setup
+### requireVersionPropertyNaming
 
-Add the rules as a dependency of the `maven-enforcer-plugin` and invoke the rule:
+Checks the names of Maven properties used for explicitly declared dependency and plugin versions:
+
+| Version belongs to | Property name must start with | Property name must end with |
+|--------------------|-------------------------------|-----------------------------|
+| A dependency or build extension | `dep.` | `.version` |
+| A Maven plugin | `dep.plugin.` | `.version` |
+
+For example:
 
 ```xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-enforcer-plugin</artifactId>
-    <dependencies>
-        <dependency>
-            <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
-            <artifactId>nbbrd-enforcer-rules</artifactId>
-            <version><!-- latest version --></version>
-        </dependency>
-    </dependencies>
-    <executions>
-        <execution>
-            <id>enforce-javadoc-jar</id>
-            <phase>verify</phase>
-            <goals>
-                <goal>enforce</goal>
-            </goals>
-            <configuration>
-                <rules>
-                    <requireJavadocJar/>
-                </rules>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
+<properties>
+    <dep.gson.version>2.15.0</dep.gson.version>
+    <dep.plugin.compiler.version>3.16.0</dep.plugin.compiler.version>
+</properties>
+
+<dependencies>
+    <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>${dep.gson.version}</version>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>${dep.plugin.compiler.version}</version>
+        </plugin>
+    </plugins>
+</build>
+```
+
+The version must be a single property reference. A literal such as `3.16.0`,
+`${project.version}`, `${compiler.version}`, or `${dep.plugin.compiler.version}`
+on a dependency is rejected. Maven still resolves the property and validates
+the resulting version; this rule checks the property name only.
+
+The rule checks dependency and plugin declarations, their management sections,
+plugin dependencies, reporting plugins, build extensions, and declarations in
+profiles (including inactive profiles). It checks only versions written in the
+current POM: versions inherited from a parent or supplied to a dependency by
+an imported BOM are not inspected. The imported BOM's own declared version is
+checked. All violations are reported together.
+
+## Setup
+
+Add the rules as a dependency of the `maven-enforcer-plugin` and invoke them.
+Replace `1.5.0` with the release you want to use.
+
+```xml
+<properties>
+    <dep.plugin.maven-enforcer-plugin.version>3.7.0</dep.plugin.maven-enforcer-plugin.version>
+    <dep.nbbrd-enforcer-rules.version>1.5.0</dep.nbbrd-enforcer-rules.version>
+</properties>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>${dep.plugin.maven-enforcer-plugin.version}</version>
+            <dependencies>
+                <dependency>
+                    <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
+                    <artifactId>nbbrd-enforcer-rules</artifactId>
+                    <version>${dep.nbbrd-enforcer-rules.version}</version>
+                </dependency>
+            </dependencies>
+            <executions>
+                <execution>
+                    <id>enforce-project-policy</id>
+                    <phase>verify</phase>
+                    <goals>
+                        <goal>enforce</goal>
+                    </goals>
+                    <configuration>
+                        <rules>
+                            <requireVersionPropertyNaming/>
+                            <requireJavadocJar/>
+                        </rules>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 ```
 

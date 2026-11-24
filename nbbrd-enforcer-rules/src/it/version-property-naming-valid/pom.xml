@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>test</groupId>
+    <artifactId>version-property-naming-valid</artifactId>
+    <version>1.0</version>
+
+    <properties>
+        <dep.example.version>1.2.3</dep.example.version>
+        <dep.enforcer-rules.version>@project.version@</dep.enforcer-rules.version>
+        <dep.plugin.maven-enforcer-plugin.version>3.7.0</dep.plugin.maven-enforcer-plugin.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>example-dependency</artifactId>
+            <version>${dep.example.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${dep.plugin.maven-enforcer-plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>@project.groupId@</groupId>
+                        <artifactId>nbbrd-enforcer-rules</artifactId>
+                        <version>${dep.enforcer-rules.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>check-version-property-naming</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireVersionPropertyNaming/>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,16 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!log.contains("with buf and 3 custom rule(s)")) {
+    throw new IllegalStateException("Custom rules were not loaded");
+}
+String[] expected = {
+    "api.proto:9:7: RPC request type \"GetBarRequest\" should end with \"RequestDto\". [RPC_DTO_SUFFIX]",
+    "api.proto:24:9: RPC message \"GetBarRequest\" should have a \"string id\" field. [RPC_DTO_ID]",
+    "api.proto:28:9: RPC response \"GetBarResponseDto\" should have a \"result\" oneof. [RPC_RESPONSE_RESULT]",
+    "buf found 3 problem(s)"
+};
+for (String text : expected) {
+    if (!log.contains(text)) {
+        throw new IllegalStateException("Missing in build log: " + text);
+    }
+}
+return true;

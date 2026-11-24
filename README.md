@@ -1,7 +1,7 @@
 # NBBRD Maven tools
 
-[![Download](https://img.shields.io/github/release/nbbrd/nbbrd-maven-tools.svg)](https://github.com/nbbrd/java-service-util/releases/latest)
-[![Changes](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnbbrd%2Fnbbrd-maven-tools%2Fbadges%2Funreleased-changes.json)](https://github.com/nbbrd/java-service-util/blob/develop/CHANGELOG.md)
+[![Download](https://img.shields.io/github/release/nbbrd/nbbrd-maven-tools.svg)](https://github.com/nbbrd/nbbrd-maven-tools/releases/latest)
+[![Changes](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnbbrd%2Fnbbrd-maven-tools%2Fbadges%2Funreleased-changes.json)](https://github.com/nbbrd/nbbrd-maven-tools/blob/develop/CHANGELOG.md)
 
 ## Overview
 
@@ -12,6 +12,8 @@ NBBRD Maven tools is a collection of Maven plugins and utilities to support the 
 | [compatibility-maven-plugin](compatibility-maven-plugin/README.md) | Maven plugin that checks the compatibility between projects, ensuring that libraries/applications and their external extensions/plugins remain compatible across versions. |
 | [exe-icon-maven-plugin](exe-icon-maven-plugin/README.md) | Cross-platform Windows executable icon replacement. |
 | [bundle-maven-plugin](bundle-maven-plugin/README.md) | Bundle local JDK/JRE archives with Appassembler or NetBeans applications. |
+| [actionlint-maven-plugin](actionlint-maven-plugin/README.md) | Lint GitHub Actions workflows with actionlint. |
+| [buf-maven-plugin](buf-maven-plugin/README.md) | Lint protobuf files with buf and custom Java rules. |
 
 ## Developing
 

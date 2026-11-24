@@ -1,0 +1,5 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!log.contains("Linting src") || !log.contains("with buf and 0 custom rule(s)") || !log.contains("buf found no problems")) {
+    throw new IllegalStateException("Valid protobuf files were not linted successfully");
+}
+return true;

@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
         <artifactId>nbbrd-maven-tools</artifactId>
-        <version>1.5.0</version>
+        <version>1.6.0</version>
     </parent>
 
     <artifactId>nbbrd-enforcer-rules</artifactId>
@@ -76,6 +76,26 @@
                         <id>index-project</id>
                         <goals>
                             <goal>main-index</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-invoker-plugin</artifactId>
+                <configuration>
+                    <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+                    <localRepositoryPath>${project.build.directory}/it-repository</localRepositoryPath>
+                    <goals>
+                        <goal>validate</goal>
+                    </goals>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-tests</id>
+                        <goals>
+                            <goal>install</goal>
+                            <goal>run</goal>
                         </goals>
                     </execution>
                 </executions>

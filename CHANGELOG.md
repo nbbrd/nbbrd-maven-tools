@@ -7,6 +7,14 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-24
+
+### Added
+
+- Add Maven Enforcer rule to enforce version property naming conventions [#215](https://github.com/nbbrd/nbbrd-maven-tools/issues/215)
+- Add Maven plugin to lint GitHub Actions workflows with actionlint [#216](https://github.com/nbbrd/nbbrd-maven-tools/issues/216)
+- Add Maven plugin to lint protobuf files [#219](https://github.com/nbbrd/nbbrd-maven-tools/issues/219)
+
 ## [1.5.0] - 2026-11-10
 
 ### Added
@@ -100,7 +108,8 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Initial release
 
-[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/nbbrd/nbbrd-maven-tools/compare/v1.4.0...v1.4.1

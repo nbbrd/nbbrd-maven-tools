@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.github.nbbrd.nbbrd-maven-tools</groupId>
         <artifactId>nbbrd-maven-tools</artifactId>
-        <version>1.5.0</version>
+        <version>1.6.0</version>
     </parent>
 
     <artifactId>nbbrd-maven-bom</artifactId>
@@ -40,6 +40,21 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>bundle-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>actionlint-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>buf-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>buf-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

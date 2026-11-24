@@ -1,0 +1,11 @@
+String log = new String(java.nio.file.Files.readAllBytes(new File(basedir, "build.log").toPath()), "UTF-8");
+if (!log.contains("Maven Stub Project (No POM)")) {
+    throw new IllegalStateException("Build did not run in standalone mode");
+}
+if (!log.contains("greeter.proto:6:10:") || !log.contains("[FIELD_LOWER_SNAKE_CASE]")) {
+    throw new IllegalStateException("Missing buf problem in build log");
+}
+if (!log.contains("buf found 1 problem(s)")) {
+    throw new IllegalStateException("Build did not fail because of buf problems");
+}
+return true;

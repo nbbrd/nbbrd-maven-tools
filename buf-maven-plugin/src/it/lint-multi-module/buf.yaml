@@ -1,0 +1,9 @@
+version: v2
+modules:
+  - path: module-a/src/main/proto
+  - path: module-b/src/main/proto
+lint:
+  use:
+    - STANDARD
+  except:
+    - FIELD_LOWER_SNAKE_CASE

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package demo.v1;
+
+message FooDto {
+  string name = 1;
+}
+
+message ErrorDto {
+  string message = 1;
+}

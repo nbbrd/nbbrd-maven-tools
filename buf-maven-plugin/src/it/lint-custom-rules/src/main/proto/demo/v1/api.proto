@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package demo.v1;
+
+import "demo/v1/common.proto";
+
+service FooService {
+  rpc GetFoo(GetFooRequestDto) returns (GetFooResponseDto);
+  rpc GetBar(GetBarRequest) returns (GetBarResponseDto);
+}
+
+message GetFooRequestDto {
+  string id = 1;
+}
+
+message GetFooResponseDto {
+  oneof result {
+    FooDto ok = 1;
+    ErrorDto err = 2;
+  }
+  string id = 3;
+}
+
+message GetBarRequest {
+  string name = 1;
+}
+
+message GetBarResponseDto {
+  string id = 1;
+}
