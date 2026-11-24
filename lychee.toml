@@ -1,0 +1,4 @@
+# This expected-output fixture contains synthetic version links.
+exclude_path = [
+    'compatibility-api[/\\]src[/\\]test[/\\]resources[/\\]internal[/\\]compatibility[/\\]spi[/\\]report-links\.md$',
+]

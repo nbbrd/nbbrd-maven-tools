@@ -1,9 +1,10 @@
 # NetBeans launcher fixtures
 
 `app.exe`, `app64.exe`, `BUILDINFO.txt`, `LICENSE` and `NOTICE` are unmodified
-files from Apache NetBeans' native launcher archive:
+files from Apache NetBeans' native launcher archive,
+`launcher-external-binaries-4-8e2bc77e581e.zip`, in:
 
-https://archive.apache.org/dist/netbeans/native/netbeans-launchers/4-8e2bc77e581e/launcher-external-binaries-4-8e2bc77e581e.zip
+https://archive.apache.org/dist/netbeans/native/netbeans-launchers/4-8e2bc77e581e/
 
 Archive SHA-1 (also recorded in the upstream harness `external/binaries-list`):
 `4932AC2C37141B459EAB30B8F00EF69E73134D07`.
