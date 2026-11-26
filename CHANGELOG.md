@@ -7,6 +7,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Allow `${project.version}` in the version property naming rule
+
 ## [1.6.0] - 2026-11-24
 
 ### Added

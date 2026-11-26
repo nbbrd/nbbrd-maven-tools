@@ -48,4 +48,17 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>inactive</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.example</groupId>
+                    <artifactId>example-module</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

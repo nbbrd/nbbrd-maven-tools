@@ -67,9 +67,10 @@ public final class RequireVersionPropertyNaming extends AbstractEnforcerRule {
         }
 
         if (!violations.isEmpty()) {
-            throw new EnforcerRuleException("Explicit dependency/plugin versions must use a property matching "
-                    + "'${dep.<name>.version}' for dependencies or '${dep.plugin.<name>.version}' for plugins:"
-                    + System.lineSeparator() + String.join(System.lineSeparator(), violations));
+            throw new EnforcerRuleException(
+                    "Explicit dependency/plugin versions must use '${project.version}' or a property matching "
+                            + "'${dep.<name>.version}' for dependencies or '${dep.plugin.<name>.version}' for plugins:"
+                            + System.lineSeparator() + String.join(System.lineSeparator(), violations));
         }
     }
 
@@ -135,7 +136,7 @@ public final class RequireVersionPropertyNaming extends AbstractEnforcerRule {
     }
 
     private static void checkVersion(@Nullable String version, String prefix, String path, List<String> violations) {
-        if (version == null) {
+        if (version == null || "${project.version}".equals(version)) {
             return;
         }
         String propertyName = extractPropertyName(version);
@@ -147,7 +148,7 @@ public final class RequireVersionPropertyNaming extends AbstractEnforcerRule {
                     ? "'" + DEPENDENCY_PREFIX + "' but not '" + PLUGIN_PREFIX + "'"
                     : "'" + prefix + "'";
             violations.add(path + " has version '" + version + "'; expected a property starting with " + expectedPrefix
-                    + " and ending with '" + VERSION_SUFFIX + "'.");
+                    + " and ending with '" + VERSION_SUFFIX + "', or '${project.version}'.");
         }
     }
 
