@@ -102,9 +102,10 @@ For example:
 </build>
 ```
 
-The version must be a single property reference. A literal such as `3.16.0`,
-`${project.version}`, `${compiler.version}`, or `${dep.plugin.compiler.version}`
-on a dependency is rejected. Maven still resolves the property and validates
+The version must be a single property reference. `${project.version}` is also
+allowed for dependencies, build extensions, and plugins. A literal such as
+`3.16.0`, `${compiler.version}`, or `${dep.plugin.compiler.version}` on a
+dependency is rejected. Maven still resolves the property and validates
 the resulting version; this rule checks the property name only.
 
 The rule checks dependency and plugin declarations, their management sections,

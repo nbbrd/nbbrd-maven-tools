@@ -32,9 +32,25 @@ class RequireVersionPropertyNamingTest {
     }
 
     @Test
+    void testProjectVersionIsAcceptedForDependenciesAndPlugins() {
+        Model model = new Model();
+        model.setDependencies(Collections.singletonList(newDependency("project.version")));
+        Build build = new Build();
+        Plugin plugin = newPlugin("project.version");
+        plugin.setDependencies(Collections.singletonList(newDependency("project.version")));
+        build.setPlugins(Collections.singletonList(plugin));
+        Extension extension = new Extension();
+        extension.setVersion("${project.version}");
+        build.setExtensions(Collections.singletonList(extension));
+        model.setBuild(build);
+
+        assertThatCode(() -> newRule(model).execute()).doesNotThrowAnyException();
+    }
+
+    @Test
     void testInvalidDependencyAndPluginPropertiesAreReportedTogether() {
         Model model = new Model();
-        model.setDependencies(Arrays.asList(newDependency("project.version"), newDependency("dep.gson")));
+        model.setDependencies(Arrays.asList(newDependency("project.parent.version"), newDependency("dep.gson")));
         Build build = new Build();
         build.setPluginManagement(new PluginManagement());
         build.getPluginManagement().setPlugins(Collections.singletonList(newPlugin("dep.compiler.version")));
@@ -43,7 +59,7 @@ class RequireVersionPropertyNamingTest {
         assertThatExceptionOfType(EnforcerRuleException.class)
                 .isThrownBy(() -> newRule(model).execute())
                 .withMessageContaining("com.example:example-dependency")
-                .withMessageContaining("project.version")
+                .withMessageContaining("project.parent.version")
                 .withMessageContaining("dep.gson")
                 .withMessageContaining("org.example:example-plugin")
                 .withMessageContaining("dep.compiler.version");
